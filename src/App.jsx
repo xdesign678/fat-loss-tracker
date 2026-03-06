@@ -1,13 +1,15 @@
-import { useState } from 'react';
+import { Suspense, lazy, useState } from 'react';
 import { useApp } from './context/AppContext';
 import SetupScreen from './components/SetupScreen';
-import Dashboard from './components/Dashboard';
-import FoodLogger from './components/FoodLogger';
-import ExerciseLogger from './components/ExerciseLogger';
-import HealthTips from './components/HealthTips';
-import WeightLogger from './components/WeightLogger';
-import Settings from './components/Settings';
+import { formatDate } from './utils/calculations';
 import { Home, Utensils, Dumbbell, BookOpen, Scale, Settings as SettingsIcon } from 'lucide-react';
+
+const Dashboard = lazy(() => import('./components/Dashboard'));
+const FoodLogger = lazy(() => import('./components/FoodLogger'));
+const ExerciseLogger = lazy(() => import('./components/ExerciseLogger'));
+const HealthTips = lazy(() => import('./components/HealthTips'));
+const WeightLogger = lazy(() => import('./components/WeightLogger'));
+const Settings = lazy(() => import('./components/Settings'));
 
 const tabs = [
   { id: 'dashboard', label: '仪表盘', icon: Home },
@@ -21,6 +23,7 @@ function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [weightModalOpen, setWeightModalOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(() => formatDate(new Date()));
 
   if (!state.setupComplete) {
     return <SetupScreen />;
@@ -29,15 +32,27 @@ function App() {
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
-        return <Dashboard onOpenWeightLogger={() => setWeightModalOpen(true)} />;
+        return (
+          <Dashboard
+            selectedDate={selectedDate}
+            onDateChange={setSelectedDate}
+            onOpenWeightLogger={() => setWeightModalOpen(true)}
+          />
+        );
       case 'food':
-        return <FoodLogger />;
+        return <FoodLogger selectedDate={selectedDate} onDateChange={setSelectedDate} />;
       case 'exercise':
-        return <ExerciseLogger />;
+        return <ExerciseLogger selectedDate={selectedDate} onDateChange={setSelectedDate} />;
       case 'tips':
         return <HealthTips />;
       default:
-        return <Dashboard onOpenWeightLogger={() => setWeightModalOpen(true)} />;
+        return (
+          <Dashboard
+            selectedDate={selectedDate}
+            onDateChange={setSelectedDate}
+            onOpenWeightLogger={() => setWeightModalOpen(true)}
+          />
+        );
     }
   };
 
@@ -45,15 +60,19 @@ function App() {
     <div style={styles.container}>
       {/* Settings button */}
       <button
+        type="button"
         onClick={() => setSettingsOpen(true)}
         style={styles.settingsBtn}
         title="AI 设置"
+        aria-label="打开 AI 设置"
       >
         <SettingsIcon size={18} color={state.aiSettings?.apiKey ? '#4f8ef7' : '#6b7494'} />
       </button>
 
       <div style={styles.content}>
-        {renderContent()}
+        <Suspense fallback={<div style={styles.loadingPanel}>页面加载中...</div>}>
+          {renderContent()}
+        </Suspense>
       </div>
 
       {/* Bottom Navigation */}
@@ -63,12 +82,15 @@ function App() {
           const isActive = activeTab === tab.id;
           return (
             <button
+              type="button"
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               style={{
                 ...styles.navBtn,
                 ...(isActive ? styles.navBtnActive : {}),
               }}
+              aria-label={tab.label}
+              aria-current={isActive ? 'page' : undefined}
             >
               <Icon
                 size={20}
@@ -87,16 +109,24 @@ function App() {
         })}
         {/* Weight button */}
         <button
+          type="button"
           onClick={() => setWeightModalOpen(true)}
           style={styles.navBtn}
+          aria-label="记录体重"
         >
           <Scale size={20} color="#6b7494" strokeWidth={1.8} />
           <span style={{ ...styles.navLabel, color: '#6b7494' }}>称重</span>
         </button>
       </nav>
 
-      <WeightLogger isOpen={weightModalOpen} onClose={() => setWeightModalOpen(false)} />
-      <Settings isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      <Suspense fallback={null}>
+        {weightModalOpen && (
+          <WeightLogger isOpen={weightModalOpen} onClose={() => setWeightModalOpen(false)} />
+        )}
+        {settingsOpen && (
+          <Settings isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
+        )}
+      </Suspense>
     </div>
   );
 }
@@ -128,6 +158,14 @@ const styles = {
     flex: 1,
     paddingBottom: '80px',
     overflowY: 'auto',
+  },
+  loadingPanel: {
+    minHeight: '40vh',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: '#9198b0',
+    fontSize: '14px',
   },
   nav: {
     position: 'fixed',

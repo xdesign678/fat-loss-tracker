@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { calculateBMR, calculateTDEE, calculateBMI, getBMICategory, recommendedWeeklyLoss, calculateDailyCalorieTarget } from '../utils/calculations';
+import { calculateBMI, getBMICategory, recommendedWeeklyLoss } from '../utils/calculations';
 import { Target, Activity, TrendingDown } from 'lucide-react';
 
 const SetupScreen = () => {
-  const { state, dispatch } = useApp();
+  const { dispatch } = useApp();
 
   const [height, setHeight] = useState('');
   const [age, setAge] = useState('');
@@ -278,17 +278,19 @@ const SetupScreen = () => {
             </label>
             <div style={styles.activityGrid}>
               {activityLevels.map((level) => (
-                <div
+                <button
+                  type="button"
                   key={level.value}
                   style={{
                     ...styles.activityOption,
                     ...(activityLevel === level.value ? styles.activityOptionActive : {})
                   }}
                   onClick={() => setActivityLevel(level.value)}
+                  aria-pressed={activityLevel === level.value}
                 >
                   <div style={styles.activityLabel}>{level.label}</div>
                   <div style={styles.activityDesc}>{level.description}</div>
-                </div>
+                </button>
               ))}
             </div>
           </div>

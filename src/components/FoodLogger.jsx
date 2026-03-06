@@ -1,27 +1,33 @@
-import React, { useState, useMemo } from 'react';
-import { Search, Plus, Sparkles, X, Edit3 } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Search, Sparkles, X, Edit3 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import DateNavigator from './DateNavigator';
 import { searchFood, foodDatabase } from '../utils/foodDatabase';
 import { formatDate } from '../utils/calculations';
+import { getRecentEntries } from '../utils/tracking';
 
-const FoodLogger = () => {
+const FoodLogger = ({ selectedDate, onDateChange }) => {
   const { state, dispatch } = useApp();
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [showAIModal, setShowAIModal] = useState(false);
+  const [editingFoodId, setEditingFoodId] = useState(null);
   const [selectedFood, setSelectedFood] = useState(null);
   const [grams, setGrams] = useState(100);
   const [aiInput, setAiInput] = useState('');
   const [manualFood, setManualFood] = useState({
     name: '',
+    grams: '',
     calories: '',
     protein: '',
     carbs: '',
-    fat: ''
+    fat: '',
+    time: ''
   });
 
   const today = formatDate(new Date());
-  const todayLogs = state.dailyLogs[today]?.foods || [];
+  const todayLogs = useMemo(() => state.dailyLogs[selectedDate]?.foods || [], [selectedDate, state.dailyLogs]);
+  const recentFoods = useMemo(() => getRecentEntries(state.dailyLogs, 'foods', 4), [state.dailyLogs]);
 
   const searchResults = useMemo(() => {
     if (!searchQuery.trim()) return [];
@@ -54,6 +60,7 @@ const FoodLogger = () => {
   };
 
   const handleFoodSelect = (food) => {
+    setEditingFoodId(null);
     setSelectedFood(food);
     setGrams(100);
     setShowAddModal(true);
@@ -76,10 +83,29 @@ const FoodLogger = () => {
       time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
     };
 
-    dispatch({ type: 'LOG_FOOD', payload: { date: today, food } });
+    dispatch({ type: 'LOG_FOOD', payload: { date: selectedDate, food } });
+    closeAddModal();
+    setSearchQuery('');
+  };
+
+  const resetManualFood = () => {
+    setManualFood({
+      name: '',
+      grams: '',
+      calories: '',
+      protein: '',
+      carbs: '',
+      fat: '',
+      time: ''
+    });
+    setEditingFoodId(null);
+  };
+
+  const closeAddModal = () => {
     setShowAddModal(false);
     setSelectedFood(null);
-    setSearchQuery('');
+    setGrams(100);
+    resetManualFood();
   };
 
   const handleManualAdd = () => {
@@ -87,17 +113,21 @@ const FoodLogger = () => {
 
     const food = {
       name: manualFood.name,
-      grams: 0,
+      grams: parseFloat(manualFood.grams) || 0,
       calories: parseFloat(manualFood.calories),
       protein: parseFloat(manualFood.protein) || 0,
       carbs: parseFloat(manualFood.carbs) || 0,
       fat: parseFloat(manualFood.fat) || 0,
-      time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+      time: manualFood.time || new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
     };
 
-    dispatch({ type: 'LOG_FOOD', payload: { date: today, food } });
-    setManualFood({ name: '', calories: '', protein: '', carbs: '', fat: '' });
-    setShowAddModal(false);
+    if (editingFoodId) {
+      dispatch({ type: 'UPDATE_FOOD', payload: { date: selectedDate, id: editingFoodId, food } });
+    } else {
+      dispatch({ type: 'LOG_FOOD', payload: { date: selectedDate, food } });
+    }
+
+    closeAddModal();
   };
 
   // 去除食物名称中的括号注释，用于模糊匹配
@@ -271,7 +301,7 @@ const FoodLogger = () => {
         fat: item.fat,
         time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
       };
-      dispatch({ type: 'LOG_FOOD', payload: { date: today, food } });
+      dispatch({ type: 'LOG_FOOD', payload: { date: selectedDate, food } });
     });
     setShowAIModal(false);
     setAiInput('');
@@ -279,12 +309,61 @@ const FoodLogger = () => {
     setAiError('');
   };
 
-  const handleDeleteFood = (index) => {
-    dispatch({ type: 'REMOVE_FOOD', payload: { date: today, index } });
+  const handleDeleteFood = (id) => {
+    dispatch({ type: 'REMOVE_FOOD', payload: { date: selectedDate, id } });
+  };
+
+  const handleEditFood = (food) => {
+    setSelectedFood(null);
+    setEditingFoodId(food.id);
+    setManualFood({
+      name: food.name || '',
+      grams: food.grams || '',
+      calories: food.calories || '',
+      protein: food.protein || '',
+      carbs: food.carbs || '',
+      fat: food.fat || '',
+      time: food.time || ''
+    });
+    setShowAddModal(true);
+  };
+
+  const handleQuickAddFood = (item) => {
+    dispatch({
+      type: 'LOG_FOOD',
+      payload: {
+        date: selectedDate,
+        food: {
+          ...item,
+          time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+        }
+      }
+    });
   };
 
   return (
     <div style={styles.container}>
+      <DateNavigator selectedDate={selectedDate} onChange={onDateChange} />
+
+      {recentFoods.length > 0 && (
+        <div style={styles.quickSection}>
+          <div style={styles.quickHeader}>最近常吃</div>
+          <div style={styles.quickList}>
+            {recentFoods.map((item) => (
+              <button
+                key={item.name}
+                type="button"
+                style={styles.quickChip}
+                onClick={() => handleQuickAddFood(item)}
+              >
+                <span>{item.name}</span>
+                <span style={styles.quickMeta}>{Math.round(item.calories)} kcal</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* 搜索区域 */}
       <div style={styles.searchSection}>
         <div style={styles.searchBox}>
@@ -295,23 +374,29 @@ const FoodLogger = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             style={styles.searchInput}
+            aria-label="搜索食物"
           />
         </div>
 
         <div style={styles.actionButtons}>
           <button
+            type="button"
             onClick={() => setShowAIModal(true)}
             style={styles.aiButton}
+            aria-label="打开 AI 食物识别"
           >
             <Sparkles size={18} />
             <span style={{ marginLeft: '6px' }}>AI识别</span>
           </button>
           <button
+            type="button"
             onClick={() => {
               setSelectedFood(null);
+              resetManualFood();
               setShowAddModal(true);
             }}
             style={styles.manualButton}
+            aria-label="手动输入食物"
           >
             <Edit3 size={18} />
             <span style={{ marginLeft: '6px' }}>手动输入</span>
@@ -323,10 +408,12 @@ const FoodLogger = () => {
       {searchResults.length > 0 && (
         <div style={styles.searchResults}>
           {searchResults.map((food, index) => (
-            <div
+            <button
+              type="button"
               key={index}
               onClick={() => handleFoodSelect(food)}
               style={styles.foodCard}
+              aria-label={`添加食物 ${food.name}`}
             >
               <div style={{ ...styles.categoryBar, background: getCategoryColor(food.category) }} />
               <div style={styles.foodContent}>
@@ -344,20 +431,20 @@ const FoodLogger = () => {
                   <span>脂肪 {food.fat}g</span>
                 </div>
               </div>
-            </div>
+            </button>
           ))}
         </div>
       )}
 
       {/* 今日记录 */}
       <div style={styles.todaySection}>
-        <h3 style={styles.sectionTitle}>今日已记录</h3>
+        <h3 style={styles.sectionTitle}>{selectedDate === today ? '今日已记录' : '当日已记录'}</h3>
         {todayLogs.length === 0 ? (
           <div style={styles.emptyState}>暂无记录</div>
         ) : (
           <div style={styles.logsList}>
-            {todayLogs.map((food, index) => (
-              <div key={index} style={styles.logItem}>
+            {todayLogs.map((food) => (
+              <div key={food.id} style={styles.logItem}>
                 <div style={styles.logContent}>
                   <div style={styles.logHeader}>
                     <span style={styles.logName}>{food.name}</span>
@@ -374,12 +461,24 @@ const FoodLogger = () => {
                     <span>脂肪 {food.fat}g</span>
                   </div>
                 </div>
-                <button
-                  onClick={() => handleDeleteFood(index)}
-                  style={styles.deleteButton}
-                >
-                  <X size={16} />
-                </button>
+                <div style={styles.logActions}>
+                  <button
+                    type="button"
+                    onClick={() => handleEditFood(food)}
+                    style={styles.editButton}
+                    aria-label={`编辑食物 ${food.name}`}
+                  >
+                    <Edit3 size={16} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteFood(food.id)}
+                    style={styles.deleteButton}
+                    aria-label={`删除食物 ${food.name}`}
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -411,7 +510,7 @@ const FoodLogger = () => {
 
       {/* 添加食物弹窗 */}
       {showAddModal && (
-        <div style={styles.modalOverlay} onClick={() => setShowAddModal(false)}>
+        <div style={styles.modalOverlay} onClick={closeAddModal}>
           <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
             {selectedFood ? (
               <>
@@ -455,17 +554,17 @@ const FoodLogger = () => {
                   </div>
                 </div>
                 <div style={styles.modalActions}>
-                  <button onClick={() => setShowAddModal(false)} style={styles.cancelButton}>
+                  <button type="button" onClick={closeAddModal} style={styles.cancelButton}>
                     取消
                   </button>
-                  <button onClick={handleAddFood} style={styles.confirmButton}>
+                  <button type="button" onClick={handleAddFood} style={styles.confirmButton}>
                     添加
                   </button>
                 </div>
               </>
             ) : (
               <>
-                <h3 style={styles.modalTitle}>手动输入食物</h3>
+                <h3 style={styles.modalTitle}>{editingFoodId ? '编辑食物' : '手动输入食物'}</h3>
                 <div style={styles.modalContent}>
                   <label style={styles.label}>
                     <span>食物名称*</span>
@@ -475,6 +574,16 @@ const FoodLogger = () => {
                       onChange={(e) => setManualFood({ ...manualFood, name: e.target.value })}
                       style={styles.input}
                       placeholder="例：鸡胸肉"
+                    />
+                  </label>
+                  <label style={styles.label}>
+                    <span>重量（克）</span>
+                    <input
+                      type="number"
+                      value={manualFood.grams}
+                      onChange={(e) => setManualFood({ ...manualFood, grams: e.target.value })}
+                      style={styles.input}
+                      placeholder="例：150"
                     />
                   </label>
                   <label style={styles.label}>
@@ -519,11 +628,11 @@ const FoodLogger = () => {
                   </label>
                 </div>
                 <div style={styles.modalActions}>
-                  <button onClick={() => setShowAddModal(false)} style={styles.cancelButton}>
+                  <button type="button" onClick={closeAddModal} style={styles.cancelButton}>
                     取消
                   </button>
-                  <button onClick={handleManualAdd} style={styles.confirmButton}>
-                    添加
+                  <button type="button" onClick={handleManualAdd} style={styles.confirmButton}>
+                    {editingFoodId ? '保存' : '添加'}
                   </button>
                 </div>
               </>
@@ -608,15 +717,15 @@ const FoodLogger = () => {
               )}
             </div>
             <div style={styles.modalActions}>
-              <button onClick={() => { setShowAIModal(false); setAiResults([]); setAiError(''); }} style={styles.cancelButton}>
+              <button type="button" onClick={() => { setShowAIModal(false); setAiResults([]); setAiError(''); }} style={styles.cancelButton}>
                 取消
               </button>
               {aiResults.length === 0 ? (
-                <button onClick={handleAIRecognition} style={styles.confirmButton} disabled={aiLoading}>
+                <button type="button" onClick={handleAIRecognition} style={styles.confirmButton} disabled={aiLoading}>
                   {aiLoading ? '分析中...' : '识别'}
                 </button>
               ) : (
-                <button onClick={handleConfirmAIResults} style={{ ...styles.confirmButton, background: '#2ecc71' }}>
+                <button type="button" onClick={handleConfirmAIResults} style={{ ...styles.confirmButton, background: '#2ecc71' }}>
                   确认添加
                 </button>
               )}
@@ -633,6 +742,36 @@ const styles = {
     padding: '20px',
     maxWidth: '800px',
     margin: '0 auto'
+  },
+  quickSection: {
+    marginBottom: '20px'
+  },
+  quickHeader: {
+    fontSize: '14px',
+    fontWeight: '600',
+    color: '#9ca3af',
+    marginBottom: '10px'
+  },
+  quickList: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '8px'
+  },
+  quickChip: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    border: '1px solid #252a38',
+    background: '#151820',
+    color: '#e8eaf0',
+    borderRadius: '999px',
+    padding: '8px 12px',
+    cursor: 'pointer',
+    fontSize: '13px'
+  },
+  quickMeta: {
+    color: '#6b7494',
+    fontSize: '12px'
   },
   searchSection: {
     marginBottom: '20px'
@@ -698,12 +837,16 @@ const styles = {
   },
   foodCard: {
     display: 'flex',
+    width: '100%',
     background: '#151820',
     borderRadius: '8px',
     marginBottom: '8px',
     cursor: 'pointer',
     overflow: 'hidden',
-    transition: 'transform 0.2s'
+    transition: 'transform 0.2s',
+    border: '1px solid #252a38',
+    padding: 0,
+    textAlign: 'left'
   },
   categoryBar: {
     width: '4px',
@@ -811,6 +954,24 @@ const styles = {
     cursor: 'pointer',
     transition: 'all 0.2s',
     marginLeft: '8px'
+  },
+  editButton: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '32px',
+    height: '32px',
+    background: 'transparent',
+    border: 'none',
+    borderRadius: '6px',
+    color: '#4f8ef7',
+    cursor: 'pointer',
+    transition: 'all 0.2s',
+    marginLeft: '8px'
+  },
+  logActions: {
+    display: 'flex',
+    alignItems: 'center'
   },
   summary: {
     background: '#151820',

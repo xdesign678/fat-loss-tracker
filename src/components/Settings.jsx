@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { X, Plus, Trash2, Eye, EyeOff, Check, Zap } from 'lucide-react';
 
@@ -111,9 +111,11 @@ const Settings = ({ isOpen, onClose }) => {
                 placeholder="sk-or-v1-..."
               />
               <button
+                type="button"
                 style={styles.iconBtn}
                 onClick={() => setShowKey(!showKey)}
                 title={showKey ? '隐藏' : '显示'}
+                aria-label={showKey ? '隐藏 API Key' : '显示 API Key'}
               >
                 {showKey ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -139,9 +141,20 @@ const Settings = ({ isOpen, onClose }) => {
                       ...styles.modelItem,
                       ...(selectedModel === model ? styles.modelItemSelected : {}),
                     }}
-                    onClick={() => setSelectedModel(model)}
                   >
-                    <div style={styles.modelRadio}>
+                    <div
+                      style={styles.modelRadio}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => setSelectedModel(model)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          setSelectedModel(model);
+                        }
+                      }}
+                      aria-pressed={selectedModel === model}
+                    >
                       <div
                         style={{
                           ...styles.radioOuter,
@@ -153,11 +166,13 @@ const Settings = ({ isOpen, onClose }) => {
                       <span style={styles.modelName}>{model}</span>
                     </div>
                     <button
+                      type="button"
                       style={styles.removeBtn}
                       onClick={(e) => {
                         e.stopPropagation();
                         handleRemoveModel(model);
                       }}
+                      aria-label={`删除模型 ${model}`}
                     >
                       <Trash2 size={14} />
                     </button>
@@ -177,9 +192,11 @@ const Settings = ({ isOpen, onClose }) => {
                 placeholder="输入模型名称，如 openai/gpt-4o"
               />
               <button
+                type="button"
                 style={styles.addBtn}
                 onClick={() => handleAddModel()}
                 disabled={!newModelInput.trim()}
+                aria-label="添加自定义模型"
               >
                 <Plus size={18} />
               </button>
@@ -192,9 +209,11 @@ const Settings = ({ isOpen, onClose }) => {
                 <div style={styles.presetGrid}>
                   {presetsNotAdded.map((model) => (
                     <button
+                      type="button"
                       key={model}
                       style={styles.presetChip}
                       onClick={() => handleAddModel(model)}
+                      aria-label={`快速添加模型 ${model}`}
                     >
                       <Plus size={12} />
                       <span>{model.split('/')[1] || model}</span>
@@ -209,6 +228,7 @@ const Settings = ({ isOpen, onClose }) => {
           <div style={styles.section}>
             <div style={styles.actionRow}>
               <button
+                type="button"
                 style={styles.testBtn}
                 onClick={handleTestAPI}
                 disabled={testing || !apiKey || !selectedModel}
@@ -217,6 +237,7 @@ const Settings = ({ isOpen, onClose }) => {
                 <span>{testing ? '测试中...' : '测试连接'}</span>
               </button>
               <button
+                type="button"
                 style={styles.saveBtn}
                 onClick={handleSave}
               >
@@ -361,6 +382,7 @@ const styles = {
     gap: '10px',
     flex: 1,
     minWidth: 0,
+    cursor: 'pointer',
   },
   radioOuter: {
     width: '16px',

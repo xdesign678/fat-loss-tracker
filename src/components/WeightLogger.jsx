@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { formatDate } from '../utils/calculations';
 import { X, Plus, Minus } from 'lucide-react';
@@ -192,10 +192,12 @@ const WeightLogger = ({ isOpen, onClose }) => {
 
   return (
     <div style={overlayStyle} onClick={onClose}>
-      <div style={modalStyle} onClick={(e) => e.stopPropagation()}>
+      <div style={modalStyle} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="记录体重">
         <button
+          type="button"
           style={closeButtonStyle}
           onClick={onClose}
+          aria-label="关闭体重记录弹窗"
           onMouseEnter={(e) => {
             e.currentTarget.style.background = '#252a38';
             e.currentTarget.style.color = '#ffffff';
@@ -219,8 +221,10 @@ const WeightLogger = ({ isOpen, onClose }) => {
 
         <div style={inputContainerStyle}>
           <button
+            type="button"
             style={adjustButtonStyle}
             onClick={() => handleAdjust(-0.1)}
+            aria-label="减少 0.1 千克"
             onMouseEnter={(e) => {
               e.currentTarget.style.background = '#4f8ef7';
               e.currentTarget.style.transform = 'scale(1.05)';
@@ -241,6 +245,7 @@ const WeightLogger = ({ isOpen, onClose }) => {
             onKeyPress={handleKeyPress}
             style={inputStyle}
             placeholder="0.0"
+            aria-label="输入当前体重"
             onFocus={(e) => {
               e.currentTarget.style.borderColor = '#667eea';
             }}
@@ -250,8 +255,10 @@ const WeightLogger = ({ isOpen, onClose }) => {
           />
 
           <button
+            type="button"
             style={adjustButtonStyle}
             onClick={() => handleAdjust(0.1)}
+            aria-label="增加 0.1 千克"
             onMouseEnter={(e) => {
               e.currentTarget.style.background = '#4f8ef7';
               e.currentTarget.style.transform = 'scale(1.05)';
@@ -279,9 +286,11 @@ const WeightLogger = ({ isOpen, onClose }) => {
         </div>
 
         <button
+          type="button"
           style={saveButtonStyle}
           onClick={handleSave}
           disabled={!newWeight || parseFloat(newWeight) <= 0}
+          aria-label="保存体重记录"
           onMouseEnter={(e) => {
             if (!e.currentTarget.disabled) {
               e.currentTarget.style.transform = 'translateY(-2px)';

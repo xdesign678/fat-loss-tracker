@@ -1,4 +1,4 @@
-// BMR计算 - Mifflin-St Jeor公式（男性）
+// BMR 计算，当前按常见男性公式估算
 export function calculateBMR(weightKg, heightCm, age) {
   return 10 * weightKg + 6.25 * heightCm - 5 * age + 5;
 }
@@ -93,4 +93,12 @@ export function formatDate(date, format) {
     .replace('YYYY', yyyy)
     .replace('MM', mm)
     .replace('DD', dd);
+}
+
+export function getDailyTip(tips, date = new Date()) {
+  if (!Array.isArray(tips) || tips.length === 0) return '';
+
+  const seed = formatDate(date);
+  const hash = seed.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  return tips[hash % tips.length];
 }

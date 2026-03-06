@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import { Suspense, lazy } from 'react';
 import { useApp } from '../context/AppContext';
+import DateNavigator from './DateNavigator';
 import {
   calculateBMR,
   calculateTDEE,
@@ -7,165 +8,134 @@ import {
   calculateProgress,
   calculateProteinTarget,
   formatDate,
-  getWeekDates
+  getDailyTip,
+  getWeekDates,
 } from '../utils/calculations';
-import {
-  BarChart,
-  Bar,
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  CartesianGrid
-} from 'recharts';
+import { buildDailyActionPlan } from '../utils/tracking';
 import {
   Flame,
   Drumstick,
   Dumbbell,
   Scale,
   TrendingDown,
-  Lightbulb
+  Lightbulb,
 } from 'lucide-react';
 
-const Dashboard = () => {
-  const { state, dispatch } = useApp();
-  const [showWeightModal, setShowWeightModal] = useState(false);
-  const [newWeight, setNewWeight] = useState('');
+const DashboardCharts = lazy(() => import('./DashboardCharts'));
 
-  const tips = [
-    '每餐先吃蔬菜，再吃蛋白质，最后吃碳水，能有效控制血糖和食欲',
-    '饭前喝一杯水，可以减少20%的进食量',
-    '充足的睡眠能提高30%的减脂效率，建议每晚7-8小时',
-    '高蛋白早餐能让你整个上午更有饱腹感',
-    '每天步行10000步，相当于额外消耗300-400卡路里',
-    '绿茶含有儿茶素，能促进脂肪氧化',
-    '力量训练增加肌肉，提高基础代谢率',
-    '细嚼慢咽，让大脑有时间接收饱腹信号',
-    '用小盘子吃饭，能自然减少15-20%的食量',
-    '避免连续3天以上的极低热量饮食，会降低代谢',
-    '每周至少安排一次欺骗餐，保持代谢活跃',
-    '有氧运动最佳时长是30-45分钟，过长会分解肌肉',
-    '优质脂肪不会让你发胖，坚果、牛油果、橄榄油要适量摄入',
-    '压力会导致皮质醇升高，增加腹部脂肪堆积',
-    '记录饮食能让减脂效率提高50%以上'
-  ];
+const tips = [
+  '每餐先吃蔬菜，再吃蛋白质，最后吃碳水，能有效控制血糖和食欲',
+  '饭前喝一杯水，可以减少20%的进食量',
+  '充足的睡眠能提高30%的减脂效率，建议每晚7-8小时',
+  '高蛋白早餐能让你整个上午更有饱腹感',
+  '每天步行10000步，相当于额外消耗300-400卡路里',
+  '绿茶含有儿茶素，能促进脂肪氧化',
+  '力量训练增加肌肉，提高基础代谢率',
+  '细嚼慢咽，让大脑有时间接收饱腹信号',
+  '用小盘子吃饭，能自然减少15-20%的食量',
+  '避免连续3天以上的极低热量饮食，会降低代谢',
+  '每周至少安排一次欺骗餐，保持代谢活跃',
+  '有氧运动最佳时长是30-45分钟，过长会分解肌肉',
+  '优质脂肪不会让你发胖，坚果、牛油果、橄榄油要适量摄入',
+  '压力会导致皮质醇升高，增加腹部脂肪堆积',
+  '记录饮食能让减脂效率提高50%以上',
+];
 
-  const todayTip = tips[Math.floor(Math.random() * tips.length)];
+const Dashboard = ({ selectedDate, onDateChange, onOpenWeightLogger }) => {
+  const { state } = useApp();
 
-  // 计算今日数据
-  const profile = state.profile || {};
   const today = formatDate(new Date());
-  const todayLog = state.dailyLogs[today] || { foods: [], exercises: [] };
-  const todayCalories = Math.round(todayLog.foods.reduce((sum, f) => sum + (f.calories || 0), 0));
-  const todayProtein = Math.round(todayLog.foods.reduce((sum, f) => sum + (f.protein || 0), 0));
-  const todayExercise = Math.round(todayLog.exercises.reduce((sum, e) => sum + (e.calories || 0), 0));
+  const profile = state.profile || {};
+  const selectedLog = state.dailyLogs[selectedDate] || { foods: [], exercises: [] };
+  const caloriesConsumed = Math.round(selectedLog.foods.reduce((sum, food) => sum + (food.calories || 0), 0));
+  const proteinConsumed = Math.round(selectedLog.foods.reduce((sum, food) => sum + (food.protein || 0), 0));
+  const exerciseCalories = Math.round(selectedLog.exercises.reduce((sum, exercise) => sum + (exercise.calories || 0), 0));
 
   const bmr = profile.height && profile.age && profile.currentWeight
     ? calculateBMR(profile.currentWeight, profile.height, profile.age)
     : 0;
-
-  const tdee = bmr && profile.activityLevel
-    ? calculateTDEE(bmr, profile.activityLevel)
-    : 0;
-
-  const dailyCalorieTarget = tdee
-    ? calculateDailyCalorieTarget(tdee, 0.5)
-    : 0;
-
-  const proteinTarget = profile.currentWeight
-    ? calculateProteinTarget(profile.currentWeight)
-    : 0;
-
+  const tdee = bmr && profile.activityLevel ? calculateTDEE(bmr, profile.activityLevel) : 0;
+  const calorieTarget = tdee ? calculateDailyCalorieTarget(tdee, 0.5) : 0;
+  const proteinTarget = profile.currentWeight ? calculateProteinTarget(profile.currentWeight) : 0;
   const progress = profile.startWeight && profile.currentWeight && profile.targetWeight
     ? calculateProgress(profile.startWeight, profile.currentWeight, profile.targetWeight)
     : 0;
 
-  // 本周热量数据（实际数据）
-  const weekDates = getWeekDates();
-  const weeklyCalorieData = weekDates.map((date) => {
+  const weeklyCalorieData = getWeekDates(new Date(selectedDate)).map((date) => {
     const dateKey = formatDate(date);
     const log = state.dailyLogs[dateKey] || { foods: [], exercises: [] };
-    const cal = Math.round(log.foods.reduce((s, f) => s + (f.calories || 0), 0));
     return {
       date: formatDate(date, 'MM/DD'),
-      calories: cal,
-      target: Math.round(dailyCalorieTarget)
+      calories: Math.round(log.foods.reduce((sum, food) => sum + (food.calories || 0), 0)),
+      target: Math.round(calorieTarget),
     };
   });
 
-  // 体重趋势数据（实际记录）
   const weightTrendData = state.weightHistory.length > 0
     ? state.weightHistory.slice(-14).map((entry) => ({
         date: formatDate(new Date(entry.date), 'MM/DD'),
-        weight: entry.weight
+        weight: entry.weight,
       }))
     : [{ date: formatDate(new Date(), 'MM/DD'), weight: profile.currentWeight || 0 }];
 
-  const handleSaveWeight = () => {
-    if (!newWeight) return;
+  const actionPlan = buildDailyActionPlan({
+    calorieTarget,
+    caloriesConsumed,
+    proteinTarget,
+    proteinConsumed,
+    exerciseCalories,
+  });
 
-    dispatch({
-      type: 'LOG_WEIGHT',
-      payload: {
-        weight: parseFloat(newWeight),
-        date: formatDate(new Date())
-      }
-    });
-
-    setShowWeightModal(false);
-    setNewWeight('');
-  };
+  const todayTip = getDailyTip(tips, new Date(selectedDate));
 
   const styles = {
     container: {
       minHeight: '100vh',
       background: '#0d0f14',
       padding: '24px',
-      color: '#e8eaf0'
+      color: '#e8eaf0',
     },
     header: {
-      marginBottom: '32px'
+      marginBottom: '24px',
     },
     date: {
       fontSize: '14px',
       color: '#9198b0',
-      marginBottom: '8px'
+      marginBottom: '8px',
     },
     greeting: {
       fontSize: '28px',
       fontWeight: '700',
       background: 'linear-gradient(135deg, #4f8ef7, #7c5cf7)',
       WebkitBackgroundClip: 'text',
-      WebkitTextFillColor: 'transparent'
+      WebkitTextFillColor: 'transparent',
     },
     progressCard: {
       background: '#151820',
       border: '1px solid #252a38',
       borderRadius: '16px',
       padding: '24px',
-      marginBottom: '24px'
+      marginBottom: '24px',
     },
     progressHeader: {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
-      marginBottom: '16px'
+      marginBottom: '16px',
     },
     progressTitle: {
       fontSize: '16px',
       color: '#9198b0',
       display: 'flex',
       alignItems: 'center',
-      gap: '8px'
+      gap: '8px',
     },
     progressPercent: {
       fontSize: '24px',
       fontWeight: '700',
       background: 'linear-gradient(135deg, #4f8ef7, #7c5cf7)',
       WebkitBackgroundClip: 'text',
-      WebkitTextFillColor: 'transparent'
+      WebkitTextFillColor: 'transparent',
     },
     progressBar: {
       width: '100%',
@@ -173,25 +143,25 @@ const Dashboard = () => {
       background: '#0d0f14',
       borderRadius: '6px',
       overflow: 'hidden',
-      marginBottom: '12px'
+      marginBottom: '12px',
     },
     progressFill: {
       height: '100%',
       background: 'linear-gradient(90deg, #4f8ef7, #7c5cf7)',
       borderRadius: '6px',
-      transition: 'width 0.5s ease'
+      transition: 'width 0.5s ease',
     },
     progressLabels: {
       display: 'flex',
       justifyContent: 'space-between',
       fontSize: '12px',
-      color: '#9198b0'
+      color: '#9198b0',
     },
     statsGrid: {
       display: 'grid',
       gridTemplateColumns: 'repeat(2, 1fr)',
       gap: '16px',
-      marginBottom: '24px'
+      marginBottom: '24px',
     },
     statCard: {
       background: '#151820',
@@ -199,24 +169,20 @@ const Dashboard = () => {
       borderRadius: '16px',
       padding: '20px',
       cursor: 'pointer',
-      transition: 'all 0.3s ease'
-    },
-    statCardHover: {
-      border: '1px solid #4f8ef7',
-      transform: 'translateY(-2px)'
+      transition: 'all 0.3s ease',
     },
     statHeader: {
       display: 'flex',
       alignItems: 'center',
       gap: '8px',
-      marginBottom: '12px'
+      marginBottom: '12px',
     },
     statIcon: {
-      color: '#4f8ef7'
+      color: '#4f8ef7',
     },
     statLabel: {
       fontSize: '14px',
-      color: '#9198b0'
+      color: '#9198b0',
     },
     statValue: {
       fontSize: '32px',
@@ -224,24 +190,42 @@ const Dashboard = () => {
       background: 'linear-gradient(135deg, #4f8ef7, #7c5cf7)',
       WebkitBackgroundClip: 'text',
       WebkitTextFillColor: 'transparent',
-      marginBottom: '4px'
+      marginBottom: '4px',
     },
     statSubtext: {
       fontSize: '12px',
-      color: '#9198b0'
+      color: '#9198b0',
     },
-    chartCard: {
-      background: '#151820',
-      border: '1px solid #252a38',
+    actionCard: {
+      background: 'rgba(79,142,247,0.08)',
+      border: '1px solid rgba(79,142,247,0.2)',
       borderRadius: '16px',
-      padding: '24px',
-      marginBottom: '24px'
+      padding: '18px 20px',
+      marginBottom: '24px',
     },
-    chartTitle: {
+    actionCardCalm: {
+      background: 'rgba(245,158,11,0.08)',
+      border: '1px solid rgba(245,158,11,0.2)',
+    },
+    actionCardWarning: {
+      background: 'rgba(239,68,68,0.08)',
+      border: '1px solid rgba(239,68,68,0.2)',
+    },
+    actionTitle: {
       fontSize: '18px',
-      fontWeight: '600',
+      fontWeight: '700',
       color: '#e8eaf0',
-      marginBottom: '20px'
+      marginBottom: '8px',
+    },
+    actionHint: {
+      fontSize: '14px',
+      color: '#c7cfde',
+      lineHeight: '1.6',
+      marginBottom: '6px',
+    },
+    actionSubHint: {
+      fontSize: '13px',
+      color: '#9198b0',
     },
     tipCard: {
       background: 'rgba(46,204,113,0.08)',
@@ -249,121 +233,50 @@ const Dashboard = () => {
       borderRadius: '16px',
       padding: '20px',
       display: 'flex',
-      gap: '16px'
+      gap: '16px',
     },
     tipIcon: {
       color: '#2ecc71',
-      flexShrink: 0
+      flexShrink: 0,
     },
     tipContent: {
-      flex: 1
+      flex: 1,
     },
     tipTitle: {
       fontSize: '14px',
       fontWeight: '600',
       color: '#2ecc71',
-      marginBottom: '8px'
+      marginBottom: '8px',
     },
     tipText: {
       fontSize: '14px',
       color: '#e8eaf0',
-      lineHeight: '1.6'
+      lineHeight: '1.6',
     },
-    modal: {
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      background: 'rgba(0,0,0,0.8)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 1000
-    },
-    modalContent: {
+    chartSkeleton: {
       background: '#151820',
       border: '1px solid #252a38',
       borderRadius: '16px',
-      padding: '32px',
-      width: '90%',
-      maxWidth: '400px'
-    },
-    modalTitle: {
-      fontSize: '20px',
-      fontWeight: '600',
-      color: '#e8eaf0',
-      marginBottom: '24px'
-    },
-    inputWrapper: {
-      position: 'relative',
-      background: 'linear-gradient(135deg, rgba(79, 142, 247, 0.1), rgba(124, 92, 247, 0.1))',
-      borderRadius: '12px',
-      padding: '1px',
-      marginBottom: '24px'
-    },
-    input: {
-      width: '100%',
-      padding: '14px 16px',
-      background: '#0d0f14',
-      border: 'none',
-      borderRadius: '11px',
-      fontSize: '16px',
-      color: '#e8eaf0',
-      outline: 'none'
-    },
-    buttonGroup: {
+      padding: '24px',
+      marginBottom: '24px',
+      minHeight: '180px',
       display: 'flex',
-      gap: '12px'
-    },
-    button: {
-      flex: 1,
-      padding: '12px',
-      borderRadius: '8px',
-      border: 'none',
+      alignItems: 'center',
+      justifyContent: 'center',
+      color: '#9198b0',
       fontSize: '14px',
-      fontWeight: '600',
-      cursor: 'pointer',
-      transition: 'all 0.3s ease'
     },
-    buttonPrimary: {
-      background: 'linear-gradient(135deg, #4f8ef7, #7c5cf7)',
-      color: '#ffffff'
-    },
-    buttonSecondary: {
-      background: '#252a38',
-      color: '#9198b0'
-    }
-  };
-
-  const customTooltip = ({ active, payload }) => {
-    if (!active || !payload || !payload.length) return null;
-
-    return (
-      <div style={{
-        background: '#151820',
-        border: '1px solid #252a38',
-        borderRadius: '8px',
-        padding: '12px',
-        fontSize: '12px'
-      }}>
-        {payload.map((entry, index) => (
-          <div key={index} style={{ color: entry.color, marginBottom: '4px' }}>
-            {entry.name}: {entry.value}
-          </div>
-        ))}
-      </div>
-    );
   };
 
   return (
     <div style={styles.container}>
+      <DateNavigator selectedDate={selectedDate} onChange={onDateChange} />
+
       <div style={styles.header}>
-        <div style={styles.date}>{formatDate(new Date(), 'YYYY年MM月DD日')}</div>
-        <h1 style={styles.greeting}>今天继续加油！</h1>
+        <div style={styles.date}>{formatDate(selectedDate, 'YYYY年MM月DD日')}</div>
+        <h1 style={styles.greeting}>{selectedDate === today ? '今天继续加油！' : '回看这一天'}</h1>
       </div>
 
-      {/* 进度卡片 */}
       <div style={styles.progressCard}>
         <div style={styles.progressHeader}>
           <div style={styles.progressTitle}>
@@ -381,15 +294,14 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* 4个指标卡片 */}
       <div style={styles.statsGrid}>
         <div style={styles.statCard}>
           <div style={styles.statHeader}>
             <Flame size={20} style={styles.statIcon} />
-            <span style={styles.statLabel}>今日摄入</span>
+            <span style={styles.statLabel}>摄入热量</span>
           </div>
-          <div style={styles.statValue}>{todayCalories}</div>
-          <div style={styles.statSubtext}>目标: {dailyCalorieTarget.toFixed(0)} kcal</div>
+          <div style={styles.statValue}>{caloriesConsumed}</div>
+          <div style={styles.statSubtext}>目标: {calorieTarget.toFixed(0)} kcal</div>
         </div>
 
         <div style={styles.statCard}>
@@ -397,7 +309,7 @@ const Dashboard = () => {
             <Drumstick size={20} style={styles.statIcon} />
             <span style={styles.statLabel}>蛋白质</span>
           </div>
-          <div style={styles.statValue}>{todayProtein}g</div>
+          <div style={styles.statValue}>{proteinConsumed}g</div>
           <div style={styles.statSubtext}>目标: {proteinTarget.toFixed(0)}g</div>
         </div>
 
@@ -406,13 +318,15 @@ const Dashboard = () => {
             <Dumbbell size={20} style={styles.statIcon} />
             <span style={styles.statLabel}>运动消耗</span>
           </div>
-          <div style={styles.statValue}>{todayExercise}</div>
+          <div style={styles.statValue}>{exerciseCalories}</div>
           <div style={styles.statSubtext}>kcal</div>
         </div>
 
-        <div
+        <button
+          type="button"
           style={styles.statCard}
-          onClick={() => setShowWeightModal(true)}
+          onClick={onOpenWeightLogger}
+          aria-label="打开体重记录"
         >
           <div style={styles.statHeader}>
             <Scale size={20} style={styles.statIcon} />
@@ -420,71 +334,28 @@ const Dashboard = () => {
           </div>
           <div style={styles.statValue}>{profile.currentWeight || 0}</div>
           <div style={styles.statSubtext}>点击记录新体重</div>
-        </div>
+        </button>
       </div>
 
-      {/* 本周热量趋势图 */}
-      <div style={styles.chartCard}>
-        <div style={styles.chartTitle}>本周热量趋势</div>
-        <ResponsiveContainer width="100%" height={200}>
-          <BarChart data={weeklyCalorieData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#252a38" />
-            <XAxis
-              dataKey="date"
-              stroke="#9198b0"
-              tick={{ fill: '#9198b0', fontSize: 12 }}
-            />
-            <YAxis
-              stroke="#9198b0"
-              tick={{ fill: '#9198b0', fontSize: 12 }}
-            />
-            <Tooltip content={customTooltip} />
-            <Bar
-              dataKey="calories"
-              fill="#4f8ef7"
-              radius={[8, 8, 0, 0]}
-              name="实际摄入"
-            />
-            <Bar
-              dataKey="target"
-              fill="rgba(79, 142, 247, 0.3)"
-              radius={[8, 8, 0, 0]}
-              name="目标"
-            />
-          </BarChart>
-        </ResponsiveContainer>
+      <div
+        style={{
+          ...styles.actionCard,
+          ...(actionPlan.tone === 'warning'
+            ? styles.actionCardWarning
+            : actionPlan.tone === 'calm'
+              ? styles.actionCardCalm
+              : {}),
+        }}
+      >
+        <div style={styles.actionTitle}>{actionPlan.title}</div>
+        <div style={styles.actionHint}>{actionPlan.suggestion}</div>
+        <div style={styles.actionSubHint}>{actionPlan.exerciseHint}</div>
       </div>
 
-      {/* 体重趋势图 */}
-      <div style={styles.chartCard}>
-        <div style={styles.chartTitle}>体重趋势（最近14天）</div>
-        <ResponsiveContainer width="100%" height={200}>
-          <LineChart data={weightTrendData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#252a38" />
-            <XAxis
-              dataKey="date"
-              stroke="#9198b0"
-              tick={{ fill: '#9198b0', fontSize: 12 }}
-            />
-            <YAxis
-              stroke="#9198b0"
-              tick={{ fill: '#9198b0', fontSize: 12 }}
-              domain={['dataMin - 2', 'dataMax + 2']}
-            />
-            <Tooltip content={customTooltip} />
-            <Line
-              type="monotone"
-              dataKey="weight"
-              stroke="#2ecc71"
-              strokeWidth={3}
-              dot={{ fill: '#2ecc71', r: 4 }}
-              name="体重 (kg)"
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
+      <Suspense fallback={<div style={styles.chartSkeleton}>图表加载中...</div>}>
+        <DashboardCharts weeklyCalorieData={weeklyCalorieData} weightTrendData={weightTrendData} />
+      </Suspense>
 
-      {/* 健康提示 */}
       <div style={styles.tipCard}>
         <Lightbulb size={24} style={styles.tipIcon} />
         <div style={styles.tipContent}>
@@ -492,40 +363,6 @@ const Dashboard = () => {
           <div style={styles.tipText}>{todayTip}</div>
         </div>
       </div>
-
-      {/* 体重记录弹窗 */}
-      {showWeightModal && (
-        <div style={styles.modal} onClick={() => setShowWeightModal(false)}>
-          <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-            <div style={styles.modalTitle}>记录新体重</div>
-            <div style={styles.inputWrapper}>
-              <input
-                type="number"
-                step="0.1"
-                style={styles.input}
-                value={newWeight}
-                onChange={(e) => setNewWeight(e.target.value)}
-                placeholder="输入当前体重 (kg)"
-                autoFocus
-              />
-            </div>
-            <div style={styles.buttonGroup}>
-              <button
-                style={{ ...styles.button, ...styles.buttonSecondary }}
-                onClick={() => setShowWeightModal(false)}
-              >
-                取消
-              </button>
-              <button
-                style={{ ...styles.button, ...styles.buttonPrimary }}
-                onClick={handleSaveWeight}
-              >
-                保存
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

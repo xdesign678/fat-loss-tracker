@@ -1,23 +1,29 @@
-import React, { useState, useMemo } from 'react';
-import { Activity, Plus, Edit3, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Activity, Edit3, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import DateNavigator from './DateNavigator';
 import { exerciseDatabase, adjustCaloriesBurn } from '../utils/foodDatabase';
 import { formatDate } from '../utils/calculations';
+import { getRecentEntries } from '../utils/tracking';
 
-const ExerciseLogger = () => {
+const ExerciseLogger = ({ selectedDate, onDateChange }) => {
   const { state, dispatch } = useApp();
   const [expandedCategory, setExpandedCategory] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingExerciseId, setEditingExerciseId] = useState(null);
   const [selectedExercise, setSelectedExercise] = useState(null);
   const [duration, setDuration] = useState(30);
   const [manualExercise, setManualExercise] = useState({
     name: '',
     duration: '',
-    calories: ''
+    calories: '',
+    category: '其他',
+    time: ''
   });
 
   const today = formatDate(new Date());
-  const todayLogs = state.dailyLogs[today]?.exercises || [];
+  const todayLogs = useMemo(() => state.dailyLogs[selectedDate]?.exercises || [], [selectedDate, state.dailyLogs]);
+  const recentExercises = useMemo(() => getRecentEntries(state.dailyLogs, 'exercises', 4), [state.dailyLogs]);
   const userWeight = state.profile.currentWeight || 70;
 
   // Group exerciseDatabase array by category
@@ -52,6 +58,7 @@ const ExerciseLogger = () => {
   };
 
   const handleExerciseSelect = (exercise, category) => {
+    setEditingExerciseId(null);
     setSelectedExercise({ ...exercise, category });
     setDuration(30);
     setShowAddModal(true);
@@ -74,9 +81,26 @@ const ExerciseLogger = () => {
       time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
     };
 
-    dispatch({ type: 'LOG_EXERCISE', payload: { date: today, exercise } });
+    dispatch({ type: 'LOG_EXERCISE', payload: { date: selectedDate, exercise } });
+    closeAddModal();
+  };
+
+  const resetManualExercise = () => {
+    setManualExercise({
+      name: '',
+      duration: '',
+      calories: '',
+      category: '其他',
+      time: ''
+    });
+    setEditingExerciseId(null);
+  };
+
+  const closeAddModal = () => {
     setShowAddModal(false);
     setSelectedExercise(null);
+    setDuration(30);
+    resetManualExercise();
   };
 
   const handleManualAdd = () => {
@@ -86,35 +110,89 @@ const ExerciseLogger = () => {
       name: manualExercise.name,
       duration: parseInt(manualExercise.duration),
       calories: parseFloat(manualExercise.calories),
-      category: '其他',
-      time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+      category: manualExercise.category || '其他',
+      time: manualExercise.time || new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
     };
 
-    dispatch({ type: 'LOG_EXERCISE', payload: { date: today, exercise } });
-    setManualExercise({ name: '', duration: '', calories: '' });
-    setShowAddModal(false);
+    if (editingExerciseId) {
+      dispatch({ type: 'UPDATE_EXERCISE', payload: { date: selectedDate, id: editingExerciseId, exercise } });
+    } else {
+      dispatch({ type: 'LOG_EXERCISE', payload: { date: selectedDate, exercise } });
+    }
+
+    closeAddModal();
   };
 
-  const handleDeleteExercise = (index) => {
-    dispatch({ type: 'REMOVE_EXERCISE', payload: { date: today, index } });
+  const handleDeleteExercise = (id) => {
+    dispatch({ type: 'REMOVE_EXERCISE', payload: { date: selectedDate, id } });
+  };
+
+  const handleEditExercise = (exercise) => {
+    setSelectedExercise(null);
+    setEditingExerciseId(exercise.id);
+    setManualExercise({
+      name: exercise.name || '',
+      duration: exercise.duration || '',
+      calories: exercise.calories || '',
+      category: exercise.category || '其他',
+      time: exercise.time || ''
+    });
+    setShowAddModal(true);
   };
 
   const toggleCategory = (category) => {
     setExpandedCategory(expandedCategory === category ? null : category);
   };
 
+  const handleQuickAddExercise = (item) => {
+    dispatch({
+      type: 'LOG_EXERCISE',
+      payload: {
+        date: selectedDate,
+        exercise: {
+          ...item,
+          time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+        }
+      }
+    });
+  };
+
   return (
     <div style={styles.container}>
+      <DateNavigator selectedDate={selectedDate} onChange={onDateChange} />
+
+      {recentExercises.length > 0 && (
+        <div style={styles.quickSection}>
+          <div style={styles.quickHeader}>最近常练</div>
+          <div style={styles.quickList}>
+            {recentExercises.map((item) => (
+              <button
+                key={item.name}
+                type="button"
+                style={styles.quickChip}
+                onClick={() => handleQuickAddExercise(item)}
+              >
+                <span>{item.name}</span>
+                <span style={styles.quickMeta}>{Math.round(item.calories)} kcal</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* 运动类型选择 */}
       <div style={styles.categoriesSection}>
         <div style={styles.header}>
           <h3 style={styles.sectionTitle}>选择运动类型</h3>
           <button
+            type="button"
             onClick={() => {
               setSelectedExercise(null);
+              resetManualExercise();
               setShowAddModal(true);
             }}
             style={styles.manualButton}
+            aria-label="手动输入运动"
           >
             <Edit3 size={16} />
             <span style={{ marginLeft: '6px' }}>手动输入</span>
@@ -123,9 +201,12 @@ const ExerciseLogger = () => {
 
         {categories.map((category) => (
           <div key={category} style={styles.categoryCard}>
-            <div
+            <button
+              type="button"
               style={styles.categoryHeader}
               onClick={() => toggleCategory(category)}
+              aria-expanded={expandedCategory === category}
+              aria-label={`${category} 分类，${expandedCategory === category ? '收起' : '展开'}`}
             >
               <div style={styles.categoryTitleRow}>
                 <Activity size={18} style={{ color: '#4f8ef7' }} />
@@ -139,15 +220,17 @@ const ExerciseLogger = () => {
               ) : (
                 <ChevronDown size={20} style={{ color: '#9ca3af' }} />
               )}
-            </div>
+            </button>
 
             {expandedCategory === category && (
               <div style={styles.exerciseList}>
                 {groupedExercises[category].map((exercise, index) => (
-                  <div
+                  <button
+                    type="button"
                     key={index}
                     style={styles.exerciseItem}
                     onClick={() => handleExerciseSelect(exercise, category)}
+                    aria-label={`添加运动 ${exercise.name}`}
                   >
                     <div style={styles.exerciseContent}>
                       <div style={styles.exerciseHeader}>
@@ -171,7 +254,7 @@ const ExerciseLogger = () => {
                         )}
                       </div>
                     </div>
-                  </div>
+                  </button>
                 ))}
               </div>
             )}
@@ -181,13 +264,13 @@ const ExerciseLogger = () => {
 
       {/* 今日记录 */}
       <div style={styles.todaySection}>
-        <h3 style={styles.sectionTitle}>今日已记录</h3>
+        <h3 style={styles.sectionTitle}>{selectedDate === today ? '今日已记录' : '当日已记录'}</h3>
         {todayLogs.length === 0 ? (
           <div style={styles.emptyState}>暂无记录</div>
         ) : (
           <div style={styles.logsList}>
-            {todayLogs.map((exercise, index) => (
-              <div key={index} style={styles.logItem}>
+            {todayLogs.map((exercise) => (
+              <div key={exercise.id} style={styles.logItem}>
                 <div style={styles.logContent}>
                   <div style={styles.logHeader}>
                     <span style={styles.logName}>{exercise.name}</span>
@@ -201,12 +284,24 @@ const ExerciseLogger = () => {
                     <span style={styles.logCalories}>-{exercise.calories}千卡</span>
                   </div>
                 </div>
-                <button
-                  onClick={() => handleDeleteExercise(index)}
-                  style={styles.deleteButton}
-                >
-                  <X size={16} />
-                </button>
+                <div style={styles.logActions}>
+                  <button
+                    type="button"
+                    onClick={() => handleEditExercise(exercise)}
+                    style={styles.editButton}
+                    aria-label={`编辑运动 ${exercise.name}`}
+                  >
+                    <Edit3 size={16} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteExercise(exercise.id)}
+                    style={styles.deleteButton}
+                    aria-label={`删除运动 ${exercise.name}`}
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -223,7 +318,7 @@ const ExerciseLogger = () => {
 
       {/* 添加运动弹窗 */}
       {showAddModal && (
-        <div style={styles.modalOverlay} onClick={() => setShowAddModal(false)}>
+        <div style={styles.modalOverlay} onClick={closeAddModal}>
           <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
             {selectedExercise ? (
               <>
@@ -272,17 +367,17 @@ const ExerciseLogger = () => {
                   </div>
                 </div>
                 <div style={styles.modalActions}>
-                  <button onClick={() => setShowAddModal(false)} style={styles.cancelButton}>
+                  <button type="button" onClick={closeAddModal} style={styles.cancelButton}>
                     取消
                   </button>
-                  <button onClick={handleAddExercise} style={styles.confirmButton}>
+                  <button type="button" onClick={handleAddExercise} style={styles.confirmButton}>
                     添加
                   </button>
                 </div>
               </>
             ) : (
               <>
-                <h3 style={styles.modalTitle}>手动输入运动</h3>
+                <h3 style={styles.modalTitle}>{editingExerciseId ? '编辑运动' : '手动输入运动'}</h3>
                 <div style={styles.modalContent}>
                   <label style={styles.label}>
                     <span>运动名称*</span>
@@ -314,13 +409,23 @@ const ExerciseLogger = () => {
                       placeholder="例：300"
                     />
                   </label>
+                  <label style={styles.label}>
+                    <span>分类</span>
+                    <input
+                      type="text"
+                      value={manualExercise.category}
+                      onChange={(e) => setManualExercise({ ...manualExercise, category: e.target.value })}
+                      style={styles.input}
+                      placeholder="例：有氧运动"
+                    />
+                  </label>
                 </div>
                 <div style={styles.modalActions}>
-                  <button onClick={() => setShowAddModal(false)} style={styles.cancelButton}>
+                  <button type="button" onClick={closeAddModal} style={styles.cancelButton}>
                     取消
                   </button>
-                  <button onClick={handleManualAdd} style={styles.confirmButton}>
-                    添加
+                  <button type="button" onClick={handleManualAdd} style={styles.confirmButton}>
+                    {editingExerciseId ? '保存' : '添加'}
                   </button>
                 </div>
               </>
@@ -337,6 +442,36 @@ const styles = {
     padding: '20px',
     maxWidth: '800px',
     margin: '0 auto'
+  },
+  quickSection: {
+    marginBottom: '20px'
+  },
+  quickHeader: {
+    fontSize: '14px',
+    fontWeight: '600',
+    color: '#9ca3af',
+    marginBottom: '10px'
+  },
+  quickList: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '8px'
+  },
+  quickChip: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    border: '1px solid #252a38',
+    background: '#151820',
+    color: '#e8eaf0',
+    borderRadius: '999px',
+    padding: '8px 12px',
+    cursor: 'pointer',
+    fontSize: '13px'
+  },
+  quickMeta: {
+    color: '#6b7494',
+    fontSize: '12px'
   },
   categoriesSection: {
     marginBottom: '20px'
@@ -376,9 +511,13 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
+    width: '100%',
     padding: '14px',
     cursor: 'pointer',
-    transition: 'background 0.2s'
+    transition: 'background 0.2s',
+    background: 'transparent',
+    border: 'none',
+    textAlign: 'left'
   },
   categoryTitleRow: {
     display: 'flex',
@@ -401,10 +540,16 @@ const styles = {
     borderTop: '1px solid #252a38'
   },
   exerciseItem: {
+    width: '100%',
     padding: '12px 14px',
     borderBottom: '1px solid #252a38',
     cursor: 'pointer',
-    transition: 'background 0.2s'
+    transition: 'background 0.2s',
+    background: 'transparent',
+    borderLeft: 'none',
+    borderRight: 'none',
+    borderTop: 'none',
+    textAlign: 'left'
   },
   exerciseContent: {
     display: 'flex',
@@ -506,6 +651,24 @@ const styles = {
     cursor: 'pointer',
     transition: 'all 0.2s',
     marginLeft: '8px'
+  },
+  editButton: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '32px',
+    height: '32px',
+    background: 'transparent',
+    border: 'none',
+    borderRadius: '6px',
+    color: '#4f8ef7',
+    cursor: 'pointer',
+    transition: 'all 0.2s',
+    marginLeft: '8px'
+  },
+  logActions: {
+    display: 'flex',
+    alignItems: 'center'
   },
   summary: {
     background: '#151820',

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Heart, Utensils, Dumbbell, Moon, Pill, AlertTriangle, XCircle } from 'lucide-react';
 
 const HealthTips = () => {
