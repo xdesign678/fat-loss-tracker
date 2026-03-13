@@ -327,7 +327,7 @@ const HealthTips = () => {
       {/* 医学提醒 */}
       <div style={sectionStyle}>
         <div style={headerStyle} onClick={() => toggleSection('medical')}>
-          <AlertTriangle size={28} color="#f59e0b" />
+          <AlertTriangle size={28} color="var(--warning)" />
           <h2 style={titleStyle}>医学提醒</h2>
           <span style={{ marginLeft: 'auto', color: 'var(--text-secondary)' }}>
             {openSections.medical ? '▼' : '▶'}
@@ -385,7 +385,7 @@ const HealthTips = () => {
       {/* 常见误区 */}
       <div style={sectionStyle}>
         <div style={headerStyle} onClick={() => toggleSection('myths')}>
-          <XCircle size={28} color="#ef4444" />
+          <XCircle size={28} color="var(--danger)" />
           <h2 style={titleStyle}>常见误区</h2>
           <span style={{ marginLeft: 'auto', color: 'var(--text-secondary)' }}>
             {openSections.myths ? '▼' : '▶'}

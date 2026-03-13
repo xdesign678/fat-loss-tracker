@@ -444,7 +444,7 @@ const VoiceRecorder = ({ isOpen, onClose }) => {
           {/* Error state */}
           {status === 'error' && (
             <div style={styles.errorArea}>
-              <MicOff size={40} color="#ef4444" />
+              <MicOff size={40} color="var(--danger)" />
               <div style={styles.errorText}>{error}</div>
             </div>
           )}
@@ -497,7 +497,7 @@ const styles = {
     left: 0,
     right: 0,
     bottom: 0,
-    background: 'rgba(0, 0, 0, 0.85)',
+    background: 'var(--bg-overlay-heavy)',
     backdropFilter: 'blur(20px)',
     WebkitBackdropFilter: 'blur(20px)',
     display: 'flex',
@@ -601,7 +601,7 @@ const styles = {
   recordingText: {
     fontSize: '16px',
     fontWeight: '500',
-    color: '#ef4444',
+    color: 'var(--danger)',
   },
   transcriptPreview: {
     fontSize: '15px',
@@ -684,8 +684,8 @@ const styles = {
     padding: '3px 10px',
     borderRadius: '12px',
     fontSize: '11px',
-    background: 'rgba(107, 114, 128, 0.2)',
-    color: '#9ca3af',
+    background: 'var(--accent-bg)',
+    color: 'var(--text-muted)',
   },
   transcriptBox: {
     display: 'flex',
@@ -762,7 +762,7 @@ const styles = {
   },
   errorText: {
     fontSize: '14px',
-    color: '#ef4444',
+    color: 'var(--danger)',
     textAlign: 'center',
     padding: '0 20px',
     lineHeight: '1.6',
@@ -799,7 +799,7 @@ const styles = {
     width: '64px',
     height: '64px',
     borderRadius: '50%',
-    background: '#ef4444',
+    background: 'var(--danger)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -807,7 +807,7 @@ const styles = {
   },
   stopLabel: {
     fontSize: '13px',
-    color: '#ef4444',
+    color: 'var(--danger)',
     fontWeight: '500',
   },
   resultActions: {

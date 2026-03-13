@@ -449,7 +449,7 @@ const styles = {
   quickHeader: {
     fontSize: '14px',
     fontWeight: '600',
-    color: '#9ca3af',
+    color: 'var(--text-muted)',
     marginBottom: '10px'
   },
   quickList: {
@@ -461,16 +461,16 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
-    border: '1px solid #252a38',
-    background: '#151820',
-    color: '#e8eaf0',
+    border: '1px solid var(--border)',
+    background: 'var(--bg-tertiary)',
+    color: 'var(--text-heading)',
     borderRadius: '999px',
     padding: '8px 12px',
     cursor: 'pointer',
     fontSize: '13px'
   },
   quickMeta: {
-    color: '#6b7494',
+    color: 'var(--text-secondary)',
     fontSize: '12px'
   },
   categoriesSection: {
@@ -661,7 +661,7 @@ const styles = {
     background: 'transparent',
     border: 'none',
     borderRadius: '6px',
-    color: '#4f8ef7',
+    color: 'var(--accent)',
     cursor: 'pointer',
     transition: 'all 0.2s',
     marginLeft: '8px'
@@ -746,7 +746,7 @@ const styles = {
   description: {
     marginTop: '8px',
     paddingTop: '8px',
-    borderTop: '1px solid #252a38',
+    borderTop: '1px solid var(--border)',
     fontSize: '13px',
     color: 'var(--text-secondary)',
     lineHeight: '1.5'
@@ -762,7 +762,7 @@ const styles = {
     marginTop: '6px',
     padding: '10px',
     background: 'var(--bg-secondary)',
-    border: '1px solid #252a38',
+    border: '1px solid var(--border)',
     borderRadius: '6px',
     color: 'var(--text-heading)',
     fontSize: '14px',
@@ -800,7 +800,7 @@ const styles = {
     flex: 1,
     padding: '12px',
     background: 'var(--bg-secondary)',
-    border: '1px solid #252a38',
+    border: '1px solid var(--border)',
     borderRadius: '8px',
     color: 'var(--text-heading)',
     fontSize: '14px',

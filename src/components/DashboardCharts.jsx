@@ -31,11 +31,11 @@ const DashboardCharts = ({ weeklyCalorieData, weightTrendData }) => {
         <div style={styles.chartTitle}>本周热量趋势</div>
         <ResponsiveContainer width="100%" height={200}>
           <BarChart data={weeklyCalorieData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#252a38" />
-            <XAxis dataKey="date" stroke="#9198b0" tick={{ fill: '#9198b0', fontSize: 12 }} />
-            <YAxis stroke="#9198b0" tick={{ fill: '#9198b0', fontSize: 12 }} />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" />
+            <XAxis dataKey="date" stroke="var(--chart-text)" tick={{ fill: 'var(--chart-text)', fontSize: 12 }} />
+            <YAxis stroke="var(--chart-text)" tick={{ fill: 'var(--chart-text)', fontSize: 12 }} />
             <Tooltip content={customTooltip} />
-            <Bar dataKey="calories" fill="#4f8ef7" radius={[8, 8, 0, 0]} name="实际摄入" />
+            <Bar dataKey="calories" fill="var(--accent)" radius={[8, 8, 0, 0]} name="实际摄入" />
             <Bar dataKey="target" fill="rgba(79, 142, 247, 0.3)" radius={[8, 8, 0, 0]} name="目标" />
           </BarChart>
         </ResponsiveContainer>
@@ -45,11 +45,11 @@ const DashboardCharts = ({ weeklyCalorieData, weightTrendData }) => {
         <div style={styles.chartTitle}>体重趋势（最近14天）</div>
         <ResponsiveContainer width="100%" height={200}>
           <LineChart data={weightTrendData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#252a38" />
-            <XAxis dataKey="date" stroke="#9198b0" tick={{ fill: '#9198b0', fontSize: 12 }} />
-            <YAxis stroke="#9198b0" tick={{ fill: '#9198b0', fontSize: 12 }} domain={['dataMin - 2', 'dataMax + 2']} />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" />
+            <XAxis dataKey="date" stroke="var(--chart-text)" tick={{ fill: 'var(--chart-text)', fontSize: 12 }} />
+            <YAxis stroke="var(--chart-text)" tick={{ fill: 'var(--chart-text)', fontSize: 12 }} domain={['dataMin - 2', 'dataMax + 2']} />
             <Tooltip content={customTooltip} />
-            <Line type="monotone" dataKey="weight" stroke="#2ecc71" strokeWidth={3} dot={{ fill: '#2ecc71', r: 4 }} name="体重 (kg)" />
+            <Line type="monotone" dataKey="weight" stroke="var(--success)" strokeWidth={3} dot={{ fill: 'var(--success)', r: 4 }} name="体重 (kg)" />
           </LineChart>
         </ResponsiveContainer>
       </div>
@@ -59,8 +59,8 @@ const DashboardCharts = ({ weeklyCalorieData, weightTrendData }) => {
 
 const styles = {
   chartCard: {
-    background: '#151820',
-    border: '1px solid #252a38',
+    background: 'var(--bg-secondary)',
+    border: '1px solid var(--border)',
     borderRadius: '16px',
     padding: '24px',
     marginBottom: '24px',
@@ -68,12 +68,12 @@ const styles = {
   chartTitle: {
     fontSize: '18px',
     fontWeight: '600',
-    color: '#e8eaf0',
+    color: 'var(--text-heading)',
     marginBottom: '20px',
   },
   tooltip: {
-    background: '#151820',
-    border: '1px solid #252a38',
+    background: 'var(--bg-tertiary)',
+    border: '1px solid var(--chart-grid)',
     borderRadius: '8px',
     padding: '12px',
     fontSize: '12px',
