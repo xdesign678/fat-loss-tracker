@@ -725,11 +725,7 @@ const FoodLogger = ({ selectedDate, onDateChange }) => {
                   {aiLoading ? '分析中...' : '识别'}
                 </button>
               ) : (
-<<<<<<< HEAD
-                <button type="button" onClick={handleConfirmAIResults} style={{ ...styles.confirmButton, background: '#2ecc71' }}>
-=======
-                <button onClick={handleConfirmAIResults} style={{ ...styles.confirmButton, background: 'var(--success)' }}>
->>>>>>> 0ee8057 (feat: 添加语音记录功能和主题系统)
+                <button type="button" onClick={handleConfirmAIResults} style={{ ...styles.confirmButton, background: 'var(--success)' }}>
                   确认添加
                 </button>
               )}
@@ -753,7 +749,7 @@ const styles = {
   quickHeader: {
     fontSize: '14px',
     fontWeight: '600',
-    color: '#9ca3af',
+    color: 'var(--text-muted)',
     marginBottom: '10px'
   },
   quickList: {
@@ -765,16 +761,16 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
-    border: '1px solid #252a38',
-    background: '#151820',
-    color: '#e8eaf0',
+    border: '1px solid var(--border)',
+    background: 'var(--bg-secondary)',
+    color: 'var(--text-primary)',
     borderRadius: '999px',
     padding: '8px 12px',
     cursor: 'pointer',
     fontSize: '13px'
   },
   quickMeta: {
-    color: '#6b7494',
+    color: 'var(--text-nav)',
     fontSize: '12px'
   },
   searchSection: {
@@ -841,18 +837,14 @@ const styles = {
   },
   foodCard: {
     display: 'flex',
-<<<<<<< HEAD
     width: '100%',
-    background: '#151820',
-=======
     background: 'var(--bg-secondary)',
->>>>>>> 0ee8057 (feat: 添加语音记录功能和主题系统)
     borderRadius: '8px',
     marginBottom: '8px',
     cursor: 'pointer',
     overflow: 'hidden',
     transition: 'transform 0.2s',
-    border: '1px solid #252a38',
+    border: '1px solid var(--border)',
     padding: 0,
     textAlign: 'left'
   },
@@ -972,7 +964,7 @@ const styles = {
     background: 'transparent',
     border: 'none',
     borderRadius: '6px',
-    color: '#4f8ef7',
+    color: 'var(--accent)',
     cursor: 'pointer',
     transition: 'all 0.2s',
     marginLeft: '8px'

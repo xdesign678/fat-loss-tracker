@@ -2,9 +2,9 @@ import { Suspense, lazy, useState } from 'react';
 import { useApp } from './context/AppContext';
 import { useTheme } from './context/ThemeContext';
 import SetupScreen from './components/SetupScreen';
-<<<<<<< HEAD
+import VoiceRecorder from './components/VoiceRecorder';
 import { formatDate } from './utils/calculations';
-import { Home, Utensils, Dumbbell, BookOpen, Scale, Settings as SettingsIcon } from 'lucide-react';
+import { Home, Utensils, Dumbbell, BookOpen, Mic, Settings as SettingsIcon, Sun, Moon } from 'lucide-react';
 
 const Dashboard = lazy(() => import('./components/Dashboard'));
 const FoodLogger = lazy(() => import('./components/FoodLogger'));
@@ -13,19 +13,7 @@ const HealthTips = lazy(() => import('./components/HealthTips'));
 const WeightLogger = lazy(() => import('./components/WeightLogger'));
 const Settings = lazy(() => import('./components/Settings'));
 
-const tabs = [
-=======
-import Dashboard from './components/Dashboard';
-import FoodLogger from './components/FoodLogger';
-import ExerciseLogger from './components/ExerciseLogger';
-import HealthTips from './components/HealthTips';
-import WeightLogger from './components/WeightLogger';
-import Settings from './components/Settings';
-import VoiceRecorder from './components/VoiceRecorder';
-import { Home, Utensils, Dumbbell, BookOpen, Mic, Scale, Settings as SettingsIcon, Sun, Moon } from 'lucide-react';
-
 const leftTabs = [
->>>>>>> 0ee8057 (feat: 添加语音记录功能和主题系统)
   { id: 'dashboard', label: '仪表盘', icon: Home },
   { id: 'food', label: '饮食', icon: Utensils },
 ];
@@ -41,11 +29,8 @@ function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [weightModalOpen, setWeightModalOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-<<<<<<< HEAD
-  const [selectedDate, setSelectedDate] = useState(() => formatDate(new Date()));
-=======
   const [voiceModalOpen, setVoiceModalOpen] = useState(false);
->>>>>>> 0ee8057 (feat: 添加语音记录功能和主题系统)
+  const [selectedDate, setSelectedDate] = useState(() => formatDate(new Date()));
 
   if (!state.setupComplete) {
     return <SetupScreen />;
@@ -80,24 +65,14 @@ function App() {
 
   return (
     <div style={styles.container}>
-<<<<<<< HEAD
-      {/* Settings button */}
-      <button
-        type="button"
-        onClick={() => setSettingsOpen(true)}
-        style={styles.settingsBtn}
-        title="AI 设置"
-        aria-label="打开 AI 设置"
-      >
-        <SettingsIcon size={18} color={state.aiSettings?.apiKey ? '#4f8ef7' : '#6b7494'} />
-      </button>
-=======
       {/* Top right buttons */}
       <div style={styles.topButtons}>
         <button
+          type="button"
           onClick={toggleTheme}
           style={styles.topBtn}
           title={theme === 'dark' ? '切换浅色模式' : '切换深色模式'}
+          aria-label="切换主题"
         >
           {theme === 'dark'
             ? <Sun size={18} color="var(--text-muted)" />
@@ -105,14 +80,15 @@ function App() {
           }
         </button>
         <button
+          type="button"
           onClick={() => setSettingsOpen(true)}
           style={styles.topBtn}
           title="AI 设置"
+          aria-label="打开 AI 设置"
         >
           <SettingsIcon size={18} color={state.aiSettings?.apiKey ? 'var(--accent)' : 'var(--text-nav)'} />
         </button>
       </div>
->>>>>>> 0ee8057 (feat: 添加语音记录功能和主题系统)
 
       <div style={styles.content}>
         <Suspense fallback={<div style={styles.loadingPanel}>页面加载中...</div>}>
@@ -155,15 +131,10 @@ function App() {
 
         {/* Center voice button */}
         <button
-<<<<<<< HEAD
           type="button"
-          onClick={() => setWeightModalOpen(true)}
-          style={styles.navBtn}
-          aria-label="记录体重"
-=======
           onClick={() => setVoiceModalOpen(true)}
           style={styles.voiceBtn}
->>>>>>> 0ee8057 (feat: 添加语音记录功能和主题系统)
+          aria-label="语音记录"
         >
           <div style={styles.voiceBtnInner}>
             <Mic size={24} color="#fff" strokeWidth={2.2} />
@@ -176,12 +147,15 @@ function App() {
           const isActive = activeTab === tab.id;
           return (
             <button
+              type="button"
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               style={{
                 ...styles.navBtn,
                 ...(isActive ? styles.navBtnActive : {}),
               }}
+              aria-label={tab.label}
+              aria-current={isActive ? 'page' : undefined}
             >
               <Icon
                 size={20}
@@ -200,7 +174,6 @@ function App() {
         })}
       </nav>
 
-<<<<<<< HEAD
       <Suspense fallback={null}>
         {weightModalOpen && (
           <WeightLogger isOpen={weightModalOpen} onClose={() => setWeightModalOpen(false)} />
@@ -209,11 +182,7 @@ function App() {
           <Settings isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
         )}
       </Suspense>
-=======
-      <WeightLogger isOpen={weightModalOpen} onClose={() => setWeightModalOpen(false)} />
-      <Settings isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
       <VoiceRecorder isOpen={voiceModalOpen} onClose={() => setVoiceModalOpen(false)} />
->>>>>>> 0ee8057 (feat: 添加语音记录功能和主题系统)
     </div>
   );
 }
@@ -255,7 +224,7 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    color: '#9198b0',
+    color: 'var(--text-secondary)',
     fontSize: '14px',
   },
   nav: {

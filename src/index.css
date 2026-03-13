@@ -167,14 +167,14 @@ button {
   font-family: inherit;
 }
 
-<<<<<<< HEAD
 button:focus-visible,
 input:focus-visible,
 textarea:focus-visible,
 [role="button"]:focus-visible {
   outline: 2px solid #4f8ef7;
   outline-offset: 2px;
-=======
+}
+
 /* Theme transition for smooth switching */
 [data-theme="light"] * {
   transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
@@ -194,5 +194,4 @@ textarea:focus-visible,
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
->>>>>>> 0ee8057 (feat: 添加语音记录功能和主题系统)
 }
