@@ -1,14 +1,17 @@
-import { useState, useMemo } from 'react';
-import { Search, Sparkles, X, Edit3 } from 'lucide-react';
+import { useState, useMemo, useEffect, useRef } from 'react';
+import { Search, Sparkles, X, Edit3, Utensils, Loader } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import DateNavigator from './DateNavigator';
 import { searchFood, foodDatabase } from '../utils/foodDatabase';
 import { formatDate } from '../utils/calculations';
 import { getRecentEntries } from '../utils/tracking';
+import EmptyState from './EmptyState';
+import { useToast } from './Toast';
 
 const FoodLogger = ({ selectedDate, onDateChange }) => {
   const { state, dispatch } = useApp();
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [showAIModal, setShowAIModal] = useState(false);
   const [editingFoodId, setEditingFoodId] = useState(null);
@@ -25,14 +28,52 @@ const FoodLogger = ({ selectedDate, onDateChange }) => {
     time: ''
   });
 
+  const showToast = useToast();
+  const searchInputRef = useRef(null);
+
   const today = formatDate(new Date());
   const todayLogs = useMemo(() => state.dailyLogs[selectedDate]?.foods || [], [selectedDate, state.dailyLogs]);
-  const recentFoods = useMemo(() => getRecentEntries(state.dailyLogs, 'foods', 4), [state.dailyLogs]);
+
+  // 提取最近7天高频食物top5
+  const frequentFoods = useMemo(() => {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const foodCount = {};
+    Object.keys(state.dailyLogs).forEach(date => {
+      const logDate = new Date(date);
+      if (logDate >= sevenDaysAgo) {
+        const foods = state.dailyLogs[date]?.foods || [];
+        foods.forEach(food => {
+          const key = food.name;
+          if (!foodCount[key]) {
+            foodCount[key] = { count: 0, lastEntry: food };
+          }
+          foodCount[key].count++;
+          foodCount[key].lastEntry = food;
+        });
+      }
+    });
+
+    return Object.values(foodCount)
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5)
+      .map(item => item.lastEntry);
+  }, [state.dailyLogs]);
+
+  // 搜索防抖 300ms
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   const searchResults = useMemo(() => {
-    if (!searchQuery.trim()) return [];
-    return searchFood(searchQuery);
-  }, [searchQuery]);
+    if (!debouncedSearchQuery.trim()) return [];
+    return searchFood(debouncedSearchQuery);
+  }, [debouncedSearchQuery]);
 
   const todayTotals = useMemo(() => {
     return todayLogs.reduce((acc, food) => ({
@@ -84,6 +125,7 @@ const FoodLogger = ({ selectedDate, onDateChange }) => {
     };
 
     dispatch({ type: 'LOG_FOOD', payload: { date: selectedDate, food } });
+    showToast(`已添加 ${food.name}`, 'success');
     closeAddModal();
     setSearchQuery('');
   };
@@ -123,8 +165,10 @@ const FoodLogger = ({ selectedDate, onDateChange }) => {
 
     if (editingFoodId) {
       dispatch({ type: 'UPDATE_FOOD', payload: { date: selectedDate, id: editingFoodId, food } });
+      showToast(`已更新 ${food.name}`, 'success');
     } else {
       dispatch({ type: 'LOG_FOOD', payload: { date: selectedDate, food } });
+      showToast(`已添加 ${food.name}`, 'success');
     }
 
     closeAddModal();
@@ -303,6 +347,7 @@ const FoodLogger = ({ selectedDate, onDateChange }) => {
       };
       dispatch({ type: 'LOG_FOOD', payload: { date: selectedDate, food } });
     });
+    showToast(`已添加 ${aiResults.length} 项食物`, 'success');
     setShowAIModal(false);
     setAiInput('');
     setAiResults([]);
@@ -310,7 +355,9 @@ const FoodLogger = ({ selectedDate, onDateChange }) => {
   };
 
   const handleDeleteFood = (id) => {
+    const food = todayLogs.find(f => f.id === id);
     dispatch({ type: 'REMOVE_FOOD', payload: { date: selectedDate, id } });
+    showToast(`已删除 ${food?.name || '食物'}`, 'success');
   };
 
   const handleEditFood = (food) => {
@@ -339,21 +386,23 @@ const FoodLogger = ({ selectedDate, onDateChange }) => {
         }
       }
     });
+    showToast(`已添加 ${item.name}`, 'success');
   };
 
   return (
     <div style={styles.container}>
       <DateNavigator selectedDate={selectedDate} onChange={onDateChange} />
 
-      {recentFoods.length > 0 && (
+      {frequentFoods.length > 0 && (
         <div style={styles.quickSection}>
           <div style={styles.quickHeader}>最近常吃</div>
           <div style={styles.quickList}>
-            {recentFoods.map((item) => (
+            {frequentFoods.map((item, idx) => (
               <button
-                key={item.name}
+                key={`${item.name}-${idx}`}
                 type="button"
                 style={styles.quickChip}
+                className="btn-interactive"
                 onClick={() => handleQuickAddFood(item)}
               >
                 <span>{item.name}</span>
@@ -369,6 +418,7 @@ const FoodLogger = ({ selectedDate, onDateChange }) => {
         <div style={styles.searchBox}>
           <Search size={20} style={styles.searchIcon} />
           <input
+            ref={searchInputRef}
             type="text"
             placeholder="搜索食物..."
             value={searchQuery}
@@ -383,10 +433,12 @@ const FoodLogger = ({ selectedDate, onDateChange }) => {
             type="button"
             onClick={() => setShowAIModal(true)}
             style={styles.aiButton}
+            className="btn-interactive"
+            disabled={aiLoading}
             aria-label="打开 AI 食物识别"
           >
-            <Sparkles size={18} />
-            <span style={{ marginLeft: '6px' }}>AI识别</span>
+            {aiLoading ? <Loader size={18} style={{ animation: 'spin 1s linear infinite' }} /> : <Sparkles size={18} />}
+            <span style={{ marginLeft: '6px' }}>{aiLoading ? 'AI识别中...' : 'AI识别'}</span>
           </button>
           <button
             type="button"
@@ -396,6 +448,7 @@ const FoodLogger = ({ selectedDate, onDateChange }) => {
               setShowAddModal(true);
             }}
             style={styles.manualButton}
+            className="btn-interactive"
             aria-label="手动输入食物"
           >
             <Edit3 size={18} />
@@ -413,6 +466,7 @@ const FoodLogger = ({ selectedDate, onDateChange }) => {
               key={index}
               onClick={() => handleFoodSelect(food)}
               style={styles.foodCard}
+              className="card-hover"
               aria-label={`添加食物 ${food.name}`}
             >
               <div style={{ ...styles.categoryBar, background: getCategoryColor(food.category) }} />
@@ -440,11 +494,17 @@ const FoodLogger = ({ selectedDate, onDateChange }) => {
       <div style={styles.todaySection}>
         <h3 style={styles.sectionTitle}>{selectedDate === today ? '今日已记录' : '当日已记录'}</h3>
         {todayLogs.length === 0 ? (
-          <div style={styles.emptyState}>暂无记录</div>
+          <EmptyState
+            icon={Utensils}
+            title="还没有记录今日饮食"
+            description="搜索食物或使用 AI 识别来开始记录"
+            actionLabel="搜索食物"
+            onAction={() => searchInputRef.current?.focus()}
+          />
         ) : (
           <div style={styles.logsList}>
             {todayLogs.map((food) => (
-              <div key={food.id} style={styles.logItem}>
+              <div key={food.id} style={{ ...styles.logItem, animation: 'slideInRight 0.25s ease' }}>
                 <div style={styles.logContent}>
                   <div style={styles.logHeader}>
                     <span style={styles.logName}>{food.name}</span>
@@ -466,6 +526,7 @@ const FoodLogger = ({ selectedDate, onDateChange }) => {
                     type="button"
                     onClick={() => handleEditFood(food)}
                     style={styles.editButton}
+                    className="btn-interactive"
                     aria-label={`编辑食物 ${food.name}`}
                   >
                     <Edit3 size={16} />
@@ -474,6 +535,7 @@ const FoodLogger = ({ selectedDate, onDateChange }) => {
                     type="button"
                     onClick={() => handleDeleteFood(food.id)}
                     style={styles.deleteButton}
+                    className="btn-interactive"
                     aria-label={`删除食物 ${food.name}`}
                   >
                     <X size={16} />
@@ -518,13 +580,26 @@ const FoodLogger = ({ selectedDate, onDateChange }) => {
                 <div style={styles.modalContent}>
                   <label style={styles.label}>
                     <span>重量（克）</span>
-                    <input
-                      type="number"
-                      value={grams}
-                      onChange={(e) => setGrams(e.target.value)}
-                      style={styles.input}
-                      autoFocus
-                    />
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      <input
+                        type="number"
+                        value={grams}
+                        onChange={(e) => setGrams(e.target.value)}
+                        style={{ ...styles.input, marginTop: 0, flex: 1 }}
+                        autoFocus
+                      />
+                      {[50, 100, 150, 200].map(g => (
+                        <button
+                          key={g}
+                          type="button"
+                          onClick={() => setGrams(g)}
+                          style={styles.quickGramButton}
+                          className="btn-interactive"
+                        >
+                          {g}g
+                        </button>
+                      ))}
+                    </div>
                   </label>
                   <div style={styles.nutritionPreview}>
                     <div style={styles.previewItem}>
@@ -578,13 +653,26 @@ const FoodLogger = ({ selectedDate, onDateChange }) => {
                   </label>
                   <label style={styles.label}>
                     <span>重量（克）</span>
-                    <input
-                      type="number"
-                      value={manualFood.grams}
-                      onChange={(e) => setManualFood({ ...manualFood, grams: e.target.value })}
-                      style={styles.input}
-                      placeholder="例：150"
-                    />
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      <input
+                        type="number"
+                        value={manualFood.grams}
+                        onChange={(e) => setManualFood({ ...manualFood, grams: e.target.value })}
+                        style={{ ...styles.input, marginTop: 0, flex: 1 }}
+                        placeholder="例：150"
+                      />
+                      {[50, 100, 150, 200].map(g => (
+                        <button
+                          key={g}
+                          type="button"
+                          onClick={() => setManualFood({ ...manualFood, grams: g.toString() })}
+                          style={styles.quickGramButton}
+                          className="btn-interactive"
+                        >
+                          {g}g
+                        </button>
+                      ))}
+                    </div>
                   </label>
                   <label style={styles.label}>
                     <span>热量（千卡）*</span>
@@ -945,8 +1033,10 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    width: '32px',
-    height: '32px',
+    minWidth: '44px',
+    minHeight: '44px',
+    width: '44px',
+    height: '44px',
     background: 'transparent',
     border: 'none',
     borderRadius: '6px',
@@ -959,8 +1049,10 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    width: '32px',
-    height: '32px',
+    minWidth: '44px',
+    minHeight: '44px',
+    width: '44px',
+    height: '44px',
     background: 'transparent',
     border: 'none',
     borderRadius: '6px',
@@ -1121,6 +1213,19 @@ const styles = {
     fontWeight: '500',
     cursor: 'pointer',
     transition: 'background 0.3s'
+  },
+  quickGramButton: {
+    padding: '8px 12px',
+    background: 'var(--bg-tertiary)',
+    border: '1px solid var(--border)',
+    borderRadius: '6px',
+    color: 'var(--text-heading)',
+    fontSize: '13px',
+    fontWeight: '500',
+    cursor: 'pointer',
+    minWidth: '44px',
+    minHeight: '44px',
+    whiteSpace: 'nowrap'
   }
 };
 

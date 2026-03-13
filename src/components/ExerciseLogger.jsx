@@ -1,10 +1,12 @@
 import { useState, useMemo } from 'react';
-import { Activity, Edit3, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { Activity, Edit3, X, ChevronDown, ChevronUp, Dumbbell } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import DateNavigator from './DateNavigator';
 import { exerciseDatabase, adjustCaloriesBurn } from '../utils/foodDatabase';
 import { formatDate } from '../utils/calculations';
 import { getRecentEntries } from '../utils/tracking';
+import EmptyState from './EmptyState';
+import { useToast } from './Toast';
 
 const ExerciseLogger = ({ selectedDate, onDateChange }) => {
   const { state, dispatch } = useApp();
@@ -20,6 +22,8 @@ const ExerciseLogger = ({ selectedDate, onDateChange }) => {
     category: '其他',
     time: ''
   });
+
+  const showToast = useToast();
 
   const today = formatDate(new Date());
   const todayLogs = useMemo(() => state.dailyLogs[selectedDate]?.exercises || [], [selectedDate, state.dailyLogs]);
@@ -82,6 +86,7 @@ const ExerciseLogger = ({ selectedDate, onDateChange }) => {
     };
 
     dispatch({ type: 'LOG_EXERCISE', payload: { date: selectedDate, exercise } });
+    showToast(`已添加 ${exercise.name}`, 'success');
     closeAddModal();
   };
 
@@ -116,15 +121,19 @@ const ExerciseLogger = ({ selectedDate, onDateChange }) => {
 
     if (editingExerciseId) {
       dispatch({ type: 'UPDATE_EXERCISE', payload: { date: selectedDate, id: editingExerciseId, exercise } });
+      showToast(`已更新 ${exercise.name}`, 'success');
     } else {
       dispatch({ type: 'LOG_EXERCISE', payload: { date: selectedDate, exercise } });
+      showToast(`已添加 ${exercise.name}`, 'success');
     }
 
     closeAddModal();
   };
 
   const handleDeleteExercise = (id) => {
+    const exercise = todayLogs.find(e => e.id === id);
     dispatch({ type: 'REMOVE_EXERCISE', payload: { date: selectedDate, id } });
+    showToast(`已删除 ${exercise?.name || '运动'}`, 'success');
   };
 
   const handleEditExercise = (exercise) => {
@@ -155,6 +164,7 @@ const ExerciseLogger = ({ selectedDate, onDateChange }) => {
         }
       }
     });
+    showToast(`已添加 ${item.name}`, 'success');
   };
 
   return (
@@ -170,6 +180,7 @@ const ExerciseLogger = ({ selectedDate, onDateChange }) => {
                 key={item.name}
                 type="button"
                 style={styles.quickChip}
+                className="btn-interactive"
                 onClick={() => handleQuickAddExercise(item)}
               >
                 <span>{item.name}</span>
@@ -192,6 +203,7 @@ const ExerciseLogger = ({ selectedDate, onDateChange }) => {
               setShowAddModal(true);
             }}
             style={styles.manualButton}
+            className="btn-interactive"
             aria-label="手动输入运动"
           >
             <Edit3 size={16} />
@@ -229,6 +241,7 @@ const ExerciseLogger = ({ selectedDate, onDateChange }) => {
                     type="button"
                     key={index}
                     style={styles.exerciseItem}
+                    className="btn-interactive"
                     onClick={() => handleExerciseSelect(exercise, category)}
                     aria-label={`添加运动 ${exercise.name}`}
                   >
@@ -266,11 +279,15 @@ const ExerciseLogger = ({ selectedDate, onDateChange }) => {
       <div style={styles.todaySection}>
         <h3 style={styles.sectionTitle}>{selectedDate === today ? '今日已记录' : '当日已记录'}</h3>
         {todayLogs.length === 0 ? (
-          <div style={styles.emptyState}>暂无记录</div>
+          <EmptyState
+            icon={Dumbbell}
+            title="还没有记录今日运动"
+            description="选择运动类型开始记录"
+          />
         ) : (
           <div style={styles.logsList}>
             {todayLogs.map((exercise) => (
-              <div key={exercise.id} style={styles.logItem}>
+              <div key={exercise.id} style={{ ...styles.logItem, animation: 'slideInRight 0.25s ease' }}>
                 <div style={styles.logContent}>
                   <div style={styles.logHeader}>
                     <span style={styles.logName}>{exercise.name}</span>
@@ -289,6 +306,7 @@ const ExerciseLogger = ({ selectedDate, onDateChange }) => {
                     type="button"
                     onClick={() => handleEditExercise(exercise)}
                     style={styles.editButton}
+                    className="btn-interactive"
                     aria-label={`编辑运动 ${exercise.name}`}
                   >
                     <Edit3 size={16} />
@@ -297,6 +315,7 @@ const ExerciseLogger = ({ selectedDate, onDateChange }) => {
                     type="button"
                     onClick={() => handleDeleteExercise(exercise.id)}
                     style={styles.deleteButton}
+                    className="btn-interactive"
                     aria-label={`删除运动 ${exercise.name}`}
                   >
                     <X size={16} />
@@ -347,13 +366,26 @@ const ExerciseLogger = ({ selectedDate, onDateChange }) => {
 
                   <label style={styles.label}>
                     <span>运动时长（分钟）</span>
-                    <input
-                      type="number"
-                      value={duration}
-                      onChange={(e) => setDuration(e.target.value)}
-                      style={styles.input}
-                      autoFocus
-                    />
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      <input
+                        type="number"
+                        value={duration}
+                        onChange={(e) => setDuration(e.target.value)}
+                        style={{ ...styles.input, marginTop: 0, flex: 1 }}
+                        autoFocus
+                      />
+                      {[15, 30, 45, 60].map(d => (
+                        <button
+                          key={d}
+                          type="button"
+                          onClick={() => setDuration(d)}
+                          style={styles.quickDurationButton}
+                          className="btn-interactive"
+                        >
+                          {d}
+                        </button>
+                      ))}
+                    </div>
                   </label>
 
                   <div style={styles.caloriesPreview}>
@@ -391,13 +423,26 @@ const ExerciseLogger = ({ selectedDate, onDateChange }) => {
                   </label>
                   <label style={styles.label}>
                     <span>时长（分钟）*</span>
-                    <input
-                      type="number"
-                      value={manualExercise.duration}
-                      onChange={(e) => setManualExercise({ ...manualExercise, duration: e.target.value })}
-                      style={styles.input}
-                      placeholder="例：60"
-                    />
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      <input
+                        type="number"
+                        value={manualExercise.duration}
+                        onChange={(e) => setManualExercise({ ...manualExercise, duration: e.target.value })}
+                        style={{ ...styles.input, marginTop: 0, flex: 1 }}
+                        placeholder="例：60"
+                      />
+                      {[15, 30, 45, 60].map(d => (
+                        <button
+                          key={d}
+                          type="button"
+                          onClick={() => setManualExercise({ ...manualExercise, duration: d.toString() })}
+                          style={styles.quickDurationButton}
+                          className="btn-interactive"
+                        >
+                          {d}
+                        </button>
+                      ))}
+                    </div>
                   </label>
                   <label style={styles.label}>
                     <span>消耗热量（千卡）*</span>
@@ -642,8 +687,10 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    width: '32px',
-    height: '32px',
+    minWidth: '44px',
+    minHeight: '44px',
+    width: '44px',
+    height: '44px',
     background: 'transparent',
     border: 'none',
     borderRadius: '6px',
@@ -656,8 +703,10 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    width: '32px',
-    height: '32px',
+    minWidth: '44px',
+    minHeight: '44px',
+    width: '44px',
+    height: '44px',
     background: 'transparent',
     border: 'none',
     borderRadius: '6px',
@@ -819,6 +868,19 @@ const styles = {
     fontWeight: '500',
     cursor: 'pointer',
     transition: 'background 0.3s'
+  },
+  quickDurationButton: {
+    padding: '8px 12px',
+    background: 'var(--bg-tertiary)',
+    border: '1px solid var(--border)',
+    borderRadius: '6px',
+    color: 'var(--text-heading)',
+    fontSize: '13px',
+    fontWeight: '500',
+    cursor: 'pointer',
+    minWidth: '44px',
+    minHeight: '44px',
+    whiteSpace: 'nowrap'
   }
 };
 

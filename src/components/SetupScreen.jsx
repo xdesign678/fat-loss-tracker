@@ -2,15 +2,18 @@ import { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { calculateBMI, getBMICategory, recommendedWeeklyLoss } from '../utils/calculations';
 import { Target, Activity, TrendingDown } from 'lucide-react';
+import { useToast } from './Toast';
 
 const SetupScreen = () => {
   const { dispatch } = useApp();
+  const showToast = useToast();
 
   const [height, setHeight] = useState('');
   const [age, setAge] = useState('');
   const [currentWeight, setCurrentWeight] = useState('');
   const [targetWeight, setTargetWeight] = useState('');
   const [activityLevel, setActivityLevel] = useState('sedentary');
+  const [errors, setErrors] = useState({});
 
   const activityLevels = [
     { value: 'sedentary', label: '久坐', description: '几乎不运动' },
@@ -25,11 +28,97 @@ const SetupScreen = () => {
     ? recommendedWeeklyLoss(parseFloat(currentWeight), parseFloat(targetWeight))
     : null;
 
+  const validateField = (field, value) => {
+    const newErrors = { ...errors };
+
+    switch(field) {
+      case 'height':
+        const h = parseFloat(value);
+        if (!value) {
+          newErrors.height = '请输入身高';
+        } else if (h < 120 || h > 230) {
+          newErrors.height = '身高范围应在 120-230cm 之间';
+        } else {
+          delete newErrors.height;
+        }
+        break;
+      case 'age':
+        const a = parseInt(value);
+        if (!value) {
+          newErrors.age = '请输入年龄';
+        } else if (a < 10 || a > 100) {
+          newErrors.age = '年龄范围应在 10-100 岁之间';
+        } else {
+          delete newErrors.age;
+        }
+        break;
+      case 'currentWeight':
+        const cw = parseFloat(value);
+        if (!value) {
+          newErrors.currentWeight = '请输入当前体重';
+        } else if (cw < 30 || cw > 300) {
+          newErrors.currentWeight = '体重范围应在 30-300kg 之间';
+        } else {
+          delete newErrors.currentWeight;
+        }
+        break;
+      case 'targetWeight':
+        const tw = parseFloat(value);
+        const current = parseFloat(currentWeight);
+        if (!value) {
+          newErrors.targetWeight = '请输入目标体重';
+        } else if (tw < 30 || tw > 300) {
+          newErrors.targetWeight = '体重范围应在 30-300kg 之间';
+        } else if (current && tw >= current) {
+          newErrors.targetWeight = '目标体重必须小于当前体重';
+        } else {
+          delete newErrors.targetWeight;
+        }
+        break;
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleHeightChange = (e) => {
+    const value = e.target.value;
+    setHeight(value);
+    validateField('height', value);
+  };
+
+  const handleAgeChange = (e) => {
+    const value = e.target.value;
+    setAge(value);
+    validateField('age', value);
+  };
+
+  const handleCurrentWeightChange = (e) => {
+    const value = e.target.value;
+    setCurrentWeight(value);
+    validateField('currentWeight', value);
+    // Re-validate target weight if it exists
+    if (targetWeight) {
+      validateField('targetWeight', targetWeight);
+    }
+  };
+
+  const handleTargetWeightChange = (e) => {
+    const value = e.target.value;
+    setTargetWeight(value);
+    validateField('targetWeight', value);
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (!height || !age || !currentWeight || !targetWeight) {
-      alert('请填写所有必填项');
+    // Validate all fields
+    const heightValid = validateField('height', height);
+    const ageValid = validateField('age', age);
+    const currentWeightValid = validateField('currentWeight', currentWeight);
+    const targetWeightValid = validateField('targetWeight', targetWeight);
+
+    if (!heightValid || !ageValid || !currentWeightValid || !targetWeightValid) {
       return;
     }
 
@@ -47,6 +136,8 @@ const SetupScreen = () => {
         startDate
       }
     });
+
+    showToast('设置完成，开始你的减脂之旅！', 'success');
   };
 
   const styles = {
@@ -110,6 +201,9 @@ const SetupScreen = () => {
       borderRadius: '12px',
       padding: '1px'
     },
+    inputWrapperError: {
+      background: 'var(--danger)',
+    },
     input: {
       width: '100%',
       padding: '14px 16px',
@@ -120,6 +214,12 @@ const SetupScreen = () => {
       color: 'var(--text-primary)',
       outline: 'none',
       transition: 'all 0.3s ease'
+    },
+    errorText: {
+      fontSize: '13px',
+      color: 'var(--danger)',
+      marginTop: '4px',
+      marginLeft: '4px'
     },
     activityGrid: {
       display: 'grid',
@@ -206,16 +306,17 @@ const SetupScreen = () => {
               <Target size={16} />
               身高 (cm)
             </label>
-            <div style={styles.inputWrapper}>
+            <div style={{...styles.inputWrapper, ...(errors.height ? styles.inputWrapperError : {})}}>
               <input
                 type="number"
                 style={styles.input}
                 value={height}
-                onChange={(e) => setHeight(e.target.value)}
+                onChange={handleHeightChange}
                 placeholder="例如: 170"
                 required
               />
             </div>
+            {errors.height && <div style={styles.errorText}>{errors.height}</div>}
           </div>
 
           <div style={styles.formGroup}>
@@ -223,16 +324,17 @@ const SetupScreen = () => {
               <Target size={16} />
               年龄
             </label>
-            <div style={styles.inputWrapper}>
+            <div style={{...styles.inputWrapper, ...(errors.age ? styles.inputWrapperError : {})}}>
               <input
                 type="number"
                 style={styles.input}
                 value={age}
-                onChange={(e) => setAge(e.target.value)}
+                onChange={handleAgeChange}
                 placeholder="例如: 25"
                 required
               />
             </div>
+            {errors.age && <div style={styles.errorText}>{errors.age}</div>}
           </div>
 
           <div style={styles.formGroup}>
@@ -240,17 +342,18 @@ const SetupScreen = () => {
               <TrendingDown size={16} />
               当前体重 (kg)
             </label>
-            <div style={styles.inputWrapper}>
+            <div style={{...styles.inputWrapper, ...(errors.currentWeight ? styles.inputWrapperError : {})}}>
               <input
                 type="number"
                 step="0.1"
                 style={styles.input}
                 value={currentWeight}
-                onChange={(e) => setCurrentWeight(e.target.value)}
+                onChange={handleCurrentWeightChange}
                 placeholder="例如: 70.5"
                 required
               />
             </div>
+            {errors.currentWeight && <div style={styles.errorText}>{errors.currentWeight}</div>}
           </div>
 
           <div style={styles.formGroup}>
@@ -258,17 +361,18 @@ const SetupScreen = () => {
               <Target size={16} />
               目标体重 (kg)
             </label>
-            <div style={styles.inputWrapper}>
+            <div style={{...styles.inputWrapper, ...(errors.targetWeight ? styles.inputWrapperError : {})}}>
               <input
                 type="number"
                 step="0.1"
                 style={styles.input}
                 value={targetWeight}
-                onChange={(e) => setTargetWeight(e.target.value)}
+                onChange={handleTargetWeightChange}
                 placeholder="例如: 65.0"
                 required
               />
             </div>
+            {errors.targetWeight && <div style={styles.errorText}>{errors.targetWeight}</div>}
           </div>
 
           <div style={styles.formGroup}>
@@ -276,8 +380,8 @@ const SetupScreen = () => {
               <Activity size={16} />
               活动量等级
             </label>
-            <div style={styles.activityGrid}>
-              {activityLevels.map((level) => (
+            <div style={styles.activityGrid} role="radiogroup" aria-label="活动量等级">
+              {activityLevels.map((level, index) => (
                 <button
                   type="button"
                   key={level.value}
@@ -286,7 +390,23 @@ const SetupScreen = () => {
                     ...(activityLevel === level.value ? styles.activityOptionActive : {})
                   }}
                   onClick={() => setActivityLevel(level.value)}
-                  aria-pressed={activityLevel === level.value}
+                  role="radio"
+                  aria-checked={activityLevel === level.value}
+                  tabIndex={activityLevel === level.value ? 0 : -1}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setActivityLevel(level.value);
+                    } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                      e.preventDefault();
+                      const nextIndex = (index + 1) % activityLevels.length;
+                      setActivityLevel(activityLevels[nextIndex].value);
+                    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                      e.preventDefault();
+                      const prevIndex = (index - 1 + activityLevels.length) % activityLevels.length;
+                      setActivityLevel(activityLevels[prevIndex].value);
+                    }
+                  }}
                 >
                   <div style={styles.activityLabel}>{level.label}</div>
                   <div style={styles.activityDesc}>{level.description}</div>
@@ -314,7 +434,7 @@ const SetupScreen = () => {
             </div>
           )}
 
-          <button type="submit" style={styles.button}>
+          <button type="submit" style={styles.button} className="btn-interactive">
             <Target size={20} />
             开始减脂之旅
           </button>

@@ -2,6 +2,7 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Mic, MicOff, X, Check, RotateCcw, Loader, Utensils, Dumbbell } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { formatDate } from '../utils/calculations';
+import { useToast } from './Toast';
 
 const AI_GATEWAY_URL = 'https://ai-gateway.happycapy.ai/api/v1/chat/completions';
 const AI_GATEWAY_KEY = import.meta.env.VITE_AI_GATEWAY_API_KEY;
@@ -9,13 +10,17 @@ const AI_GATEWAY_KEY = import.meta.env.VITE_AI_GATEWAY_API_KEY;
 // States: idle, recording, processing, results, error
 const VoiceRecorder = ({ isOpen, onClose }) => {
   const { state, dispatch } = useApp();
+  const showToast = useToast();
   const [status, setStatus] = useState('idle');
   const [transcript, setTranscript] = useState('');
   const [interimText, setInterimText] = useState('');
   const [results, setResults] = useState(null);
   const [error, setError] = useState('');
   const [pulseAnim, setPulseAnim] = useState(false);
+  const [recordingDuration, setRecordingDuration] = useState(0);
   const recognitionRef = useRef(null);
+  const processingTimeoutRef = useRef(null);
+  const recordingTimerRef = useRef(null);
   const today = formatDate(new Date());
 
   // Reset state when modal opens
@@ -26,16 +31,35 @@ const VoiceRecorder = ({ isOpen, onClose }) => {
       setInterimText('');
       setResults(null);
       setError('');
+      setRecordingDuration(0);
     } else {
       stopRecording();
+      if (processingTimeoutRef.current) {
+        clearTimeout(processingTimeoutRef.current);
+        processingTimeoutRef.current = null;
+      }
+      if (recordingTimerRef.current) {
+        clearInterval(recordingTimerRef.current);
+        recordingTimerRef.current = null;
+      }
     }
   }, [isOpen]);
 
-  // Pulse animation for recording
+  // Pulse animation and timer for recording
   useEffect(() => {
     if (status === 'recording') {
-      const interval = setInterval(() => setPulseAnim(prev => !prev), 800);
-      return () => clearInterval(interval);
+      const pulseInterval = setInterval(() => setPulseAnim(prev => !prev), 800);
+      setRecordingDuration(0);
+      recordingTimerRef.current = setInterval(() => {
+        setRecordingDuration(prev => prev + 1);
+      }, 1000);
+      return () => {
+        clearInterval(pulseInterval);
+        if (recordingTimerRef.current) {
+          clearInterval(recordingTimerRef.current);
+          recordingTimerRef.current = null;
+        }
+      };
     }
     setPulseAnim(false);
   }, [status]);

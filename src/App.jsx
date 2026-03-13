@@ -1,10 +1,28 @@
-import { Suspense, lazy, useState } from 'react';
+import { Suspense, lazy, useState, Component } from 'react';
 import { useApp } from './context/AppContext';
 import { useTheme } from './context/ThemeContext';
 import SetupScreen from './components/SetupScreen';
 import VoiceRecorder from './components/VoiceRecorder';
 import { formatDate } from './utils/calculations';
 import { Home, Utensils, Dumbbell, BookOpen, Mic, Settings as SettingsIcon, Sun, Moon } from 'lucide-react';
+
+class ErrorBoundary extends Component {
+  constructor(props) { super(props); this.state = { error: null }; }
+  static getDerivedStateFromError(error) { return { error }; }
+  componentDidCatch(error, info) { console.error('ErrorBoundary caught:', error, info); }
+  render() {
+    if (this.state.error) {
+      return (
+        <div style={{ padding: 40, color: 'var(--danger)', background: 'var(--bg-primary)', minHeight: '100vh' }}>
+          <h2>Something went wrong</h2>
+          <pre style={{ whiteSpace: 'pre-wrap', fontSize: 13 }}>{this.state.error.message}{'\n'}{this.state.error.stack}</pre>
+          <button onClick={() => this.setState({ error: null })} style={{ marginTop: 16, padding: '8px 16px' }}>Retry</button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 const Dashboard = lazy(() => import('./components/Dashboard'));
 const FoodLogger = lazy(() => import('./components/FoodLogger'));
@@ -37,23 +55,28 @@ function App() {
   }
 
   const renderContent = () => {
+    let content;
     switch (activeTab) {
       case 'dashboard':
-        return (
+        content = (
           <Dashboard
             selectedDate={selectedDate}
             onDateChange={setSelectedDate}
             onOpenWeightLogger={() => setWeightModalOpen(true)}
           />
         );
+        break;
       case 'food':
-        return <FoodLogger selectedDate={selectedDate} onDateChange={setSelectedDate} />;
+        content = <FoodLogger selectedDate={selectedDate} onDateChange={setSelectedDate} />;
+        break;
       case 'exercise':
-        return <ExerciseLogger selectedDate={selectedDate} onDateChange={setSelectedDate} />;
+        content = <ExerciseLogger selectedDate={selectedDate} onDateChange={setSelectedDate} />;
+        break;
       case 'tips':
-        return <HealthTips />;
+        content = <HealthTips />;
+        break;
       default:
-        return (
+        content = (
           <Dashboard
             selectedDate={selectedDate}
             onDateChange={setSelectedDate}
@@ -61,6 +84,11 @@ function App() {
           />
         );
     }
+    return (
+      <div key={activeTab} className="tab-content">
+        {content}
+      </div>
+    );
   };
 
   return (
@@ -71,6 +99,7 @@ function App() {
           type="button"
           onClick={toggleTheme}
           style={styles.topBtn}
+          className="btn-interactive"
           title={theme === 'dark' ? '切换浅色模式' : '切换深色模式'}
           aria-label="切换主题"
         >
@@ -83,6 +112,7 @@ function App() {
           type="button"
           onClick={() => setSettingsOpen(true)}
           style={styles.topBtn}
+          className="btn-interactive"
           title="AI 设置"
           aria-label="打开 AI 设置"
         >
@@ -91,13 +121,15 @@ function App() {
       </div>
 
       <div style={styles.content}>
-        <Suspense fallback={<div style={styles.loadingPanel}>页面加载中...</div>}>
-          {renderContent()}
-        </Suspense>
+        <ErrorBoundary>
+          <Suspense fallback={<div style={styles.loadingPanel}>页面加载中...</div>}>
+            {renderContent()}
+          </Suspense>
+        </ErrorBoundary>
       </div>
 
       {/* Bottom Navigation */}
-      <nav style={styles.nav}>
+      <nav className="nav-safe-area" style={styles.nav}>
         {leftTabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -106,6 +138,7 @@ function App() {
               type="button"
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
+              className="nav-btn-hover"
               style={{
                 ...styles.navBtn,
                 ...(isActive ? styles.navBtnActive : {}),
@@ -133,6 +166,7 @@ function App() {
         <button
           type="button"
           onClick={() => setVoiceModalOpen(true)}
+          className="btn-interactive"
           style={styles.voiceBtn}
           aria-label="语音记录"
         >
@@ -150,6 +184,7 @@ function App() {
               type="button"
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
+              className="nav-btn-hover"
               style={{
                 ...styles.navBtn,
                 ...(isActive ? styles.navBtnActive : {}),
@@ -216,7 +251,7 @@ const styles = {
   },
   content: {
     flex: 1,
-    paddingBottom: '80px',
+    paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))',
     overflowY: 'auto',
   },
   loadingPanel: {
@@ -278,11 +313,11 @@ const styles = {
     width: '52px',
     height: '52px',
     borderRadius: '50%',
-    background: 'linear-gradient(135deg, #4f8ef7, #6366f1)',
+    background: 'var(--accent-gradient)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    boxShadow: '0 4px 16px rgba(79, 142, 247, 0.4)',
+    boxShadow: 'var(--shadow-button)',
     transition: 'transform 0.2s, box-shadow 0.2s',
   },
   voiceLabel: {

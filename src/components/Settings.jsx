@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useApp } from '../context/AppContext';
+import { useToast } from './Toast';
 import { X, Plus, Trash2, Eye, EyeOff, Check, Zap } from 'lucide-react';
 
 const PRESET_MODELS = [
@@ -13,8 +14,37 @@ const PRESET_MODELS = [
   'qwen/qwen-2.5-72b-instruct',
 ];
 
+// Reusable Modal styles (exported for other components)
+export const MODAL_STYLES = {
+  overlay: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: 'var(--bg-overlay)',
+    backdropFilter: 'blur(10px)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1000,
+    padding: '20px',
+  },
+  content: {
+    background: 'var(--bg-tertiary)',
+    borderRadius: '16px',
+    width: '100%',
+    maxWidth: '520px',
+    maxHeight: '85vh',
+    display: 'flex',
+    flexDirection: 'column',
+  },
+};
+
 const Settings = ({ isOpen, onClose }) => {
   const { state, dispatch } = useApp();
+  const showToast = useToast();
+  const firstInputRef = useRef(null);
   const ai = state.aiSettings || { apiKey: '', models: [], selectedModel: '' };
 
   const [apiKey, setApiKey] = useState(ai.apiKey || '');
@@ -49,6 +79,7 @@ const Settings = ({ isOpen, onClose }) => {
       payload: { apiKey, models, selectedModel },
     });
     setSaved(true);
+    showToast('设置已保存', 'success');
     setTimeout(() => setSaved(false), 2000);
   };
 
@@ -84,16 +115,40 @@ const Settings = ({ isOpen, onClose }) => {
     setTesting(false);
   };
 
+  // ESC key to close
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [isOpen, onClose]);
+
+  // Focus management
+  useEffect(() => {
+    if (isOpen && firstInputRef.current) {
+      // Small delay to ensure modal is fully rendered
+      setTimeout(() => {
+        firstInputRef.current?.focus();
+      }, 50);
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const presetsNotAdded = PRESET_MODELS.filter((m) => !models.includes(m));
 
   return (
-    <div style={styles.overlay} onClick={onClose}>
-      <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
+    <div className="modal-overlay" style={MODAL_STYLES.overlay} onClick={onClose}>
+      <div className="modal-content" style={MODAL_STYLES.content} onClick={(e) => e.stopPropagation()}>
         <div style={styles.header}>
           <h2 style={styles.title}>AI 设置</h2>
-          <button style={styles.closeBtn} onClick={onClose}>
+          <button style={styles.closeBtn} onClick={onClose} aria-label="关闭设置">
             <X size={20} />
           </button>
         </div>
@@ -104,6 +159,7 @@ const Settings = ({ isOpen, onClose }) => {
             <label style={styles.sectionLabel}>OpenRouter API Key</label>
             <div style={styles.apiKeyRow}>
               <input
+                ref={firstInputRef}
                 type={showKey ? 'text' : 'password'}
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
@@ -266,29 +322,6 @@ const Settings = ({ isOpen, onClose }) => {
 };
 
 const styles = {
-  overlay: {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    background: 'var(--bg-overlay)',
-    backdropFilter: 'blur(10px)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 1000,
-    padding: '20px',
-  },
-  modal: {
-    background: 'var(--bg-tertiary)',
-    borderRadius: '16px',
-    width: '100%',
-    maxWidth: '520px',
-    maxHeight: '85vh',
-    display: 'flex',
-    flexDirection: 'column',
-  },
   header: {
     display: 'flex',
     alignItems: 'center',
@@ -306,8 +339,12 @@ const styles = {
     border: 'none',
     color: 'var(--text-secondary)',
     cursor: 'pointer',
-    padding: '4px',
+    padding: '12px',
+    minWidth: '44px',
+    minHeight: '44px',
     display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   scrollArea: {
     padding: '20px 24px 24px',

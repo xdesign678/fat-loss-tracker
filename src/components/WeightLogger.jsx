@@ -1,16 +1,23 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import { formatDate } from '../utils/calculations';
 import { X, Plus, Minus } from 'lucide-react';
+import { useToast } from './Toast';
 
 const WeightLogger = ({ isOpen, onClose }) => {
   const { state, dispatch } = useApp();
+  const showToast = useToast();
   const [newWeight, setNewWeight] = useState('');
   const [weightChange, setWeightChange] = useState(null);
+  const inputRef = useRef(null);
 
   useEffect(() => {
     if (isOpen && state.profile.currentWeight) {
       setNewWeight(state.profile.currentWeight.toFixed(1));
+      // Focus input when modal opens
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
     }
   }, [isOpen, state.profile.currentWeight]);
 
@@ -33,13 +40,26 @@ const WeightLogger = ({ isOpen, onClose }) => {
   const handleSave = () => {
     if (newWeight && parseFloat(newWeight) > 0) {
       const today = formatDate(new Date());
+      const weight = parseFloat(newWeight);
+
       dispatch({
         type: 'LOG_WEIGHT',
         payload: {
           date: today,
-          weight: parseFloat(newWeight)
+          weight: weight
         }
       });
+
+      // Show toast with change info
+      if (weightChange !== null && weightChange !== 0) {
+        const changeText = weightChange > 0
+          ? `+${Math.abs(weightChange).toFixed(1)}kg`
+          : `-${Math.abs(weightChange).toFixed(1)}kg`;
+        showToast(`已记录 ${weight.toFixed(1)}kg，较上次 ${changeText}`, 'success');
+      } else {
+        showToast(`已记录 ${weight.toFixed(1)}kg`, 'success');
+      }
+
       onClose();
     }
   };
@@ -55,10 +75,28 @@ const WeightLogger = ({ isOpen, onClose }) => {
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') {
       handleSave();
+    } else if (e.key === 'Escape') {
+      onClose();
     }
   };
 
+  // Get recent weight records
+  const getRecentRecords = () => {
+    return state.weightHistory.slice(-5).reverse();
+  };
+
   if (!isOpen) return null;
+
+  // Handle ESC key
+  useEffect(() => {
+    const handleEsc = (e) => {
+      if (e.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [isOpen, onClose]);
 
   const overlayStyle = {
     position: 'fixed',
@@ -94,6 +132,8 @@ const WeightLogger = ({ isOpen, onClose }) => {
     color: 'var(--text-secondary)',
     cursor: 'pointer',
     padding: '8px',
+    minWidth: '44px',
+    minHeight: '44px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -190,9 +230,58 @@ const WeightLogger = ({ isOpen, onClose }) => {
     boxShadow: 'var(--shadow-button)'
   };
 
+  const historyContainerStyle = {
+    marginTop: '24px',
+    paddingTop: '24px',
+    borderTop: '1px solid var(--border-light)'
+  };
+
+  const historyTitleStyle = {
+    fontSize: '0.9em',
+    color: 'var(--text-secondary)',
+    marginBottom: '12px',
+    textTransform: 'uppercase',
+    letterSpacing: '1px'
+  };
+
+  const historyListStyle = {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px'
+  };
+
+  const historyItemStyle = {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '8px 12px',
+    background: 'var(--border)',
+    borderRadius: '8px',
+    fontSize: '0.95em'
+  };
+
+  const historyDateStyle = {
+    color: 'var(--text-secondary)'
+  };
+
+  const historyWeightStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    fontWeight: '600',
+    color: 'var(--text-heading)'
+  };
+
+  const historyChangeStyle = (change) => ({
+    fontSize: '0.9em',
+    color: change > 0 ? 'var(--danger)' : change < 0 ? 'var(--success-alt)' : 'var(--text-secondary)'
+  });
+
+  const recentRecords = getRecentRecords();
+
   return (
-    <div style={overlayStyle} onClick={onClose}>
-      <div style={modalStyle} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="记录体重">
+    <div style={overlayStyle} onClick={onClose} className="modal-overlay">
+      <div style={modalStyle} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="记录体重" className="modal-content">
         <button
           type="button"
           style={closeButtonStyle}
@@ -219,57 +308,97 @@ const WeightLogger = ({ isOpen, onClose }) => {
           </div>
         </div>
 
-        <div style={inputContainerStyle}>
-          <button
-            type="button"
-            style={adjustButtonStyle}
-            onClick={() => handleAdjust(-0.1)}
-            aria-label="减少 0.1 千克"
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'var(--accent)';
-              e.currentTarget.style.transform = 'scale(1.05)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'var(--border)';
-              e.currentTarget.style.transform = 'scale(1)';
-            }}
-          >
-            <Minus size={24} />
-          </button>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {/* Quick adjustment buttons row */}
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
+            <button
+              type="button"
+              style={{ padding: '6px 12px', fontSize: '0.85em', background: 'var(--border)', border: 'none', borderRadius: '8px', color: 'var(--text-secondary)', cursor: 'pointer', transition: 'all 0.2s' }}
+              onClick={() => handleAdjust(-1)}
+              className="btn-interactive"
+            >
+              -1.0kg
+            </button>
+            <button
+              type="button"
+              style={{ padding: '6px 12px', fontSize: '0.85em', background: 'var(--border)', border: 'none', borderRadius: '8px', color: 'var(--text-secondary)', cursor: 'pointer', transition: 'all 0.2s' }}
+              onClick={() => handleAdjust(-0.5)}
+              className="btn-interactive"
+            >
+              -0.5kg
+            </button>
+            <button
+              type="button"
+              style={{ padding: '6px 12px', fontSize: '0.85em', background: 'var(--border)', border: 'none', borderRadius: '8px', color: 'var(--text-secondary)', cursor: 'pointer', transition: 'all 0.2s' }}
+              onClick={() => handleAdjust(0.5)}
+              className="btn-interactive"
+            >
+              +0.5kg
+            </button>
+            <button
+              type="button"
+              style={{ padding: '6px 12px', fontSize: '0.85em', background: 'var(--border)', border: 'none', borderRadius: '8px', color: 'var(--text-secondary)', cursor: 'pointer', transition: 'all 0.2s' }}
+              onClick={() => handleAdjust(1)}
+              className="btn-interactive"
+            >
+              +1.0kg
+            </button>
+          </div>
 
-          <input
-            type="text"
-            inputMode="decimal"
-            value={newWeight}
-            onChange={handleInputChange}
-            onKeyPress={handleKeyPress}
-            style={inputStyle}
-            placeholder="0.0"
-            aria-label="输入当前体重"
-            onFocus={(e) => {
-              e.currentTarget.style.borderColor = 'var(--accent)';
-            }}
-            onBlur={(e) => {
-              e.currentTarget.style.borderColor = 'var(--border-light)';
-            }}
-          />
+          {/* Main input with +/- 0.1 buttons */}
+          <div style={inputContainerStyle}>
+            <button
+              type="button"
+              style={adjustButtonStyle}
+              onClick={() => handleAdjust(-0.1)}
+              aria-label="减少 0.1 千克"
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'var(--accent)';
+                e.currentTarget.style.transform = 'scale(1.05)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'var(--border)';
+                e.currentTarget.style.transform = 'scale(1)';
+              }}
+            >
+              <Minus size={24} />
+            </button>
 
-          <button
-            type="button"
-            style={adjustButtonStyle}
-            onClick={() => handleAdjust(0.1)}
-            aria-label="增加 0.1 千克"
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'var(--accent)';
-              e.currentTarget.style.transform = 'scale(1.05)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'var(--border)';
-              e.currentTarget.style.transform = 'scale(1)';
-            }}
-          >
-            <Plus size={24} />
-          </button>
+            <input
+              ref={inputRef}
+              type="text"
+              inputMode="decimal"
+              value={newWeight}
+              onChange={handleInputChange}
+              onKeyPress={handleKeyPress}
+              style={inputStyle}
+              placeholder="0.0"
+              aria-label="输入当前体重"
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = 'var(--accent)';
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = 'var(--border-light)';
+              }}
+            />
+
+            <button
+              type="button"
+              style={adjustButtonStyle}
+              onClick={() => handleAdjust(0.1)}
+              aria-label="增加 0.1 千克"
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'var(--accent)';
+                e.currentTarget.style.transform = 'scale(1.05)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'var(--border)';
+                e.currentTarget.style.transform = 'scale(1)';
+              }}
+            >
+              <Plus size={24} />
+            </button>
+          </div>
         </div>
 
         <div style={changeIndicatorStyle}>
@@ -291,6 +420,7 @@ const WeightLogger = ({ isOpen, onClose }) => {
           onClick={handleSave}
           disabled={!newWeight || parseFloat(newWeight) <= 0}
           aria-label="保存体重记录"
+          className="btn-interactive"
           onMouseEnter={(e) => {
             if (!e.currentTarget.disabled) {
               e.currentTarget.style.transform = 'translateY(-2px)';
@@ -304,6 +434,32 @@ const WeightLogger = ({ isOpen, onClose }) => {
         >
           保存记录
         </button>
+
+        {/* Recent history */}
+        {recentRecords.length > 0 && (
+          <div style={historyContainerStyle}>
+            <div style={historyTitleStyle}>最近记录</div>
+            <div style={historyListStyle}>
+              {recentRecords.map((record, index) => {
+                const prevRecord = index < recentRecords.length - 1 ? recentRecords[index + 1] : null;
+                const change = prevRecord ? record.weight - prevRecord.weight : null;
+                return (
+                  <div key={record.date} style={historyItemStyle}>
+                    <span style={historyDateStyle}>{record.date}</span>
+                    <div style={historyWeightStyle}>
+                      <span>{record.weight.toFixed(1)} kg</span>
+                      {change !== null && (
+                        <span style={historyChangeStyle(change)}>
+                          {change > 0 ? `+${change.toFixed(1)}` : change.toFixed(1)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
