@@ -66,7 +66,7 @@ const WeightLogger = ({ isOpen, onClose }) => {
     left: 0,
     right: 0,
     bottom: 0,
-    background: 'rgba(0, 0, 0, 0.7)',
+    background: 'var(--bg-overlay)',
     backdropFilter: 'blur(10px)',
     display: 'flex',
     alignItems: 'center',
@@ -76,12 +76,12 @@ const WeightLogger = ({ isOpen, onClose }) => {
   };
 
   const modalStyle = {
-    background: '#1a1e28',
+    background: 'var(--bg-tertiary)',
     borderRadius: '20px',
     padding: '32px',
     maxWidth: '400px',
     width: '100%',
-    boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
+    boxShadow: 'var(--shadow-modal)',
     position: 'relative'
   };
 
@@ -91,7 +91,7 @@ const WeightLogger = ({ isOpen, onClose }) => {
     right: '16px',
     background: 'transparent',
     border: 'none',
-    color: '#9ca3af',
+    color: 'var(--text-secondary)',
     cursor: 'pointer',
     padding: '8px',
     display: 'flex',
@@ -104,7 +104,7 @@ const WeightLogger = ({ isOpen, onClose }) => {
   const titleStyle = {
     fontSize: '1.8em',
     fontWeight: '700',
-    color: '#ffffff',
+    color: 'var(--text-heading)',
     marginBottom: '24px',
     textAlign: 'center'
   };
@@ -117,7 +117,7 @@ const WeightLogger = ({ isOpen, onClose }) => {
   const weightDisplayStyle = {
     fontSize: '3em',
     fontWeight: '700',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    background: 'var(--weight-gradient)',
     WebkitBackgroundClip: 'text',
     WebkitTextFillColor: 'transparent',
     backgroundClip: 'text',
@@ -126,7 +126,7 @@ const WeightLogger = ({ isOpen, onClose }) => {
 
   const labelStyle = {
     fontSize: '0.9em',
-    color: '#9ca3af',
+    color: 'var(--text-secondary)',
     textTransform: 'uppercase',
     letterSpacing: '1px'
   };
@@ -143,9 +143,9 @@ const WeightLogger = ({ isOpen, onClose }) => {
     width: '48px',
     height: '48px',
     borderRadius: '50%',
-    background: '#252a38',
+    background: 'var(--border)',
     border: 'none',
-    color: '#ffffff',
+    color: 'var(--text-heading)',
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
@@ -160,10 +160,10 @@ const WeightLogger = ({ isOpen, onClose }) => {
     fontSize: '2em',
     fontWeight: '600',
     textAlign: 'center',
-    background: '#252a38',
-    border: '2px solid #3a3f52',
+    background: 'var(--border)',
+    border: '2px solid var(--border-light)',
     borderRadius: '12px',
-    color: '#ffffff',
+    color: 'var(--text-heading)',
     outline: 'none',
     transition: 'border-color 0.2s'
   };
@@ -173,7 +173,7 @@ const WeightLogger = ({ isOpen, onClose }) => {
     marginBottom: '24px',
     fontSize: '1.1em',
     fontWeight: '600',
-    color: weightChange === null ? '#9ca3af' : weightChange > 0 ? '#ef4444' : weightChange < 0 ? '#10b981' : '#9ca3af'
+    color: weightChange === null ? 'var(--text-secondary)' : weightChange > 0 ? 'var(--danger)' : weightChange < 0 ? 'var(--success-alt)' : 'var(--text-secondary)'
   };
 
   const saveButtonStyle = {
@@ -182,12 +182,12 @@ const WeightLogger = ({ isOpen, onClose }) => {
     fontSize: '1.1em',
     fontWeight: '600',
     color: '#ffffff',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    background: 'var(--weight-gradient)',
     border: 'none',
     borderRadius: '12px',
     cursor: 'pointer',
     transition: 'all 0.2s',
-    boxShadow: '0 4px 12px rgba(102, 126, 234, 0.4)'
+    boxShadow: 'var(--shadow-button)'
   };
 
   return (
@@ -199,12 +199,12 @@ const WeightLogger = ({ isOpen, onClose }) => {
           onClick={onClose}
           aria-label="关闭体重记录弹窗"
           onMouseEnter={(e) => {
-            e.currentTarget.style.background = '#252a38';
-            e.currentTarget.style.color = '#ffffff';
+            e.currentTarget.style.background = 'var(--border)';
+            e.currentTarget.style.color = 'var(--text-heading)';
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.background = 'transparent';
-            e.currentTarget.style.color = '#9ca3af';
+            e.currentTarget.style.color = 'var(--text-secondary)';
           }}
         >
           <X size={24} />
@@ -226,11 +226,11 @@ const WeightLogger = ({ isOpen, onClose }) => {
             onClick={() => handleAdjust(-0.1)}
             aria-label="减少 0.1 千克"
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = '#4f8ef7';
+              e.currentTarget.style.background = 'var(--accent)';
               e.currentTarget.style.transform = 'scale(1.05)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = '#252a38';
+              e.currentTarget.style.background = 'var(--border)';
               e.currentTarget.style.transform = 'scale(1)';
             }}
           >
@@ -247,10 +247,10 @@ const WeightLogger = ({ isOpen, onClose }) => {
             placeholder="0.0"
             aria-label="输入当前体重"
             onFocus={(e) => {
-              e.currentTarget.style.borderColor = '#667eea';
+              e.currentTarget.style.borderColor = 'var(--accent)';
             }}
             onBlur={(e) => {
-              e.currentTarget.style.borderColor = '#3a3f52';
+              e.currentTarget.style.borderColor = 'var(--border-light)';
             }}
           />
 
@@ -260,11 +260,11 @@ const WeightLogger = ({ isOpen, onClose }) => {
             onClick={() => handleAdjust(0.1)}
             aria-label="增加 0.1 千克"
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = '#4f8ef7';
+              e.currentTarget.style.background = 'var(--accent)';
               e.currentTarget.style.transform = 'scale(1.05)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = '#252a38';
+              e.currentTarget.style.background = 'var(--border)';
               e.currentTarget.style.transform = 'scale(1)';
             }}
           >
@@ -294,12 +294,12 @@ const WeightLogger = ({ isOpen, onClose }) => {
           onMouseEnter={(e) => {
             if (!e.currentTarget.disabled) {
               e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = '0 6px 20px rgba(102, 126, 234, 0.5)';
+              e.currentTarget.style.boxShadow = 'var(--shadow-button-hover)';
             }
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.4)';
+            e.currentTarget.style.boxShadow = 'var(--shadow-button)';
           }}
         >
           保存记录

@@ -209,16 +209,16 @@ const ExerciseLogger = ({ selectedDate, onDateChange }) => {
               aria-label={`${category} 分类，${expandedCategory === category ? '收起' : '展开'}`}
             >
               <div style={styles.categoryTitleRow}>
-                <Activity size={18} style={{ color: '#4f8ef7' }} />
+                <Activity size={18} style={{ color: 'var(--accent)' }} />
                 <span style={styles.categoryTitle}>{category}</span>
                 <span style={styles.categoryCount}>
                   {groupedExercises[category].length}项
                 </span>
               </div>
               {expandedCategory === category ? (
-                <ChevronUp size={20} style={{ color: '#9ca3af' }} />
+                <ChevronUp size={20} style={{ color: 'var(--text-secondary)' }} />
               ) : (
-                <ChevronDown size={20} style={{ color: '#9ca3af' }} />
+                <ChevronDown size={20} style={{ color: 'var(--text-secondary)' }} />
               )}
             </button>
 
@@ -485,24 +485,24 @@ const styles = {
   sectionTitle: {
     fontSize: '16px',
     fontWeight: '600',
-    color: '#fff',
+    color: 'var(--text-heading)',
     margin: 0
   },
   manualButton: {
     display: 'flex',
     alignItems: 'center',
     padding: '8px 16px',
-    background: '#1a1e28',
-    border: '1px solid #252a38',
+    background: 'var(--bg-tertiary)',
+    border: '1px solid var(--border)',
     borderRadius: '8px',
-    color: '#fff',
+    color: 'var(--text-heading)',
     fontSize: '14px',
     fontWeight: '500',
     cursor: 'pointer',
     transition: 'background 0.3s'
   },
   categoryCard: {
-    background: '#151820',
+    background: 'var(--bg-secondary)',
     borderRadius: '8px',
     marginBottom: '8px',
     overflow: 'hidden'
@@ -528,21 +528,21 @@ const styles = {
   categoryTitle: {
     fontSize: '15px',
     fontWeight: '500',
-    color: '#fff'
+    color: 'var(--text-heading)'
   },
   categoryCount: {
     fontSize: '13px',
-    color: '#6b7280',
+    color: 'var(--text-muted)',
     marginLeft: 'auto',
     marginRight: '12px'
   },
   exerciseList: {
-    borderTop: '1px solid #252a38'
+    borderTop: '1px solid var(--border)'
   },
   exerciseItem: {
     width: '100%',
     padding: '12px 14px',
-    borderBottom: '1px solid #252a38',
+    borderBottom: '1px solid var(--border)',
     cursor: 'pointer',
     transition: 'background 0.2s',
     background: 'transparent',
@@ -564,7 +564,7 @@ const styles = {
   exerciseName: {
     fontSize: '14px',
     fontWeight: '500',
-    color: '#fff'
+    color: 'var(--text-heading)'
   },
   impactBadge: {
     padding: '2px 8px',
@@ -577,11 +577,11 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     fontSize: '13px',
-    color: '#9ca3af'
+    color: 'var(--text-secondary)'
   },
   divider: {
     margin: '0 8px',
-    color: '#3f4451'
+    color: 'var(--border-divider)'
   },
   todaySection: {
     marginBottom: '20px'
@@ -589,9 +589,9 @@ const styles = {
   emptyState: {
     textAlign: 'center',
     padding: '40px',
-    color: '#6b7280',
+    color: 'var(--text-muted)',
     fontSize: '14px',
-    background: '#151820',
+    background: 'var(--bg-secondary)',
     borderRadius: '8px'
   },
   logsList: {
@@ -602,7 +602,7 @@ const styles = {
   logItem: {
     display: 'flex',
     alignItems: 'center',
-    background: '#151820',
+    background: 'var(--bg-secondary)',
     borderRadius: '8px',
     padding: '12px',
     transition: 'background 0.2s'
@@ -619,23 +619,23 @@ const styles = {
   logName: {
     fontSize: '15px',
     fontWeight: '500',
-    color: '#fff'
+    color: 'var(--text-heading)'
   },
   logTime: {
     fontSize: '12px',
-    color: '#6b7280'
+    color: 'var(--text-muted)'
   },
   logInfo: {
     display: 'flex',
     alignItems: 'center',
     fontSize: '13px',
-    color: '#9ca3af'
+    color: 'var(--text-secondary)'
   },
   logCategory: {
-    color: '#4f8ef7'
+    color: 'var(--accent)'
   },
   logCalories: {
-    color: '#2ecc71',
+    color: 'var(--success)',
     fontWeight: '500'
   },
   deleteButton: {
@@ -647,7 +647,7 @@ const styles = {
     background: 'transparent',
     border: 'none',
     borderRadius: '6px',
-    color: '#6b7280',
+    color: 'var(--text-muted)',
     cursor: 'pointer',
     transition: 'all 0.2s',
     marginLeft: '8px'
@@ -671,7 +671,7 @@ const styles = {
     alignItems: 'center'
   },
   summary: {
-    background: '#151820',
+    background: 'var(--bg-secondary)',
     borderRadius: '12px',
     padding: '20px'
   },
@@ -683,12 +683,12 @@ const styles = {
   summaryLabel: {
     fontSize: '16px',
     fontWeight: '500',
-    color: '#9ca3af'
+    color: 'var(--text-secondary)'
   },
   summaryValue: {
     fontSize: '28px',
     fontWeight: '700',
-    color: '#2ecc71'
+    color: 'var(--success)'
   },
   modalOverlay: {
     position: 'fixed',
@@ -705,7 +705,7 @@ const styles = {
     padding: '20px'
   },
   modal: {
-    background: '#1a1e28',
+    background: 'var(--bg-tertiary)',
     borderRadius: '16px',
     padding: '24px',
     width: '100%',
@@ -716,14 +716,14 @@ const styles = {
   modalTitle: {
     fontSize: '18px',
     fontWeight: '600',
-    color: '#fff',
+    color: 'var(--text-heading)',
     marginBottom: '20px'
   },
   modalContent: {
     marginBottom: '20px'
   },
   exerciseDetails: {
-    background: '#151820',
+    background: 'var(--bg-secondary)',
     borderRadius: '8px',
     padding: '12px',
     marginBottom: '16px'
@@ -736,19 +736,19 @@ const styles = {
   },
   detailLabel: {
     fontSize: '13px',
-    color: '#9ca3af'
+    color: 'var(--text-secondary)'
   },
   detailValue: {
     fontSize: '14px',
     fontWeight: '500',
-    color: '#fff'
+    color: 'var(--text-heading)'
   },
   description: {
     marginTop: '8px',
     paddingTop: '8px',
     borderTop: '1px solid #252a38',
     fontSize: '13px',
-    color: '#9ca3af',
+    color: 'var(--text-secondary)',
     lineHeight: '1.5'
   },
   label: {
@@ -756,15 +756,15 @@ const styles = {
     flexDirection: 'column',
     marginBottom: '16px',
     fontSize: '14px',
-    color: '#9ca3af'
+    color: 'var(--text-secondary)'
   },
   input: {
     marginTop: '6px',
     padding: '10px',
-    background: '#151820',
+    background: 'var(--bg-secondary)',
     border: '1px solid #252a38',
     borderRadius: '6px',
-    color: '#fff',
+    color: 'var(--text-heading)',
     fontSize: '14px',
     outline: 'none'
   },
@@ -773,22 +773,22 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: '16px',
-    background: '#151820',
+    background: 'var(--bg-secondary)',
     borderRadius: '8px',
     marginBottom: '8px'
   },
   previewLabel: {
     fontSize: '14px',
-    color: '#9ca3af'
+    color: 'var(--text-secondary)'
   },
   previewValue: {
     fontSize: '24px',
     fontWeight: '700',
-    color: '#2ecc71'
+    color: 'var(--success)'
   },
   hint: {
     fontSize: '12px',
-    color: '#6b7280',
+    color: 'var(--text-muted)',
     textAlign: 'center',
     fontStyle: 'italic'
   },
@@ -799,10 +799,10 @@ const styles = {
   cancelButton: {
     flex: 1,
     padding: '12px',
-    background: '#151820',
+    background: 'var(--bg-secondary)',
     border: '1px solid #252a38',
     borderRadius: '8px',
-    color: '#fff',
+    color: 'var(--text-heading)',
     fontSize: '14px',
     fontWeight: '500',
     cursor: 'pointer',
@@ -811,7 +811,7 @@ const styles = {
   confirmButton: {
     flex: 1,
     padding: '12px',
-    background: '#4f8ef7',
+    background: 'var(--accent)',
     border: 'none',
     borderRadius: '8px',
     color: '#fff',

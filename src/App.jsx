@@ -1,6 +1,8 @@
 import { Suspense, lazy, useState } from 'react';
 import { useApp } from './context/AppContext';
+import { useTheme } from './context/ThemeContext';
 import SetupScreen from './components/SetupScreen';
+<<<<<<< HEAD
 import { formatDate } from './utils/calculations';
 import { Home, Utensils, Dumbbell, BookOpen, Scale, Settings as SettingsIcon } from 'lucide-react';
 
@@ -12,18 +14,38 @@ const WeightLogger = lazy(() => import('./components/WeightLogger'));
 const Settings = lazy(() => import('./components/Settings'));
 
 const tabs = [
+=======
+import Dashboard from './components/Dashboard';
+import FoodLogger from './components/FoodLogger';
+import ExerciseLogger from './components/ExerciseLogger';
+import HealthTips from './components/HealthTips';
+import WeightLogger from './components/WeightLogger';
+import Settings from './components/Settings';
+import VoiceRecorder from './components/VoiceRecorder';
+import { Home, Utensils, Dumbbell, BookOpen, Mic, Scale, Settings as SettingsIcon, Sun, Moon } from 'lucide-react';
+
+const leftTabs = [
+>>>>>>> 0ee8057 (feat: 添加语音记录功能和主题系统)
   { id: 'dashboard', label: '仪表盘', icon: Home },
-  { id: 'food', label: '饮食记录', icon: Utensils },
-  { id: 'exercise', label: '运动记录', icon: Dumbbell },
+  { id: 'food', label: '饮食', icon: Utensils },
+];
+
+const rightTabs = [
+  { id: 'exercise', label: '运动', icon: Dumbbell },
   { id: 'tips', label: '知识库', icon: BookOpen },
 ];
 
 function App() {
   const { state } = useApp();
+  const { theme, toggleTheme } = useTheme();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [weightModalOpen, setWeightModalOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+<<<<<<< HEAD
   const [selectedDate, setSelectedDate] = useState(() => formatDate(new Date()));
+=======
+  const [voiceModalOpen, setVoiceModalOpen] = useState(false);
+>>>>>>> 0ee8057 (feat: 添加语音记录功能和主题系统)
 
   if (!state.setupComplete) {
     return <SetupScreen />;
@@ -58,6 +80,7 @@ function App() {
 
   return (
     <div style={styles.container}>
+<<<<<<< HEAD
       {/* Settings button */}
       <button
         type="button"
@@ -68,6 +91,28 @@ function App() {
       >
         <SettingsIcon size={18} color={state.aiSettings?.apiKey ? '#4f8ef7' : '#6b7494'} />
       </button>
+=======
+      {/* Top right buttons */}
+      <div style={styles.topButtons}>
+        <button
+          onClick={toggleTheme}
+          style={styles.topBtn}
+          title={theme === 'dark' ? '切换浅色模式' : '切换深色模式'}
+        >
+          {theme === 'dark'
+            ? <Sun size={18} color="var(--text-muted)" />
+            : <Moon size={18} color="var(--text-muted)" />
+          }
+        </button>
+        <button
+          onClick={() => setSettingsOpen(true)}
+          style={styles.topBtn}
+          title="AI 设置"
+        >
+          <SettingsIcon size={18} color={state.aiSettings?.apiKey ? 'var(--accent)' : 'var(--text-nav)'} />
+        </button>
+      </div>
+>>>>>>> 0ee8057 (feat: 添加语音记录功能和主题系统)
 
       <div style={styles.content}>
         <Suspense fallback={<div style={styles.loadingPanel}>页面加载中...</div>}>
@@ -77,7 +122,7 @@ function App() {
 
       {/* Bottom Navigation */}
       <nav style={styles.nav}>
-        {tabs.map((tab) => {
+        {leftTabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
           return (
@@ -94,12 +139,12 @@ function App() {
             >
               <Icon
                 size={20}
-                color={isActive ? '#4f8ef7' : '#6b7494'}
+                color={isActive ? 'var(--accent)' : 'var(--text-nav)'}
                 strokeWidth={isActive ? 2.5 : 1.8}
               />
               <span style={{
                 ...styles.navLabel,
-                color: isActive ? '#4f8ef7' : '#6b7494',
+                color: isActive ? 'var(--accent)' : 'var(--text-nav)',
                 fontWeight: isActive ? 600 : 400,
               }}>
                 {tab.label}
@@ -107,18 +152,55 @@ function App() {
             </button>
           );
         })}
-        {/* Weight button */}
+
+        {/* Center voice button */}
         <button
+<<<<<<< HEAD
           type="button"
           onClick={() => setWeightModalOpen(true)}
           style={styles.navBtn}
           aria-label="记录体重"
+=======
+          onClick={() => setVoiceModalOpen(true)}
+          style={styles.voiceBtn}
+>>>>>>> 0ee8057 (feat: 添加语音记录功能和主题系统)
         >
-          <Scale size={20} color="#6b7494" strokeWidth={1.8} />
-          <span style={{ ...styles.navLabel, color: '#6b7494' }}>称重</span>
+          <div style={styles.voiceBtnInner}>
+            <Mic size={24} color="#fff" strokeWidth={2.2} />
+          </div>
+          <span style={styles.voiceLabel}>语音</span>
         </button>
+
+        {rightTabs.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              style={{
+                ...styles.navBtn,
+                ...(isActive ? styles.navBtnActive : {}),
+              }}
+            >
+              <Icon
+                size={20}
+                color={isActive ? 'var(--accent)' : 'var(--text-nav)'}
+                strokeWidth={isActive ? 2.5 : 1.8}
+              />
+              <span style={{
+                ...styles.navLabel,
+                color: isActive ? 'var(--accent)' : 'var(--text-nav)',
+                fontWeight: isActive ? 600 : 400,
+              }}>
+                {tab.label}
+              </span>
+            </button>
+          );
+        })}
       </nav>
 
+<<<<<<< HEAD
       <Suspense fallback={null}>
         {weightModalOpen && (
           <WeightLogger isOpen={weightModalOpen} onClose={() => setWeightModalOpen(false)} />
@@ -127,6 +209,11 @@ function App() {
           <Settings isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
         )}
       </Suspense>
+=======
+      <WeightLogger isOpen={weightModalOpen} onClose={() => setWeightModalOpen(false)} />
+      <Settings isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      <VoiceRecorder isOpen={voiceModalOpen} onClose={() => setVoiceModalOpen(false)} />
+>>>>>>> 0ee8057 (feat: 添加语音记录功能和主题系统)
     </div>
   );
 }
@@ -134,18 +221,22 @@ function App() {
 const styles = {
   container: {
     minHeight: '100vh',
-    background: '#0d0f14',
+    background: 'var(--bg-primary)',
     display: 'flex',
     flexDirection: 'column',
     position: 'relative',
   },
-  settingsBtn: {
+  topButtons: {
     position: 'fixed',
     top: '12px',
     right: '12px',
     zIndex: 50,
-    background: 'rgba(21,24,32,0.9)',
-    border: '1px solid #252a38',
+    display: 'flex',
+    gap: '8px',
+  },
+  topBtn: {
+    background: 'var(--bg-blur)',
+    border: '1px solid var(--border)',
     borderRadius: '10px',
     padding: '8px',
     cursor: 'pointer',
@@ -173,10 +264,10 @@ const styles = {
     left: 0,
     right: 0,
     height: '72px',
-    background: 'rgba(21,24,32,0.95)',
+    background: 'var(--bg-nav)',
     backdropFilter: 'blur(20px)',
     WebkitBackdropFilter: 'blur(20px)',
-    borderTop: '1px solid #252a38',
+    borderTop: '1px solid var(--border)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-around',
@@ -196,11 +287,40 @@ const styles = {
     transition: 'all 0.2s',
   },
   navBtnActive: {
-    background: 'rgba(79,142,247,0.1)',
+    background: 'var(--accent-bg)',
   },
   navLabel: {
     fontSize: '11px',
     letterSpacing: '0.3px',
+  },
+  voiceBtn: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '2px',
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    padding: '0',
+    marginTop: '-28px',
+    position: 'relative',
+  },
+  voiceBtnInner: {
+    width: '52px',
+    height: '52px',
+    borderRadius: '50%',
+    background: 'linear-gradient(135deg, #4f8ef7, #6366f1)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: '0 4px 16px rgba(79, 142, 247, 0.4)',
+    transition: 'transform 0.2s, box-shadow 0.2s',
+  },
+  voiceLabel: {
+    fontSize: '10px',
+    color: 'var(--text-nav)',
+    letterSpacing: '0.3px',
+    marginTop: '2px',
   },
 };
 

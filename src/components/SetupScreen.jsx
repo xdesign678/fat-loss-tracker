@@ -52,7 +52,7 @@ const SetupScreen = () => {
   const styles = {
     container: {
       minHeight: '100vh',
-      background: '#0d0f14',
+      background: 'var(--bg-primary)',
       padding: '40px 20px',
       display: 'flex',
       flexDirection: 'column',
@@ -62,12 +62,12 @@ const SetupScreen = () => {
     card: {
       maxWidth: '600px',
       width: '100%',
-      background: 'rgba(21, 24, 32, 0.8)',
+      background: 'var(--bg-blur)',
       backdropFilter: 'blur(20px)',
       borderRadius: '24px',
-      border: '1px solid rgba(79, 142, 247, 0.1)',
+      border: '1px solid var(--accent-border-subtle)',
       padding: '48px',
-      boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)'
+      boxShadow: 'var(--shadow-modal)'
     },
     header: {
       textAlign: 'center',
@@ -76,14 +76,14 @@ const SetupScreen = () => {
     title: {
       fontSize: '32px',
       fontWeight: '700',
-      background: 'linear-gradient(135deg, #4f8ef7, #7c5cf7)',
+      background: 'var(--accent-gradient)',
       WebkitBackgroundClip: 'text',
       WebkitTextFillColor: 'transparent',
       marginBottom: '12px'
     },
     subtitle: {
       fontSize: '16px',
-      color: '#9198b0',
+      color: 'var(--text-secondary)',
       lineHeight: '1.6'
     },
     form: {
@@ -99,25 +99,25 @@ const SetupScreen = () => {
     label: {
       fontSize: '14px',
       fontWeight: '600',
-      color: '#e8eaf0',
+      color: 'var(--text-primary)',
       display: 'flex',
       alignItems: 'center',
       gap: '8px'
     },
     inputWrapper: {
       position: 'relative',
-      background: 'linear-gradient(135deg, rgba(79, 142, 247, 0.1), rgba(124, 92, 247, 0.1))',
+      background: 'var(--input-gradient-border)',
       borderRadius: '12px',
       padding: '1px'
     },
     input: {
       width: '100%',
       padding: '14px 16px',
-      background: '#0d0f14',
+      background: 'var(--bg-primary)',
       border: 'none',
       borderRadius: '11px',
       fontSize: '16px',
-      color: '#e8eaf0',
+      color: 'var(--text-primary)',
       outline: 'none',
       transition: 'all 0.3s ease'
     },
@@ -129,31 +129,31 @@ const SetupScreen = () => {
     },
     activityOption: {
       padding: '16px',
-      background: '#0d0f14',
-      border: '2px solid #252a38',
+      background: 'var(--bg-primary)',
+      border: '2px solid var(--border)',
       borderRadius: '12px',
       cursor: 'pointer',
       transition: 'all 0.3s ease',
       textAlign: 'center'
     },
     activityOptionActive: {
-      background: 'rgba(79, 142, 247, 0.1)',
-      border: '2px solid #4f8ef7',
+      background: 'var(--accent-bg)',
+      border: '2px solid var(--accent)',
       transform: 'scale(1.02)'
     },
     activityLabel: {
       fontSize: '14px',
       fontWeight: '600',
-      color: '#e8eaf0',
+      color: 'var(--text-primary)',
       marginBottom: '4px'
     },
     activityDesc: {
       fontSize: '12px',
-      color: '#9198b0'
+      color: 'var(--text-secondary)'
     },
     bmiCard: {
-      background: 'rgba(79, 142, 247, 0.05)',
-      border: '1px solid rgba(79, 142, 247, 0.2)',
+      background: 'var(--accent-bg)',
+      border: '1px solid var(--accent-border)',
       borderRadius: '12px',
       padding: '20px',
       marginTop: '8px'
@@ -166,12 +166,12 @@ const SetupScreen = () => {
     },
     bmiLabel: {
       fontSize: '14px',
-      color: '#9198b0'
+      color: 'var(--text-secondary)'
     },
     bmiValue: {
       fontSize: '18px',
       fontWeight: '700',
-      color: '#4f8ef7'
+      color: 'var(--accent)'
     },
     button: {
       width: '100%',

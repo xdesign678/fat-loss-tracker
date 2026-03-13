@@ -652,13 +652,13 @@ const FoodLogger = ({ selectedDate, onDateChange }) => {
                 borderRadius: '12px',
                 fontSize: '11px',
                 fontWeight: '600',
-                background: hasAI ? 'rgba(46,204,113,0.15)' : 'rgba(245,158,11,0.15)',
-                color: hasAI ? '#2ecc71' : '#f59e0b',
+                background: hasAI ? 'var(--success-bg-badge)' : 'var(--warning-bg)',
+                color: hasAI ? 'var(--success)' : 'var(--warning)',
               }}>
                 {hasAI ? `AI: ${aiSettings.selectedModel.split('/').pop()}` : '本地匹配模式'}
               </span>
               {!hasAI && (
-                <span style={{ fontSize: '11px', color: '#6b7280' }}>
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                   在设置中配置 API 可识别任意食物
                 </span>
               )}
@@ -685,32 +685,32 @@ const FoodLogger = ({ selectedDate, onDateChange }) => {
                 </div>
               )}
               {aiLoading && (
-                <div style={{ textAlign: 'center', padding: '20px', color: '#4f8ef7', fontSize: '14px' }}>
+                <div style={{ textAlign: 'center', padding: '20px', color: 'var(--accent)', fontSize: '14px' }}>
                   AI 正在分析中...
                 </div>
               )}
               {aiError && (
-                <div style={{ color: '#ef4444', fontSize: '13px', marginTop: '8px', padding: '8px 12px', background: 'rgba(239,68,68,0.1)', borderRadius: '6px' }}>
+                <div style={{ color: 'var(--danger)', fontSize: '13px', marginTop: '8px', padding: '8px 12px', background: 'var(--danger-bg)', borderRadius: '6px' }}>
                   {aiError}
                 </div>
               )}
               {aiResults.length > 0 && (
                 <div style={{ marginTop: '12px' }}>
-                  <div style={{ fontSize: '13px', color: '#9ca3af', marginBottom: '8px' }}>
+                  <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
                     识别到 {aiResults.length} 项食物：
                   </div>
                   {aiResults.map((item, i) => (
-                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', background: '#151820', borderRadius: '8px', marginBottom: '6px' }}>
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', background: 'var(--bg-secondary)', borderRadius: '8px', marginBottom: '6px' }}>
                       <div>
-                        <span style={{ color: '#fff', fontSize: '14px', fontWeight: '500' }}>{item.name}</span>
-                        <span style={{ color: '#6b7280', fontSize: '12px', marginLeft: '8px' }}>{item.grams}g</span>
+                        <span style={{ color: 'var(--text-heading)', fontSize: '14px', fontWeight: '500' }}>{item.name}</span>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '12px', marginLeft: '8px' }}>{item.grams}g</span>
                       </div>
-                      <span style={{ color: '#4f8ef7', fontSize: '14px', fontWeight: '600' }}>
+                      <span style={{ color: 'var(--accent)', fontSize: '14px', fontWeight: '600' }}>
                         {Math.round(item.calories)} kcal
                       </span>
                     </div>
                   ))}
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', fontSize: '14px', fontWeight: '600', color: '#2ecc71', marginTop: '4px', padding: '0 12px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', fontSize: '14px', fontWeight: '600', color: 'var(--success)', marginTop: '4px', padding: '0 12px' }}>
                     合计：{aiResults.reduce((s, item) => s + (item.calories || 0), 0).toFixed(0)} kcal
                   </div>
                 </div>
@@ -725,7 +725,11 @@ const FoodLogger = ({ selectedDate, onDateChange }) => {
                   {aiLoading ? '分析中...' : '识别'}
                 </button>
               ) : (
+<<<<<<< HEAD
                 <button type="button" onClick={handleConfirmAIResults} style={{ ...styles.confirmButton, background: '#2ecc71' }}>
+=======
+                <button onClick={handleConfirmAIResults} style={{ ...styles.confirmButton, background: 'var(--success)' }}>
+>>>>>>> 0ee8057 (feat: 添加语音记录功能和主题系统)
                   确认添加
                 </button>
               )}
@@ -785,15 +789,15 @@ const styles = {
     left: '12px',
     top: '50%',
     transform: 'translateY(-50%)',
-    color: '#7f8c8d'
+    color: 'var(--text-muted)'
   },
   searchInput: {
     width: '100%',
     padding: '12px 12px 12px 44px',
-    background: '#1a1e28',
-    border: '1px solid #252a38',
+    background: 'var(--bg-tertiary)',
+    border: '1px solid var(--border)',
     borderRadius: '8px',
-    color: '#fff',
+    color: 'var(--text-heading)',
     fontSize: '14px',
     outline: 'none',
     transition: 'border-color 0.3s'
@@ -808,7 +812,7 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     padding: '12px',
-    background: 'linear-gradient(135deg, #7c5cf7, #a78bfa)',
+    background: 'var(--ai-button-gradient)',
     border: 'none',
     borderRadius: '8px',
     color: '#fff',
@@ -823,10 +827,10 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     padding: '12px',
-    background: '#1a1e28',
-    border: '1px solid #252a38',
+    background: 'var(--bg-tertiary)',
+    border: '1px solid var(--border)',
     borderRadius: '8px',
-    color: '#fff',
+    color: 'var(--text-heading)',
     fontSize: '14px',
     fontWeight: '500',
     cursor: 'pointer',
@@ -837,8 +841,12 @@ const styles = {
   },
   foodCard: {
     display: 'flex',
+<<<<<<< HEAD
     width: '100%',
     background: '#151820',
+=======
+    background: 'var(--bg-secondary)',
+>>>>>>> 0ee8057 (feat: 添加语音记录功能和主题系统)
     borderRadius: '8px',
     marginBottom: '8px',
     cursor: 'pointer',
@@ -866,24 +874,24 @@ const styles = {
     margin: 0,
     fontSize: '15px',
     fontWeight: '500',
-    color: '#fff'
+    color: 'var(--text-heading)'
   },
   categoryBadge: {
     padding: '2px 8px',
-    background: '#252a38',
+    background: 'var(--border)',
     borderRadius: '4px',
     fontSize: '12px',
-    color: '#9ca3af'
+    color: 'var(--text-secondary)'
   },
   foodNutrition: {
     display: 'flex',
     alignItems: 'center',
     fontSize: '13px',
-    color: '#9ca3af'
+    color: 'var(--text-secondary)'
   },
   divider: {
     margin: '0 8px',
-    color: '#3f4451'
+    color: 'var(--border-divider)'
   },
   todaySection: {
     marginBottom: '20px'
@@ -891,13 +899,13 @@ const styles = {
   sectionTitle: {
     fontSize: '16px',
     fontWeight: '600',
-    color: '#fff',
+    color: 'var(--text-heading)',
     marginBottom: '12px'
   },
   emptyState: {
     textAlign: 'center',
     padding: '40px',
-    color: '#6b7280',
+    color: 'var(--text-muted)',
     fontSize: '14px'
   },
   logsList: {
@@ -908,7 +916,7 @@ const styles = {
   logItem: {
     display: 'flex',
     alignItems: 'center',
-    background: '#151820',
+    background: 'var(--bg-secondary)',
     borderRadius: '8px',
     padding: '12px',
     transition: 'background 0.2s'
@@ -925,20 +933,20 @@ const styles = {
   logName: {
     fontSize: '15px',
     fontWeight: '500',
-    color: '#fff'
+    color: 'var(--text-heading)'
   },
   logTime: {
     fontSize: '12px',
-    color: '#6b7280'
+    color: 'var(--text-muted)'
   },
   logNutrition: {
     display: 'flex',
     alignItems: 'center',
     fontSize: '13px',
-    color: '#9ca3af'
+    color: 'var(--text-secondary)'
   },
   logCalories: {
-    color: '#4f8ef7',
+    color: 'var(--accent)',
     fontWeight: '500'
   },
   deleteButton: {
@@ -950,7 +958,7 @@ const styles = {
     background: 'transparent',
     border: 'none',
     borderRadius: '6px',
-    color: '#6b7280',
+    color: 'var(--text-muted)',
     cursor: 'pointer',
     transition: 'all 0.2s',
     marginLeft: '8px'
@@ -974,14 +982,14 @@ const styles = {
     alignItems: 'center'
   },
   summary: {
-    background: '#151820',
+    background: 'var(--bg-secondary)',
     borderRadius: '12px',
     padding: '16px'
   },
   summaryTitle: {
     fontSize: '16px',
     fontWeight: '600',
-    color: '#fff',
+    color: 'var(--text-heading)',
     marginBottom: '12px'
   },
   summaryGrid: {
@@ -993,18 +1001,18 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     padding: '12px',
-    background: '#1a1e28',
+    background: 'var(--bg-tertiary)',
     borderRadius: '8px'
   },
   summaryLabel: {
     fontSize: '13px',
-    color: '#9ca3af',
+    color: 'var(--text-secondary)',
     marginBottom: '4px'
   },
   summaryValue: {
     fontSize: '20px',
     fontWeight: '600',
-    color: '#4f8ef7'
+    color: 'var(--accent)'
   },
   modalOverlay: {
     position: 'fixed',
@@ -1012,7 +1020,7 @@ const styles = {
     left: 0,
     right: 0,
     bottom: 0,
-    background: 'rgba(0, 0, 0, 0.7)',
+    background: 'var(--bg-overlay)',
     backdropFilter: 'blur(10px)',
     display: 'flex',
     alignItems: 'center',
@@ -1021,7 +1029,7 @@ const styles = {
     padding: '20px'
   },
   modal: {
-    background: '#1a1e28',
+    background: 'var(--bg-tertiary)',
     borderRadius: '16px',
     padding: '24px',
     width: '100%',
@@ -1032,7 +1040,7 @@ const styles = {
   modalTitle: {
     fontSize: '18px',
     fontWeight: '600',
-    color: '#fff',
+    color: 'var(--text-heading)',
     marginBottom: '20px'
   },
   modalContent: {
@@ -1043,25 +1051,25 @@ const styles = {
     flexDirection: 'column',
     marginBottom: '16px',
     fontSize: '14px',
-    color: '#9ca3af'
+    color: 'var(--text-secondary)'
   },
   input: {
     marginTop: '6px',
     padding: '10px',
-    background: '#151820',
-    border: '1px solid #252a38',
+    background: 'var(--bg-secondary)',
+    border: '1px solid var(--border)',
     borderRadius: '6px',
-    color: '#fff',
+    color: 'var(--text-heading)',
     fontSize: '14px',
     outline: 'none'
   },
   textarea: {
     marginTop: '6px',
     padding: '10px',
-    background: '#151820',
-    border: '1px solid #252a38',
+    background: 'var(--bg-secondary)',
+    border: '1px solid var(--border)',
     borderRadius: '6px',
-    color: '#fff',
+    color: 'var(--text-heading)',
     fontSize: '14px',
     outline: 'none',
     fontFamily: 'inherit',
@@ -1073,24 +1081,24 @@ const styles = {
     gap: '12px',
     marginTop: '16px',
     padding: '16px',
-    background: '#151820',
+    background: 'var(--bg-secondary)',
     borderRadius: '8px'
   },
   previewItem: {
     display: 'flex',
     flexDirection: 'column',
     fontSize: '13px',
-    color: '#9ca3af'
+    color: 'var(--text-secondary)'
   },
   previewValue: {
     marginTop: '4px',
     fontSize: '16px',
     fontWeight: '600',
-    color: '#fff'
+    color: 'var(--text-heading)'
   },
   aiHint: {
     fontSize: '12px',
-    color: '#6b7280',
+    color: 'var(--text-muted)',
     marginTop: '8px',
     fontStyle: 'italic'
   },
@@ -1101,10 +1109,10 @@ const styles = {
   cancelButton: {
     flex: 1,
     padding: '12px',
-    background: '#151820',
-    border: '1px solid #252a38',
+    background: 'var(--bg-secondary)',
+    border: '1px solid var(--border)',
     borderRadius: '8px',
-    color: '#fff',
+    color: 'var(--text-heading)',
     fontSize: '14px',
     fontWeight: '500',
     cursor: 'pointer',
@@ -1113,7 +1121,7 @@ const styles = {
   confirmButton: {
     flex: 1,
     padding: '12px',
-    background: '#4f8ef7',
+    background: 'var(--accent)',
     border: 'none',
     borderRadius: '8px',
     color: '#fff',

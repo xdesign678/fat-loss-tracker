@@ -122,7 +122,7 @@ const Settings = ({ isOpen, onClose }) => {
             </div>
             <div style={styles.hint}>
               从{' '}
-              <span style={{ color: '#4f8ef7' }}>openrouter.ai/keys</span>
+              <span style={{ color: 'var(--accent)' }}>openrouter.ai/keys</span>
               {' '}获取 API Key
             </div>
           </div>
@@ -158,7 +158,7 @@ const Settings = ({ isOpen, onClose }) => {
                       <div
                         style={{
                           ...styles.radioOuter,
-                          borderColor: selectedModel === model ? '#4f8ef7' : '#3a3f52',
+                          borderColor: selectedModel === model ? 'var(--accent)' : 'var(--border-light)',
                         }}
                       >
                         {selectedModel === model && <div style={styles.radioInner} />}
@@ -249,10 +249,10 @@ const Settings = ({ isOpen, onClose }) => {
               <div
                 style={{
                   ...styles.testResult,
-                  color: testResult.ok ? '#2ecc71' : '#ef4444',
+                  color: testResult.ok ? 'var(--success)' : 'var(--danger)',
                   background: testResult.ok
-                    ? 'rgba(46,204,113,0.1)'
-                    : 'rgba(239,68,68,0.1)',
+                    ? 'var(--success-bg)'
+                    : 'var(--danger-bg)',
                 }}
               >
                 {testResult.ok ? 'API 连接成功' : `失败: ${testResult.msg}`}
@@ -272,7 +272,7 @@ const styles = {
     left: 0,
     right: 0,
     bottom: 0,
-    background: 'rgba(0,0,0,0.7)',
+    background: 'var(--bg-overlay)',
     backdropFilter: 'blur(10px)',
     display: 'flex',
     alignItems: 'center',
@@ -281,7 +281,7 @@ const styles = {
     padding: '20px',
   },
   modal: {
-    background: '#1a1e28',
+    background: 'var(--bg-tertiary)',
     borderRadius: '16px',
     width: '100%',
     maxWidth: '520px',
@@ -298,13 +298,13 @@ const styles = {
   title: {
     fontSize: '20px',
     fontWeight: '700',
-    color: '#fff',
+    color: 'var(--text-heading)',
     margin: 0,
   },
   closeBtn: {
     background: 'transparent',
     border: 'none',
-    color: '#9ca3af',
+    color: 'var(--text-secondary)',
     cursor: 'pointer',
     padding: '4px',
     display: 'flex',
@@ -321,7 +321,7 @@ const styles = {
     display: 'block',
     fontSize: '14px',
     fontWeight: '600',
-    color: '#e8eaf0',
+    color: 'var(--text-primary)',
     marginBottom: '10px',
   },
   apiKeyRow: {
@@ -331,20 +331,20 @@ const styles = {
   },
   input: {
     padding: '10px 12px',
-    background: '#151820',
-    border: '1px solid #252a38',
+    background: 'var(--bg-secondary)',
+    border: '1px solid var(--border)',
     borderRadius: '8px',
-    color: '#fff',
+    color: 'var(--text-heading)',
     fontSize: '14px',
     outline: 'none',
     width: '100%',
     fontFamily: 'monospace',
   },
   iconBtn: {
-    background: '#252a38',
+    background: 'var(--border)',
     border: 'none',
     borderRadius: '8px',
-    color: '#9ca3af',
+    color: 'var(--text-secondary)',
     cursor: 'pointer',
     padding: '10px',
     display: 'flex',
@@ -352,7 +352,7 @@ const styles = {
   },
   hint: {
     fontSize: '12px',
-    color: '#6b7280',
+    color: 'var(--text-muted)',
     marginTop: '6px',
   },
   modelList: {
@@ -366,15 +366,15 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: '10px 12px',
-    background: '#151820',
+    background: 'var(--bg-secondary)',
     borderRadius: '8px',
-    border: '1px solid #252a38',
+    border: '1px solid var(--border)',
     cursor: 'pointer',
     transition: 'all 0.2s',
   },
   modelItemSelected: {
-    borderColor: '#4f8ef7',
-    background: 'rgba(79,142,247,0.08)',
+    borderColor: 'var(--accent)',
+    background: 'var(--accent-bg)',
   },
   modelRadio: {
     display: 'flex',
@@ -388,7 +388,7 @@ const styles = {
     width: '16px',
     height: '16px',
     borderRadius: '50%',
-    border: '2px solid #3a3f52',
+    border: '2px solid var(--border-light)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -398,11 +398,11 @@ const styles = {
     width: '8px',
     height: '8px',
     borderRadius: '50%',
-    background: '#4f8ef7',
+    background: 'var(--accent)',
   },
   modelName: {
     fontSize: '13px',
-    color: '#e8eaf0',
+    color: 'var(--text-primary)',
     fontFamily: 'monospace',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
@@ -411,7 +411,7 @@ const styles = {
   removeBtn: {
     background: 'transparent',
     border: 'none',
-    color: '#6b7280',
+    color: 'var(--text-muted)',
     cursor: 'pointer',
     padding: '4px',
     display: 'flex',
@@ -424,7 +424,7 @@ const styles = {
     marginBottom: '12px',
   },
   addBtn: {
-    background: '#4f8ef7',
+    background: 'var(--accent)',
     border: 'none',
     borderRadius: '8px',
     color: '#fff',
@@ -435,7 +435,7 @@ const styles = {
   },
   presetLabel: {
     fontSize: '12px',
-    color: '#6b7280',
+    color: 'var(--text-muted)',
     marginBottom: '8px',
   },
   presetGrid: {
@@ -448,10 +448,10 @@ const styles = {
     alignItems: 'center',
     gap: '4px',
     padding: '5px 10px',
-    background: '#252a38',
+    background: 'var(--border)',
     border: '1px solid #3a3f52',
     borderRadius: '6px',
-    color: '#9ca3af',
+    color: 'var(--text-secondary)',
     fontSize: '12px',
     cursor: 'pointer',
     transition: 'all 0.2s',
@@ -467,10 +467,10 @@ const styles = {
     justifyContent: 'center',
     gap: '6px',
     padding: '12px',
-    background: '#252a38',
+    background: 'var(--border)',
     border: '1px solid #3a3f52',
     borderRadius: '8px',
-    color: '#e8eaf0',
+    color: 'var(--text-primary)',
     fontSize: '14px',
     fontWeight: '500',
     cursor: 'pointer',
@@ -482,7 +482,7 @@ const styles = {
     justifyContent: 'center',
     gap: '6px',
     padding: '12px',
-    background: '#4f8ef7',
+    background: 'var(--accent)',
     border: 'none',
     borderRadius: '8px',
     color: '#fff',

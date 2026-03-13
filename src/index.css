@@ -1,3 +1,120 @@
+/* === Theme System (CSS Custom Properties) === */
+
+/* Dark mode (default) */
+:root {
+  --bg-primary: #0d0f14;
+  --bg-secondary: #151820;
+  --bg-tertiary: #1a1e28;
+  --bg-blur: rgba(21, 24, 32, 0.9);
+  --bg-nav: rgba(21, 24, 32, 0.95);
+  --bg-overlay: rgba(0, 0, 0, 0.7);
+  --bg-overlay-heavy: rgba(0, 0, 0, 0.8);
+
+  --border: #252a38;
+  --border-light: #3a3f52;
+  --border-divider: #3f4451;
+
+  --text-primary: #e8eaf0;
+  --text-heading: #ffffff;
+  --text-secondary: #9198b0;
+  --text-muted: #6b7280;
+  --text-nav: #6b7494;
+  --text-body: #d1d5db;
+
+  --accent: #4f8ef7;
+  --accent-secondary: #7c5cf7;
+  --accent-gradient: linear-gradient(135deg, #4f8ef7, #7c5cf7);
+  --accent-bg: rgba(79, 142, 247, 0.1);
+  --accent-border: rgba(79, 142, 247, 0.2);
+  --accent-border-subtle: rgba(79, 142, 247, 0.1);
+  --input-gradient-border: linear-gradient(135deg, rgba(79, 142, 247, 0.1), rgba(124, 92, 247, 0.1));
+
+  --success: #2ecc71;
+  --success-alt: #10b981;
+  --success-bg: rgba(46, 204, 113, 0.08);
+  --success-border: rgba(46, 204, 113, 0.2);
+  --success-bg-badge: rgba(46, 204, 113, 0.15);
+
+  --danger: #ef4444;
+  --danger-bg: rgba(239, 68, 68, 0.1);
+
+  --warning: #f59e0b;
+  --warning-bg: rgba(245, 158, 11, 0.15);
+
+  --chart-grid: #252a38;
+  --chart-text: #9198b0;
+
+  --scrollbar-thumb: #252a38;
+  --selection-bg: rgba(79, 142, 247, 0.3);
+  --selection-text: #fff;
+
+  --shadow-card: 0 4px 6px rgba(0, 0, 0, 0.3);
+  --shadow-modal: 0 20px 60px rgba(0, 0, 0, 0.5);
+  --shadow-button: 0 4px 12px rgba(102, 126, 234, 0.4);
+  --shadow-button-hover: 0 6px 20px rgba(102, 126, 234, 0.5);
+
+  --weight-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --ai-button-gradient: linear-gradient(135deg, #7c5cf7, #a78bfa);
+}
+
+/* Light mode — Claude/Anthropic design style */
+[data-theme="light"] {
+  --bg-primary: #faf9f5;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f0efe8;
+  --bg-blur: rgba(250, 249, 245, 0.92);
+  --bg-nav: rgba(255, 255, 255, 0.95);
+  --bg-overlay: rgba(20, 20, 19, 0.4);
+  --bg-overlay-heavy: rgba(20, 20, 19, 0.5);
+
+  --border: #e5e4de;
+  --border-light: #d1d0c9;
+  --border-divider: #d1d0c9;
+
+  --text-primary: #141413;
+  --text-heading: #141413;
+  --text-secondary: #6b6b66;
+  --text-muted: #a3a39e;
+  --text-nav: #6b6b66;
+  --text-body: #3d3d3a;
+
+  --accent: #4f8ef7;
+  --accent-secondary: #7c5cf7;
+  --accent-gradient: linear-gradient(135deg, #4f8ef7, #7c5cf7);
+  --accent-bg: rgba(79, 142, 247, 0.08);
+  --accent-border: rgba(79, 142, 247, 0.2);
+  --accent-border-subtle: rgba(79, 142, 247, 0.08);
+  --input-gradient-border: linear-gradient(135deg, rgba(79, 142, 247, 0.15), rgba(124, 92, 247, 0.15));
+
+  --success: #16a34a;
+  --success-alt: #16a34a;
+  --success-bg: rgba(22, 163, 74, 0.06);
+  --success-border: rgba(22, 163, 74, 0.2);
+  --success-bg-badge: rgba(22, 163, 74, 0.1);
+
+  --danger: #dc2626;
+  --danger-bg: rgba(220, 38, 38, 0.06);
+
+  --warning: #d97706;
+  --warning-bg: rgba(217, 119, 6, 0.1);
+
+  --chart-grid: #e5e4de;
+  --chart-text: #6b6b66;
+
+  --scrollbar-thumb: #d1d0c9;
+  --selection-bg: rgba(79, 142, 247, 0.2);
+  --selection-text: #141413;
+
+  --shadow-card: 0 1px 3px rgba(20, 20, 19, 0.06);
+  --shadow-modal: 0 20px 60px rgba(20, 20, 19, 0.15);
+  --shadow-button: 0 2px 8px rgba(79, 142, 247, 0.2);
+  --shadow-button-hover: 0 4px 16px rgba(79, 142, 247, 0.3);
+
+  --weight-gradient: linear-gradient(135deg, #4f8ef7 0%, #7c5cf7 100%);
+  --ai-button-gradient: linear-gradient(135deg, #7c5cf7, #a78bfa);
+}
+
+/* === Base Styles === */
 * {
   margin: 0;
   padding: 0;
@@ -7,13 +124,14 @@
 html, body, #root {
   height: 100%;
   width: 100%;
-  background: #0d0f14;
-  color: #e8eaf0;
+  background: var(--bg-primary);
+  color: var(--text-primary);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
   line-height: 1.6;
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
 body {
@@ -36,23 +154,45 @@ input[type="number"] {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #252a38;
+  background: var(--scrollbar-thumb);
   border-radius: 2px;
 }
 
 ::selection {
-  background: rgba(79, 142, 247, 0.3);
-  color: #fff;
+  background: var(--selection-bg);
+  color: var(--selection-text);
 }
 
 button {
   font-family: inherit;
 }
 
+<<<<<<< HEAD
 button:focus-visible,
 input:focus-visible,
 textarea:focus-visible,
 [role="button"]:focus-visible {
   outline: 2px solid #4f8ef7;
   outline-offset: 2px;
+=======
+/* Theme transition for smooth switching */
+[data-theme="light"] * {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+/* Voice Recorder Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+>>>>>>> 0ee8057 (feat: 添加语音记录功能和主题系统)
 }
