@@ -387,3 +387,12 @@ textarea:focus-visible,
   animation: pulse 1.5s ease-in-out infinite;
   border-radius: 8px;
 }
+
+/* === Modal body scroll lock === */
+body.modal-open {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  top: 0;
+  left: 0;
+}

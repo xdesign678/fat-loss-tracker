@@ -1,18 +1,17 @@
+import { memo } from 'react';
 import { ClipboardList } from 'lucide-react';
 
-export default function EmptyState({
-  icon,
+export default memo(function EmptyState({
+  icon: Icon = ClipboardList,
   title = '暂无记录',
   description = '',
   actionLabel = '',
   onAction = null,
 }) {
-  const IconComponent = icon || ClipboardList;
-
   return (
     <div style={styles.container}>
       <div style={styles.iconWrap}>
-        <IconComponent size={40} color="var(--text-muted)" strokeWidth={1.2} />
+        <Icon size={40} color="var(--text-muted)" strokeWidth={1.2} />
       </div>
       <p style={styles.title}>{title}</p>
       {description && <p style={styles.desc}>{description}</p>}
@@ -28,7 +27,7 @@ export default function EmptyState({
       )}
     </div>
   );
-}
+});
 
 const styles = {
   container: {

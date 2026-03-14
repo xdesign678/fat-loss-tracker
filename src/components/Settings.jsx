@@ -1,9 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useApp } from '../context/AppContext';
-import { testAIConnection } from '../utils/ai';
 import { useToast } from './Toast';
-import ModalShell from './ModalShell';
-import { Plus, Trash2, Eye, EyeOff, Check, Zap } from 'lucide-react';
+import { X, Plus, Trash2, Eye, EyeOff, Check, Zap } from 'lucide-react';
+import { Modal } from './ui';
 
 const PRESET_MODELS = [
   'google/gemini-2.0-flash-001',
@@ -43,16 +42,11 @@ const Settings = ({ isOpen, onClose }) => {
   const handleRemoveModel = (model) => {
     const updated = models.filter((m) => m !== model);
     setModels(updated);
-    if (selectedModel === model) {
-      setSelectedModel(updated[0] || '');
-    }
+    if (selectedModel === model) setSelectedModel(updated[0] || '');
   };
 
   const handleSave = () => {
-    dispatch({
-      type: 'SET_AI_SETTINGS',
-      payload: { apiKey, models, selectedModel },
-    });
+    dispatch({ type: 'SET_AI_SETTINGS', payload: { apiKey, models, selectedModel } });
     setSaved(true);
     showToast('设置已保存', 'success');
     setTimeout(() => setSaved(false), 2000);
@@ -66,386 +60,160 @@ const Settings = ({ isOpen, onClose }) => {
     setTesting(true);
     setTestResult(null);
     try {
-      await testAIConnection({ apiKey, model: selectedModel });
-      setTestResult({ ok: true, msg: '连接成功' });
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
+      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+        signal: controller.signal,
+        body: JSON.stringify({ model: selectedModel, messages: [{ role: 'user', content: 'Reply with just "ok"' }], max_tokens: 5 }),
+      });
+      clearTimeout(timeoutId);
+      if (res.ok) {
+        setTestResult({ ok: true, msg: '连接成功' });
+      } else {
+        const err = await res.json().catch(() => ({}));
+        setTestResult({ ok: false, msg: err.error?.message || `HTTP ${res.status}` });
+      }
     } catch (e) {
-      setTestResult({ ok: false, msg: e.message });
+      setTestResult({ ok: false, msg: e.name === 'AbortError' ? '请求超时' : e.message });
     }
     setTesting(false);
   };
 
-  // Focus management
   useEffect(() => {
     if (isOpen && firstInputRef.current) {
-      // Small delay to ensure modal is fully rendered
-      setTimeout(() => {
-        firstInputRef.current?.focus();
-      }, 50);
+      setTimeout(() => firstInputRef.current?.focus(), 50);
     }
   }, [isOpen]);
-
-  if (!isOpen) return null;
 
   const presetsNotAdded = PRESET_MODELS.filter((m) => !models.includes(m));
 
   return (
-    <ModalShell isOpen={isOpen} onClose={onClose} title="AI 设置" maxWidth="520px" bodyPadding="20px 24px 24px">
+    <Modal isOpen={isOpen} onClose={onClose} title="" maxWidth="520px">
+      <div style={styles.header}>
+        <h2 style={styles.title}>AI 设置</h2>
+        <button style={styles.closeBtn} onClick={onClose} aria-label="关闭设置">
+          <X size={20} />
+        </button>
+      </div>
+
       <div style={styles.scrollArea}>
-          {/* API Key */}
-          <div style={styles.section}>
-            <label style={styles.sectionLabel}>OpenRouter API Key</label>
-            <div style={styles.apiKeyRow}>
-              <input
-                ref={firstInputRef}
-                type={showKey ? 'text' : 'password'}
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                style={styles.input}
-                placeholder="sk-or-v1-..."
-              />
-              <button
-                type="button"
-                style={styles.iconBtn}
-                onClick={() => setShowKey(!showKey)}
-                title={showKey ? '隐藏' : '显示'}
-                aria-label={showKey ? '隐藏 API Key' : '显示 API Key'}
-              >
-                {showKey ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
+        {/* API Key */}
+        <div style={styles.section}>
+          <label style={styles.sectionLabel}>OpenRouter API Key</label>
+          <div style={styles.apiKeyRow}>
+            <input
+              ref={firstInputRef}
+              type={showKey ? 'text' : 'password'}
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              style={styles.input}
+              placeholder="sk-or-v1-..."
+            />
+            <button type="button" style={styles.iconBtn} onClick={() => setShowKey(!showKey)} title={showKey ? '隐藏' : '显示'} aria-label={showKey ? '隐藏 API Key' : '显示 API Key'}>
+              {showKey ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
+          <div style={styles.hint}>
+            从 <span style={{ color: 'var(--accent)' }}>openrouter.ai/keys</span> 获取 API Key
+          </div>
+        </div>
+
+        {/* Models */}
+        <div style={styles.section}>
+          <label style={styles.sectionLabel}>模型列表</label>
+          {models.length > 0 && (
+            <div style={styles.modelList}>
+              {models.map((model) => (
+                <div key={model} style={{ ...styles.modelItem, ...(selectedModel === model ? styles.modelItemSelected : {}) }}>
+                  <div style={styles.modelRadio} role="button" tabIndex={0} onClick={() => setSelectedModel(model)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedModel(model); } }} aria-pressed={selectedModel === model}>
+                    <div style={{ ...styles.radioOuter, borderColor: selectedModel === model ? 'var(--accent)' : 'var(--border-light)' }}>
+                      {selectedModel === model && <div style={styles.radioInner} />}
+                    </div>
+                    <span style={styles.modelName}>{model}</span>
+                  </div>
+                  <button type="button" style={styles.removeBtn} onClick={(e) => { e.stopPropagation(); handleRemoveModel(model); }} aria-label={`删除模型 ${model}`}>
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              ))}
             </div>
-            <div style={styles.hint}>
-              从{' '}
-              <span style={{ color: 'var(--accent)' }}>openrouter.ai/keys</span>
-              {' '}获取 API Key
-            </div>
+          )}
+
+          <div style={styles.addModelRow}>
+            <input type="text" value={newModelInput} onChange={(e) => setNewModelInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAddModel()} style={{ ...styles.input, flex: 1 }} placeholder="输入模型名称，如 openai/gpt-4o" />
+            <button type="button" style={styles.addBtn} onClick={() => handleAddModel()} disabled={!newModelInput.trim()} aria-label="添加自定义模型">
+              <Plus size={18} />
+            </button>
           </div>
 
-          {/* Models */}
-          <div style={styles.section}>
-            <label style={styles.sectionLabel}>模型列表</label>
-
-            {/* Added models */}
-            {models.length > 0 && (
-              <div style={styles.modelList}>
-                {models.map((model) => (
-                  <div
-                    key={model}
-                    style={{
-                      ...styles.modelItem,
-                      ...(selectedModel === model ? styles.modelItemSelected : {}),
-                    }}
-                  >
-                    <div
-                      style={styles.modelRadio}
-                      role="button"
-                      tabIndex={0}
-                      onClick={() => setSelectedModel(model)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault();
-                          setSelectedModel(model);
-                        }
-                      }}
-                      aria-pressed={selectedModel === model}
-                    >
-                      <div
-                        style={{
-                          ...styles.radioOuter,
-                          borderColor: selectedModel === model ? 'var(--accent)' : 'var(--border-light)',
-                        }}
-                      >
-                        {selectedModel === model && <div style={styles.radioInner} />}
-                      </div>
-                      <span style={styles.modelName}>{model}</span>
-                    </div>
-                    <button
-                      type="button"
-                      style={styles.removeBtn}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleRemoveModel(model);
-                      }}
-                      aria-label={`删除模型 ${model}`}
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
+          {presetsNotAdded.length > 0 && (
+            <>
+              <div style={styles.presetLabel}>快速添加</div>
+              <div style={styles.presetGrid}>
+                {presetsNotAdded.map((model) => (
+                  <button type="button" key={model} style={styles.presetChip} onClick={() => handleAddModel(model)} aria-label={`快速添加模型 ${model}`}>
+                    <Plus size={12} />
+                    <span>{model.split('/')[1] || model}</span>
+                  </button>
                 ))}
               </div>
-            )}
+            </>
+          )}
+        </div>
 
-            {/* Add custom model */}
-            <div style={styles.addModelRow}>
-              <input
-                type="text"
-                value={newModelInput}
-                onChange={(e) => setNewModelInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleAddModel()}
-                style={{ ...styles.input, flex: 1 }}
-                placeholder="输入模型名称，如 openai/gpt-4o"
-              />
-              <button
-                type="button"
-                style={styles.addBtn}
-                onClick={() => handleAddModel()}
-                disabled={!newModelInput.trim()}
-                aria-label="添加自定义模型"
-              >
-                <Plus size={18} />
-              </button>
-            </div>
-
-            {/* Preset models */}
-            {presetsNotAdded.length > 0 && (
-              <>
-                <div style={styles.presetLabel}>快速添加</div>
-                <div style={styles.presetGrid}>
-                  {presetsNotAdded.map((model) => (
-                    <button
-                      type="button"
-                      key={model}
-                      style={styles.presetChip}
-                      onClick={() => handleAddModel(model)}
-                      aria-label={`快速添加模型 ${model}`}
-                    >
-                      <Plus size={12} />
-                      <span>{model.split('/')[1] || model}</span>
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
+        {/* Test & Save */}
+        <div style={styles.section}>
+          <div style={styles.actionRow}>
+            <button type="button" style={styles.testBtn} onClick={handleTestAPI} disabled={testing || !apiKey || !selectedModel}>
+              <Zap size={16} />
+              <span>{testing ? '测试中...' : '测试连接'}</span>
+            </button>
+            <button type="button" style={styles.saveBtn} onClick={handleSave}>
+              <Check size={16} />
+              <span>{saved ? '已保存' : '保存设置'}</span>
+            </button>
           </div>
-
-          {/* Test & Save */}
-          <div style={styles.section}>
-            <div style={styles.actionRow}>
-              <button
-                type="button"
-                style={styles.testBtn}
-                onClick={handleTestAPI}
-                disabled={testing || !apiKey || !selectedModel}
-              >
-                <Zap size={16} />
-                <span>{testing ? '测试中...' : '测试连接'}</span>
-              </button>
-              <button
-                type="button"
-                style={styles.saveBtn}
-                onClick={handleSave}
-              >
-                <Check size={16} />
-                <span>{saved ? '已保存' : '保存设置'}</span>
-              </button>
+          {testResult && (
+            <div style={{ ...styles.testResult, color: testResult.ok ? 'var(--success)' : 'var(--danger)', background: testResult.ok ? 'var(--success-bg)' : 'var(--danger-bg)' }}>
+              {testResult.ok ? 'API 连接成功' : `失败: ${testResult.msg}`}
             </div>
-            {testResult && (
-              <div
-                style={{
-                  ...styles.testResult,
-                  color: testResult.ok ? 'var(--success)' : 'var(--danger)',
-                  background: testResult.ok
-                    ? 'var(--success-bg)'
-                    : 'var(--danger-bg)',
-                }}
-              >
-                {testResult.ok ? 'API 连接成功' : `失败: ${testResult.msg}`}
-              </div>
-            )}
-          </div>
+          )}
+        </div>
       </div>
-    </ModalShell>
+    </Modal>
   );
 };
 
 const styles = {
-  scrollArea: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '24px',
-  },
-  section: {
-    marginBottom: '24px',
-  },
-  sectionLabel: {
-    display: 'block',
-    fontSize: '14px',
-    fontWeight: '600',
-    color: 'var(--text-primary)',
-    marginBottom: '10px',
-  },
-  apiKeyRow: {
-    display: 'flex',
-    gap: '8px',
-    alignItems: 'center',
-  },
-  input: {
-    padding: '10px 12px',
-    background: 'var(--bg-secondary)',
-    border: '1px solid var(--border)',
-    borderRadius: '8px',
-    color: 'var(--text-heading)',
-    fontSize: '14px',
-    outline: 'none',
-    width: '100%',
-    fontFamily: 'monospace',
-  },
-  iconBtn: {
-    background: 'var(--border)',
-    border: 'none',
-    borderRadius: '8px',
-    color: 'var(--text-secondary)',
-    cursor: 'pointer',
-    padding: '10px',
-    display: 'flex',
-    flexShrink: 0,
-  },
-  hint: {
-    fontSize: '12px',
-    color: 'var(--text-muted)',
-    marginTop: '6px',
-  },
-  modelList: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '6px',
-    marginBottom: '12px',
-  },
-  modelItem: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '10px 12px',
-    background: 'var(--bg-secondary)',
-    borderRadius: '8px',
-    border: '1px solid var(--border)',
-    cursor: 'pointer',
-    transition: 'all 0.2s',
-  },
-  modelItemSelected: {
-    borderColor: 'var(--accent)',
-    background: 'var(--accent-bg)',
-  },
-  modelRadio: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-    flex: 1,
-    minWidth: 0,
-    cursor: 'pointer',
-  },
-  radioOuter: {
-    width: '16px',
-    height: '16px',
-    borderRadius: '50%',
-    border: '2px solid var(--border-light)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-  },
-  radioInner: {
-    width: '8px',
-    height: '8px',
-    borderRadius: '50%',
-    background: 'var(--accent)',
-  },
-  modelName: {
-    fontSize: '13px',
-    color: 'var(--text-primary)',
-    fontFamily: 'monospace',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-  },
-  removeBtn: {
-    background: 'transparent',
-    border: 'none',
-    color: 'var(--text-muted)',
-    cursor: 'pointer',
-    padding: '4px',
-    display: 'flex',
-    flexShrink: 0,
-    transition: 'color 0.2s',
-  },
-  addModelRow: {
-    display: 'flex',
-    gap: '8px',
-    marginBottom: '12px',
-  },
-  addBtn: {
-    background: 'var(--accent)',
-    border: 'none',
-    borderRadius: '8px',
-    color: '#fff',
-    cursor: 'pointer',
-    padding: '10px',
-    display: 'flex',
-    flexShrink: 0,
-  },
-  presetLabel: {
-    fontSize: '12px',
-    color: 'var(--text-muted)',
-    marginBottom: '8px',
-  },
-  presetGrid: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: '6px',
-  },
-  presetChip: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '4px',
-    padding: '5px 10px',
-    background: 'var(--border)',
-    border: '1px solid var(--border-light)',
-    borderRadius: '6px',
-    color: 'var(--text-secondary)',
-    fontSize: '12px',
-    cursor: 'pointer',
-    transition: 'all 0.2s',
-  },
-  actionRow: {
-    display: 'flex',
-    gap: '10px',
-  },
-  testBtn: {
-    flex: 1,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '6px',
-    padding: '12px',
-    background: 'var(--border)',
-    border: '1px solid var(--border-light)',
-    borderRadius: '8px',
-    color: 'var(--text-primary)',
-    fontSize: '14px',
-    fontWeight: '500',
-    cursor: 'pointer',
-  },
-  saveBtn: {
-    flex: 1,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '6px',
-    padding: '12px',
-    background: 'var(--accent)',
-    border: 'none',
-    borderRadius: '8px',
-    color: '#fff',
-    fontSize: '14px',
-    fontWeight: '500',
-    cursor: 'pointer',
-  },
-  testResult: {
-    marginTop: '10px',
-    padding: '10px 12px',
-    borderRadius: '8px',
-    fontSize: '13px',
-    fontWeight: '500',
-  },
+  header: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' },
+  title: { fontSize: '20px', fontWeight: '700', color: 'var(--text-heading)', margin: 0 },
+  closeBtn: { background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: '12px', minWidth: '44px', minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' },
+  scrollArea: { overflowY: 'auto', flex: 1 },
+  section: { marginBottom: '24px' },
+  sectionLabel: { display: 'block', fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '10px' },
+  apiKeyRow: { display: 'flex', gap: '8px', alignItems: 'center' },
+  input: { padding: '10px 12px', background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: '8px', color: 'var(--text-heading)', fontSize: '14px', outline: 'none', width: '100%', fontFamily: 'monospace' },
+  iconBtn: { background: 'var(--border)', border: 'none', borderRadius: '8px', color: 'var(--text-secondary)', cursor: 'pointer', padding: '10px', display: 'flex', flexShrink: 0 },
+  hint: { fontSize: '12px', color: 'var(--text-muted)', marginTop: '6px' },
+  modelList: { display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '12px' },
+  modelItem: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', background: 'var(--bg-secondary)', borderRadius: '8px', border: '1px solid var(--border)', cursor: 'pointer', transition: 'all 0.2s' },
+  modelItemSelected: { borderColor: 'var(--accent)', background: 'var(--accent-bg)' },
+  modelRadio: { display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0, cursor: 'pointer' },
+  radioOuter: { width: '16px', height: '16px', borderRadius: '50%', border: '2px solid var(--border-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  radioInner: { width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent)' },
+  modelName: { fontSize: '13px', color: 'var(--text-primary)', fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
+  removeBtn: { background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px', display: 'flex', flexShrink: 0, transition: 'color 0.2s' },
+  addModelRow: { display: 'flex', gap: '8px', marginBottom: '12px' },
+  addBtn: { background: 'var(--accent)', border: 'none', borderRadius: '8px', color: '#fff', cursor: 'pointer', padding: '10px', display: 'flex', flexShrink: 0 },
+  presetLabel: { fontSize: '12px', color: 'var(--text-muted)', marginBottom: '8px' },
+  presetGrid: { display: 'flex', flexWrap: 'wrap', gap: '6px' },
+  presetChip: { display: 'flex', alignItems: 'center', gap: '4px', padding: '5px 10px', background: 'var(--border)', border: '1px solid var(--border-light)', borderRadius: '6px', color: 'var(--text-secondary)', fontSize: '12px', cursor: 'pointer', transition: 'all 0.2s' },
+  actionRow: { display: 'flex', gap: '10px' },
+  testBtn: { flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '12px', background: 'var(--border)', border: '1px solid var(--border-light)', borderRadius: '8px', color: 'var(--text-primary)', fontSize: '14px', fontWeight: '500', cursor: 'pointer' },
+  saveBtn: { flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '12px', background: 'var(--accent)', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '14px', fontWeight: '500', cursor: 'pointer' },
+  testResult: { marginTop: '10px', padding: '10px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: '500' },
 };
 
 export default Settings;

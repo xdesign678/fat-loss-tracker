@@ -1,9 +1,10 @@
-import { createContext, useContext, useReducer, useEffect } from 'react';
+import { createContext, useContext, useReducer, useEffect, useRef } from 'react';
 import { formatDate } from '../utils/calculations';
 
 const AppContext = createContext();
 
 const STORAGE_KEY = 'fatLossTrackerData';
+const DATA_VERSION = 1;
 let entrySeed = 0;
 
 function createEntryId(type) {
@@ -43,7 +44,6 @@ function normalizeDailyLogs(dailyLogs) {
 export function createDefaultState() {
   return {
     profile: {
-      sex: 'male',
       height: 175,
       age: 30,
       startWeight: 110,
@@ -89,14 +89,27 @@ export function normalizeState(savedState) {
         : [],
     },
     setupComplete: Boolean(savedState.setupComplete),
+    _version: DATA_VERSION,
   };
 }
 
 function loadState() {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) return normalizeState(JSON.parse(saved));
-  } catch (e) { console.error('Failed to load state', e); }
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      return normalizeState(parsed);
+    }
+  } catch (e) {
+    console.error('Failed to load state', e);
+    // 备份损坏数据
+    try {
+      const corrupted = localStorage.getItem(STORAGE_KEY);
+      if (corrupted) {
+        localStorage.setItem(`${STORAGE_KEY}_backup_${Date.now()}`, corrupted);
+      }
+    } catch {}
+  }
   return null;
 }
 
@@ -129,17 +142,6 @@ export function reducer(state, action) {
       return {
         ...state,
         dailyLogs: { ...state.dailyLogs, [date]: { ...existing, foods } }
-      };
-    }
-    case 'RESTORE_FOOD': {
-      const date = action.payload.date;
-      const existing = state.dailyLogs[date] || { foods: [], exercises: [] };
-      return {
-        ...state,
-        dailyLogs: {
-          ...state.dailyLogs,
-          [date]: { ...existing, foods: [...existing.foods, action.payload.food] }
-        }
       };
     }
     case 'UPDATE_FOOD': {
@@ -183,17 +185,6 @@ export function reducer(state, action) {
         dailyLogs: { ...state.dailyLogs, [date]: { ...existing, exercises } }
       };
     }
-    case 'RESTORE_EXERCISE': {
-      const date = action.payload.date;
-      const existing = state.dailyLogs[date] || { foods: [], exercises: [] };
-      return {
-        ...state,
-        dailyLogs: {
-          ...state.dailyLogs,
-          [date]: { ...existing, exercises: [...existing.exercises, action.payload.exercise] }
-        }
-      };
-    }
     case 'UPDATE_EXERCISE': {
       const date = action.payload.date;
       const existing = state.dailyLogs[date];
@@ -229,13 +220,22 @@ export function reducer(state, action) {
 
 export function AppProvider({ children }) {
   const [state, dispatch] = useReducer(reducer, loadState() || createDefaultState());
+  const saveTimerRef = useRef(null);
 
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    } catch (error) {
-      console.error('Failed to persist state', error);
+    if (saveTimerRef.current) {
+      clearTimeout(saveTimerRef.current);
     }
+    saveTimerRef.current = setTimeout(() => {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch (e) {
+        console.error('Failed to save state', e);
+      }
+    }, 500);
+    return () => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    };
   }, [state]);
 
   return (

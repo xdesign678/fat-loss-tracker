@@ -1,18 +1,17 @@
 import { useState, useMemo } from 'react';
-import { Activity, Edit3, X, ChevronDown, ChevronUp, Dumbbell, Search } from 'lucide-react';
+import { Activity, Edit3, X, ChevronDown, ChevronUp, Dumbbell } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import DateNavigator from './DateNavigator';
-import { exerciseDatabase, adjustCaloriesBurn, searchExercise } from '../utils/foodDatabase';
+import { exerciseDatabase, adjustCaloriesBurn } from '../utils/foodDatabase';
 import { formatDate } from '../utils/calculations';
 import { getRecentEntries } from '../utils/tracking';
 import EmptyState from './EmptyState';
-import ModalShell from './ModalShell';
 import { useToast } from './Toast';
+import { Modal, ModalActions, QuickValueButtons, FormField, inputStyle } from './ui';
 
 const ExerciseLogger = ({ selectedDate, onDateChange }) => {
   const { state, dispatch } = useApp();
   const [expandedCategory, setExpandedCategory] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingExerciseId, setEditingExerciseId] = useState(null);
   const [selectedExercise, setSelectedExercise] = useState(null);
@@ -31,10 +30,6 @@ const ExerciseLogger = ({ selectedDate, onDateChange }) => {
   const todayLogs = useMemo(() => state.dailyLogs[selectedDate]?.exercises || [], [selectedDate, state.dailyLogs]);
   const recentExercises = useMemo(() => getRecentEntries(state.dailyLogs, 'exercises', 4), [state.dailyLogs]);
   const userWeight = state.profile.currentWeight || 70;
-  const searchResults = useMemo(() => {
-    if (!searchQuery.trim()) return [];
-    return searchExercise(searchQuery).slice(0, 8);
-  }, [searchQuery]);
 
   // Group exerciseDatabase array by category
   const groupedExercises = useMemo(() => {
@@ -138,18 +133,8 @@ const ExerciseLogger = ({ selectedDate, onDateChange }) => {
 
   const handleDeleteExercise = (id) => {
     const exercise = todayLogs.find(e => e.id === id);
-    if (!exercise) return;
-
     dispatch({ type: 'REMOVE_EXERCISE', payload: { date: selectedDate, id } });
-    showToast({
-      message: `已删除 ${exercise.name}`,
-      type: 'info',
-      duration: 4000,
-      actionLabel: '撤销',
-      onAction: () => {
-        dispatch({ type: 'RESTORE_EXERCISE', payload: { date: selectedDate, exercise } });
-      },
-    });
+    showToast(`已删除 ${exercise?.name || '运动'}`, 'success');
   };
 
   const handleEditExercise = (exercise) => {
@@ -226,50 +211,6 @@ const ExerciseLogger = ({ selectedDate, onDateChange }) => {
             <span style={{ marginLeft: '6px' }}>手动输入</span>
           </button>
         </div>
-
-        <div style={styles.searchBox}>
-          <Search size={18} style={styles.searchIcon} />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="搜索运动，例如：快走、骑车、力量"
-            style={styles.searchInput}
-            aria-label="搜索运动"
-          />
-        </div>
-
-        {searchResults.length > 0 && (
-          <div style={styles.searchResults}>
-            {searchResults.map((exercise, index) => (
-              <button
-                type="button"
-                key={`${exercise.name}-${index}`}
-                style={styles.searchResultCard}
-                className="btn-interactive"
-                onClick={() => handleExerciseSelect(exercise, exercise.category)}
-                aria-label={`添加运动 ${exercise.name}`}
-              >
-                <div style={styles.exerciseHeader}>
-                  <span style={styles.exerciseName}>{exercise.name}</span>
-                  <span
-                    style={{
-                      ...styles.impactBadge,
-                      background: getJointImpactColor(exercise.jointImpact),
-                    }}
-                  >
-                    {exercise.jointImpact}冲击
-                  </span>
-                </div>
-                <div style={styles.exerciseInfo}>
-                  <span>{exercise.category}</span>
-                  <span style={styles.divider}>|</span>
-                  <span>{exercise.caloriesPer30Min}千卡/30分钟</span>
-                </div>
-              </button>
-            ))}
-          </div>
-        )}
 
         {categories.map((category) => (
           <div key={category} style={styles.categoryCard}>
@@ -396,149 +337,118 @@ const ExerciseLogger = ({ selectedDate, onDateChange }) => {
       </div>
 
       {/* 添加运动弹窗 */}
-      {showAddModal && (
-        <ModalShell
-          isOpen={showAddModal}
-          onClose={closeAddModal}
-          title={selectedExercise ? selectedExercise.name : editingExerciseId ? '编辑运动' : '手动输入运动'}
-          maxWidth="500px"
-        >
-            {selectedExercise ? (
-              <>
-                <div style={styles.modalContent}>
-                  <div style={styles.exerciseDetails}>
-                    <div style={styles.detailItem}>
-                      <span style={styles.detailLabel}>运动类型</span>
-                      <span style={styles.detailValue}>{selectedExercise.category}</span>
-                    </div>
-                    <div style={styles.detailItem}>
-                      <span style={styles.detailLabel}>关节冲击</span>
-                      <span
-                        style={{
-                          ...styles.impactBadge,
-                          background: getJointImpactColor(selectedExercise.jointImpact)
-                        }}
-                      >
-                        {selectedExercise.jointImpact}
-                      </span>
-                    </div>
-                    {selectedExercise.description && (
-                      <div style={styles.description}>{selectedExercise.description}</div>
-                    )}
-                  </div>
+      <Modal
+        isOpen={showAddModal}
+        onClose={closeAddModal}
+        title={selectedExercise ? selectedExercise.name : (editingExerciseId ? '编辑运动' : '手动输入运动')}
+      >
+        {selectedExercise ? (
+          <>
+            <div style={styles.modalContent}>
+              <div style={styles.exerciseDetails}>
+                <div style={styles.detailItem}>
+                  <span style={styles.detailLabel}>运动类型</span>
+                  <span style={styles.detailValue}>{selectedExercise.category}</span>
+                </div>
+                <div style={styles.detailItem}>
+                  <span style={styles.detailLabel}>关节冲击</span>
+                  <span
+                    style={{
+                      ...styles.impactBadge,
+                      background: getJointImpactColor(selectedExercise.jointImpact)
+                    }}
+                  >
+                    {selectedExercise.jointImpact}
+                  </span>
+                </div>
+                {selectedExercise.description && (
+                  <div style={styles.description}>{selectedExercise.description}</div>
+                )}
+              </div>
 
-                  <label style={styles.label}>
-                    <span>运动时长（分钟）</span>
-                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                      <input
-                        type="number"
-                        value={duration}
-                        onChange={(e) => setDuration(e.target.value)}
-                        style={{ ...styles.input, marginTop: 0, flex: 1 }}
-                        autoFocus
-                      />
-                      {[15, 30, 45, 60].map(d => (
-                        <button
-                          key={d}
-                          type="button"
-                          onClick={() => setDuration(d)}
-                          style={styles.quickDurationButton}
-                          className="btn-interactive"
-                        >
-                          {d}
-                        </button>
-                      ))}
-                    </div>
-                  </label>
+              <FormField label="运动时长（分钟）">
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <input
+                    type="number"
+                    value={duration}
+                    onChange={(e) => setDuration(e.target.value)}
+                    style={{ ...inputStyle, marginTop: 0, flex: 1 }}
+                    autoFocus
+                  />
+                  <QuickValueButtons values={[15, 30, 45, 60]} onSelect={setDuration} />
+                </div>
+              </FormField>
 
-                  <div style={styles.caloriesPreview}>
-                    <span style={styles.previewLabel}>预计消耗</span>
-                    <span style={styles.previewValue}>
-                      {calculateCalories(selectedExercise.caloriesPer30Min, duration, userWeight).toFixed(0)}千卡
-                    </span>
-                  </div>
-                  <div style={styles.hint}>
-                    基于你的体重（{userWeight}kg）计算
-                  </div>
+              <div style={styles.caloriesPreview}>
+                <span style={styles.previewLabel}>预计消耗</span>
+                <span style={styles.previewValue}>
+                  {calculateCalories(selectedExercise.caloriesPer30Min, duration, userWeight).toFixed(0)}千卡
+                </span>
+              </div>
+              <div style={styles.hint}>
+                基于你的体重（{userWeight}kg）计算
+              </div>
+            </div>
+            <ModalActions
+              onCancel={closeAddModal}
+              onConfirm={handleAddExercise}
+              confirmText="添加"
+            />
+          </>
+        ) : (
+          <>
+            <div style={styles.modalContent}>
+              <FormField label="运动名称" required>
+                <input
+                  type="text"
+                  value={manualExercise.name}
+                  onChange={(e) => setManualExercise({ ...manualExercise, name: e.target.value })}
+                  style={inputStyle}
+                  placeholder="例：篮球"
+                />
+              </FormField>
+              <FormField label="时长（分钟）" required>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <input
+                    type="number"
+                    value={manualExercise.duration}
+                    onChange={(e) => setManualExercise({ ...manualExercise, duration: e.target.value })}
+                    style={{ ...inputStyle, marginTop: 0, flex: 1 }}
+                    placeholder="例：60"
+                  />
+                  <QuickValueButtons
+                    values={[15, 30, 45, 60]}
+                    onSelect={(v) => setManualExercise({ ...manualExercise, duration: v.toString() })}
+                  />
                 </div>
-                <div style={styles.modalActions}>
-                  <button type="button" onClick={closeAddModal} style={styles.cancelButton}>
-                    取消
-                  </button>
-                  <button type="button" onClick={handleAddExercise} style={styles.confirmButton}>
-                    添加
-                  </button>
-                </div>
-              </>
-            ) : (
-              <>
-                <div style={styles.modalContent}>
-                  <label style={styles.label}>
-                    <span>运动名称*</span>
-                    <input
-                      type="text"
-                      value={manualExercise.name}
-                      onChange={(e) => setManualExercise({ ...manualExercise, name: e.target.value })}
-                      style={styles.input}
-                      placeholder="例：篮球"
-                    />
-                  </label>
-                  <label style={styles.label}>
-                    <span>时长（分钟）*</span>
-                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                      <input
-                        type="number"
-                        value={manualExercise.duration}
-                        onChange={(e) => setManualExercise({ ...manualExercise, duration: e.target.value })}
-                        style={{ ...styles.input, marginTop: 0, flex: 1 }}
-                        placeholder="例：60"
-                      />
-                      {[15, 30, 45, 60].map(d => (
-                        <button
-                          key={d}
-                          type="button"
-                          onClick={() => setManualExercise({ ...manualExercise, duration: d.toString() })}
-                          style={styles.quickDurationButton}
-                          className="btn-interactive"
-                        >
-                          {d}
-                        </button>
-                      ))}
-                    </div>
-                  </label>
-                  <label style={styles.label}>
-                    <span>消耗热量（千卡）*</span>
-                    <input
-                      type="number"
-                      value={manualExercise.calories}
-                      onChange={(e) => setManualExercise({ ...manualExercise, calories: e.target.value })}
-                      style={styles.input}
-                      placeholder="例：300"
-                    />
-                  </label>
-                  <label style={styles.label}>
-                    <span>分类</span>
-                    <input
-                      type="text"
-                      value={manualExercise.category}
-                      onChange={(e) => setManualExercise({ ...manualExercise, category: e.target.value })}
-                      style={styles.input}
-                      placeholder="例：有氧运动"
-                    />
-                  </label>
-                </div>
-                <div style={styles.modalActions}>
-                  <button type="button" onClick={closeAddModal} style={styles.cancelButton}>
-                    取消
-                  </button>
-                  <button type="button" onClick={handleManualAdd} style={styles.confirmButton}>
-                    {editingExerciseId ? '保存' : '添加'}
-                  </button>
-                </div>
-              </>
-            )}
-        </ModalShell>
-      )}
+              </FormField>
+              <FormField label="消耗热量（千卡）" required>
+                <input
+                  type="number"
+                  value={manualExercise.calories}
+                  onChange={(e) => setManualExercise({ ...manualExercise, calories: e.target.value })}
+                  style={inputStyle}
+                  placeholder="例：300"
+                />
+              </FormField>
+              <FormField label="分类">
+                <input
+                  type="text"
+                  value={manualExercise.category}
+                  onChange={(e) => setManualExercise({ ...manualExercise, category: e.target.value })}
+                  style={inputStyle}
+                  placeholder="例：有氧运动"
+                />
+              </FormField>
+            </div>
+            <ModalActions
+              onCancel={closeAddModal}
+              onConfirm={handleManualAdd}
+              confirmText={editingExerciseId ? '保存' : '添加'}
+            />
+          </>
+        )}
+      </Modal>
     </div>
   );
 };
@@ -581,42 +491,6 @@ const styles = {
   },
   categoriesSection: {
     marginBottom: '20px'
-  },
-  searchBox: {
-    position: 'relative',
-    marginBottom: '12px'
-  },
-  searchIcon: {
-    position: 'absolute',
-    left: '12px',
-    top: '50%',
-    transform: 'translateY(-50%)',
-    color: 'var(--text-muted)'
-  },
-  searchInput: {
-    width: '100%',
-    padding: '12px 12px 12px 40px',
-    borderRadius: '10px',
-    border: '1px solid var(--border)',
-    background: 'var(--bg-tertiary)',
-    color: 'var(--text-heading)',
-    fontSize: '14px',
-    outline: 'none'
-  },
-  searchResults: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '8px',
-    marginBottom: '12px'
-  },
-  searchResultCard: {
-    width: '100%',
-    padding: '12px 14px',
-    borderRadius: '10px',
-    border: '1px solid var(--border)',
-    background: 'var(--bg-secondary)',
-    cursor: 'pointer',
-    textAlign: 'left'
   },
   header: {
     display: 'flex',
@@ -728,14 +602,6 @@ const styles = {
   todaySection: {
     marginBottom: '20px'
   },
-  emptyState: {
-    textAlign: 'center',
-    padding: '40px',
-    color: 'var(--text-muted)',
-    fontSize: '14px',
-    background: 'var(--bg-secondary)',
-    borderRadius: '8px'
-  },
   logsList: {
     display: 'flex',
     flexDirection: 'column',
@@ -836,35 +702,6 @@ const styles = {
     fontWeight: '700',
     color: 'var(--success)'
   },
-  modalOverlay: {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    background: 'rgba(0, 0, 0, 0.7)',
-    backdropFilter: 'blur(10px)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 1000,
-    padding: '20px'
-  },
-  modal: {
-    background: 'var(--bg-tertiary)',
-    borderRadius: '16px',
-    padding: '24px',
-    width: '100%',
-    maxWidth: '500px',
-    maxHeight: '90vh',
-    overflow: 'auto'
-  },
-  modalTitle: {
-    fontSize: '18px',
-    fontWeight: '600',
-    color: 'var(--text-heading)',
-    marginBottom: '20px'
-  },
   modalContent: {
     marginBottom: '20px'
   },
@@ -897,23 +734,6 @@ const styles = {
     color: 'var(--text-secondary)',
     lineHeight: '1.5'
   },
-  label: {
-    display: 'flex',
-    flexDirection: 'column',
-    marginBottom: '16px',
-    fontSize: '14px',
-    color: 'var(--text-secondary)'
-  },
-  input: {
-    marginTop: '6px',
-    padding: '10px',
-    background: 'var(--bg-secondary)',
-    border: '1px solid var(--border)',
-    borderRadius: '6px',
-    color: 'var(--text-heading)',
-    fontSize: '14px',
-    outline: 'none'
-  },
   caloriesPreview: {
     display: 'flex',
     alignItems: 'center',
@@ -937,47 +757,6 @@ const styles = {
     color: 'var(--text-muted)',
     textAlign: 'center',
     fontStyle: 'italic'
-  },
-  modalActions: {
-    display: 'flex',
-    gap: '12px'
-  },
-  cancelButton: {
-    flex: 1,
-    padding: '12px',
-    background: 'var(--bg-secondary)',
-    border: '1px solid var(--border)',
-    borderRadius: '8px',
-    color: 'var(--text-heading)',
-    fontSize: '14px',
-    fontWeight: '500',
-    cursor: 'pointer',
-    transition: 'background 0.3s'
-  },
-  confirmButton: {
-    flex: 1,
-    padding: '12px',
-    background: 'var(--accent)',
-    border: 'none',
-    borderRadius: '8px',
-    color: '#fff',
-    fontSize: '14px',
-    fontWeight: '500',
-    cursor: 'pointer',
-    transition: 'background 0.3s'
-  },
-  quickDurationButton: {
-    padding: '8px 12px',
-    background: 'var(--bg-tertiary)',
-    border: '1px solid var(--border)',
-    borderRadius: '6px',
-    color: 'var(--text-heading)',
-    fontSize: '13px',
-    fontWeight: '500',
-    cursor: 'pointer',
-    minWidth: '44px',
-    minHeight: '44px',
-    whiteSpace: 'nowrap'
   }
 };
 
