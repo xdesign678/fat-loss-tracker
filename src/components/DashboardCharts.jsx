@@ -14,29 +14,20 @@ import {
 import EmptyState from './EmptyState';
 import { TrendingUp, BarChart3 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import { formatDate, getWeekDates } from '../utils/calculations';
+import { formatDate, getDateRange } from '../utils/calculations';
 
-const DashboardCharts = ({ weeklyCalorieData, weightTrendData }) => {
+const DashboardCharts = ({ selectedDate, calorieTarget, weightTrendData }) => {
   const { state } = useApp();
   const profile = state.profile || {};
   const [calorieRange, setCalorieRange] = useState(7); // 7, 14, 30 天
 
   // 根据时间范围重新计算热量数据
   const filteredCalorieData = useMemo(() => {
-    const endDate = new Date();
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - (calorieRange - 1));
-
-    const dates = [];
-    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-      dates.push(new Date(d));
-    }
-
-    return dates.map((date) => {
+    return getDateRange(selectedDate, calorieRange).map((date) => {
       const dateKey = formatDate(date);
       const log = state.dailyLogs[dateKey] || { foods: [], exercises: [] };
       const calories = Math.round(log.foods.reduce((sum, food) => sum + (food.calories || 0), 0));
-      const target = weeklyCalorieData[0]?.target || 0;
+      const target = Math.round(calorieTarget || 0);
 
       return {
         date: formatDate(date, 'MM/DD'),
@@ -45,7 +36,7 @@ const DashboardCharts = ({ weeklyCalorieData, weightTrendData }) => {
         isOverTarget: calories > target,
       };
     });
-  }, [calorieRange, state.dailyLogs, weeklyCalorieData]);
+  }, [calorieRange, selectedDate, state.dailyLogs, calorieTarget]);
 
   // 线性回归预测体重趋势
   const predictedWeightData = useMemo(() => {
@@ -149,7 +140,7 @@ const DashboardCharts = ({ weeklyCalorieData, weightTrendData }) => {
       {/* 热量趋势图 */}
       <div style={styles.chartCard} className="card-hover">
         <div style={styles.chartHeader}>
-          <div style={styles.chartTitle}>热量趋势</div>
+          <div style={styles.chartTitle}>热量趋势（截至 {formatDate(selectedDate, 'MM/DD')}）</div>
           <div style={styles.rangeButtons}>
             {[7, 14, 30].map((days) => (
               <button
@@ -206,7 +197,7 @@ const DashboardCharts = ({ weeklyCalorieData, weightTrendData }) => {
                   name="实际摄入"
                   fill="var(--accent)"
                   shape={(props) => {
-                    const { fill, x, y, width, height, payload } = props;
+                    const { x, y, width, height, payload } = props;
                     const color = payload.isOverTarget ? 'var(--danger)' : 'var(--success)';
                     return (
                       <rect
@@ -229,7 +220,7 @@ const DashboardCharts = ({ weeklyCalorieData, weightTrendData }) => {
 
       {/* 体重趋势图 */}
       <div style={styles.chartCard} className="card-hover">
-        <div style={styles.chartTitle}>体重趋势（最近14天 + 预测）</div>
+        <div style={styles.chartTitle}>体重趋势（最近记录 + 7 天预测）</div>
 
         {!hasWeightData ? (
           <div style={{ padding: '20px 0' }}>

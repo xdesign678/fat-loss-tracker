@@ -3,7 +3,7 @@ import { useApp } from './context/AppContext';
 import { useTheme } from './context/ThemeContext';
 import SetupScreen from './components/SetupScreen';
 import VoiceRecorder from './components/VoiceRecorder';
-import { formatDate } from './utils/calculations';
+import { usePersistentNavigationState } from './hooks/usePersistentNavigationState';
 import { Home, Utensils, Dumbbell, BookOpen, Mic, Settings as SettingsIcon, Sun, Moon } from 'lucide-react';
 
 class ErrorBoundary extends Component {
@@ -41,14 +41,15 @@ const rightTabs = [
   { id: 'tips', label: '知识库', icon: BookOpen },
 ];
 
+const ALL_TABS = [...leftTabs, ...rightTabs].map((tab) => tab.id);
+
 function App() {
   const { state } = useApp();
   const { theme, toggleTheme } = useTheme();
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const { activeTab, setActiveTab, selectedDate, setSelectedDate } = usePersistentNavigationState(ALL_TABS);
   const [weightModalOpen, setWeightModalOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [voiceModalOpen, setVoiceModalOpen] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(() => formatDate(new Date()));
 
   if (!state.setupComplete) {
     return <SetupScreen />;

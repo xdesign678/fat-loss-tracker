@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { useApp } from '../context/AppContext';
+import { testAIConnection } from '../utils/ai';
 import { useToast } from './Toast';
-import { X, Plus, Trash2, Eye, EyeOff, Check, Zap } from 'lucide-react';
+import ModalShell from './ModalShell';
+import { Plus, Trash2, Eye, EyeOff, Check, Zap } from 'lucide-react';
 
 const PRESET_MODELS = [
   'google/gemini-2.0-flash-001',
@@ -13,33 +15,6 @@ const PRESET_MODELS = [
   'meta-llama/llama-3.1-70b-instruct',
   'qwen/qwen-2.5-72b-instruct',
 ];
-
-// Reusable Modal styles (exported for other components)
-export const MODAL_STYLES = {
-  overlay: {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    background: 'var(--bg-overlay)',
-    backdropFilter: 'blur(10px)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 1000,
-    padding: '20px',
-  },
-  content: {
-    background: 'var(--bg-tertiary)',
-    borderRadius: '16px',
-    width: '100%',
-    maxWidth: '520px',
-    maxHeight: '85vh',
-    display: 'flex',
-    flexDirection: 'column',
-  },
-};
 
 const Settings = ({ isOpen, onClose }) => {
   const { state, dispatch } = useApp();
@@ -91,43 +66,13 @@ const Settings = ({ isOpen, onClose }) => {
     setTesting(true);
     setTestResult(null);
     try {
-      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model: selectedModel,
-          messages: [{ role: 'user', content: 'Reply with just "ok"' }],
-          max_tokens: 5,
-        }),
-      });
-      if (res.ok) {
-        setTestResult({ ok: true, msg: '连接成功' });
-      } else {
-        const err = await res.json().catch(() => ({}));
-        setTestResult({ ok: false, msg: err.error?.message || `HTTP ${res.status}` });
-      }
+      await testAIConnection({ apiKey, model: selectedModel });
+      setTestResult({ ok: true, msg: '连接成功' });
     } catch (e) {
       setTestResult({ ok: false, msg: e.message });
     }
     setTesting(false);
   };
-
-  // ESC key to close
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleEscape = (e) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
-    };
-
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
-  }, [isOpen, onClose]);
 
   // Focus management
   useEffect(() => {
@@ -144,16 +89,8 @@ const Settings = ({ isOpen, onClose }) => {
   const presetsNotAdded = PRESET_MODELS.filter((m) => !models.includes(m));
 
   return (
-    <div className="modal-overlay" style={MODAL_STYLES.overlay} onClick={onClose}>
-      <div className="modal-content" style={MODAL_STYLES.content} onClick={(e) => e.stopPropagation()}>
-        <div style={styles.header}>
-          <h2 style={styles.title}>AI 设置</h2>
-          <button style={styles.closeBtn} onClick={onClose} aria-label="关闭设置">
-            <X size={20} />
-          </button>
-        </div>
-
-        <div style={styles.scrollArea}>
+    <ModalShell isOpen={isOpen} onClose={onClose} title="AI 设置" maxWidth="520px" bodyPadding="20px 24px 24px">
+      <div style={styles.scrollArea}>
           {/* API Key */}
           <div style={styles.section}>
             <label style={styles.sectionLabel}>OpenRouter API Key</label>
@@ -315,41 +252,16 @@ const Settings = ({ isOpen, onClose }) => {
               </div>
             )}
           </div>
-        </div>
       </div>
-    </div>
+    </ModalShell>
   );
 };
 
 const styles = {
-  header: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '20px 24px 0',
-  },
-  title: {
-    fontSize: '20px',
-    fontWeight: '700',
-    color: 'var(--text-heading)',
-    margin: 0,
-  },
-  closeBtn: {
-    background: 'transparent',
-    border: 'none',
-    color: 'var(--text-secondary)',
-    cursor: 'pointer',
-    padding: '12px',
-    minWidth: '44px',
-    minHeight: '44px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   scrollArea: {
-    padding: '20px 24px 24px',
-    overflowY: 'auto',
-    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '24px',
   },
   section: {
     marginBottom: '24px',

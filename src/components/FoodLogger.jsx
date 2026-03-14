@@ -3,9 +3,10 @@ import { Search, Sparkles, X, Edit3, Utensils, Loader } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import DateNavigator from './DateNavigator';
 import { searchFood, foodDatabase } from '../utils/foodDatabase';
-import { formatDate } from '../utils/calculations';
-import { getRecentEntries } from '../utils/tracking';
+import { formatDate, toDate } from '../utils/calculations';
+import { requestAIJson } from '../utils/ai';
 import EmptyState from './EmptyState';
+import ModalShell from './ModalShell';
 import { useToast } from './Toast';
 
 const FoodLogger = ({ selectedDate, onDateChange }) => {
@@ -41,7 +42,7 @@ const FoodLogger = ({ selectedDate, onDateChange }) => {
 
     const foodCount = {};
     Object.keys(state.dailyLogs).forEach(date => {
-      const logDate = new Date(date);
+      const logDate = toDate(date);
       if (logDate >= sevenDaysAgo) {
         const foods = state.dailyLogs[date]?.foods || [];
         foods.forEach(food => {
@@ -251,86 +252,85 @@ const FoodLogger = ({ selectedDate, onDateChange }) => {
   const aiSettings = state.aiSettings || {};
   const hasAI = !!(aiSettings.apiKey && aiSettings.selectedModel);
 
-  const callOpenRouter = async (text) => {
-    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${aiSettings.apiKey}`,
-      },
-      body: JSON.stringify({
-        model: aiSettings.selectedModel,
-        messages: [{
-          role: 'system',
-          content: `你是一个食物营养分析助手。用户会告诉你他吃了什么，你需要分析每种食物并返回JSON数组。
-每个元素格式：{"name":"食物名","grams":克数,"calories":总热量kcal,"protein":蛋白质g,"carbs":碳水g,"fat":脂肪g}
-注意：calories/protein/carbs/fat是该份量的总量，不是每100g的值。
-只返回JSON数组，不要有其他文字。`
-        }, {
-          role: 'user',
-          content: text,
-        }],
-        max_tokens: 1000,
-        temperature: 0.1,
-      }),
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error?.message || `API错误 ${res.status}`);
-    }
-    const data = await res.json();
-    const content = data.choices?.[0]?.message?.content || '';
-    // 提取JSON数组
-    const match = content.match(/\[[\s\S]*\]/);
-    if (!match) throw new Error('AI返回格式异常');
-    return JSON.parse(match[0]);
+  const normalizeAIItem = (item, fromAI) => ({
+    name: item.name || '',
+    grams: Math.round(item.grams || 0),
+    calories: Math.round(item.calories || 0),
+    protein: Math.round(item.protein || 0),
+    carbs: Math.round(item.carbs || 0),
+    fat: Math.round(item.fat || 0),
+    fromAI,
+  });
+
+  const updateAIResult = (index, field, value) => {
+    setAiResults((prev) => prev.map((item, itemIndex) => {
+      if (itemIndex !== index) return item;
+
+      const normalizedValue = field === 'name'
+        ? value
+        : value === ''
+          ? ''
+          : Number(value);
+
+      return {
+        ...item,
+        [field]: normalizedValue,
+      };
+    }));
+  };
+
+  const removeAIResult = (index) => {
+    setAiResults((prev) => prev.filter((_, itemIndex) => itemIndex !== index));
   };
 
   const handleAIRecognition = async () => {
     if (!aiInput.trim()) return;
 
+    setAiLoading(true);
+    setAiError('');
+    setAiResults([]);
+
     if (hasAI) {
-      // 使用 OpenRouter API
-      setAiLoading(true);
-      setAiError('');
-      setAiResults([]);
       try {
-        const items = await callOpenRouter(aiInput);
+        const items = await requestAIJson({
+          apiKey: aiSettings.apiKey,
+          model: aiSettings.selectedModel,
+          responseType: 'array',
+          systemPrompt: `你是一个食物营养分析助手。用户会告诉你他吃了什么，你需要分析每种食物并返回JSON数组。
+每个元素格式：{"name":"食物名","grams":克数,"calories":总热量kcal,"protein":蛋白质g,"carbs":碳水g,"fat":脂肪g}
+注意：calories/protein/carbs/fat是该份量的总量，不是每100g的值。
+只返回JSON数组，不要有其他文字。`,
+          userPrompt: aiInput,
+        });
+
         if (!Array.isArray(items) || items.length === 0) {
           setAiError('AI 未能识别食物，请重新描述');
         } else {
-          setAiResults(items.map(item => ({
-            name: item.name,
-            grams: item.grams || 100,
-            calories: Math.round(item.calories || 0),
-            protein: Math.round(item.protein || 0),
-            carbs: Math.round(item.carbs || 0),
-            fat: Math.round(item.fat || 0),
-            fromAI: true,
-          })));
+          setAiResults(items.map((item) => normalizeAIItem(item, true)));
         }
       } catch (e) {
         setAiError(`AI 识别失败: ${e.message}`);
+      } finally {
+        setAiLoading(false);
       }
-      setAiLoading(false);
     } else {
       // 本地匹配 fallback
       const recognized = parseAIInput(aiInput);
       if (recognized.length === 0) {
         setAiError('未识别到食物。配置 AI 设置可识别任意食物，或使用"一碗米饭"等格式匹配本地数据库');
-        setAiResults([]);
+        setAiLoading(false);
         return;
       }
-      setAiError('');
-      setAiResults(recognized.map(item => ({
+
+      setAiResults(recognized.map((item) => normalizeAIItem({
         name: stripParens(item.name),
         grams: item.grams,
         calories: parseFloat(calculateNutrition(item.calories, item.grams)),
         protein: parseFloat(calculateNutrition(item.protein, item.grams)),
         carbs: parseFloat(calculateNutrition(item.carbs, item.grams)),
         fat: parseFloat(calculateNutrition(item.fat, item.grams)),
-        fromAI: false,
-      })));
+      }, false)));
+      setAiLoading(false);
     }
   };
 
@@ -338,11 +338,11 @@ const FoodLogger = ({ selectedDate, onDateChange }) => {
     aiResults.forEach(item => {
       const food = {
         name: item.name,
-        grams: item.grams,
-        calories: item.fromAI ? item.calories : item.calories,
-        protein: item.protein,
-        carbs: item.carbs,
-        fat: item.fat,
+        grams: Number(item.grams) || 0,
+        calories: Number(item.calories) || 0,
+        protein: Number(item.protein) || 0,
+        carbs: Number(item.carbs) || 0,
+        fat: Number(item.fat) || 0,
         time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
       };
       dispatch({ type: 'LOG_FOOD', payload: { date: selectedDate, food } });
@@ -356,8 +356,18 @@ const FoodLogger = ({ selectedDate, onDateChange }) => {
 
   const handleDeleteFood = (id) => {
     const food = todayLogs.find(f => f.id === id);
+    if (!food) return;
+
     dispatch({ type: 'REMOVE_FOOD', payload: { date: selectedDate, id } });
-    showToast(`已删除 ${food?.name || '食物'}`, 'success');
+    showToast({
+      message: `已删除 ${food.name}`,
+      type: 'info',
+      duration: 4000,
+      actionLabel: '撤销',
+      onAction: () => {
+        dispatch({ type: 'RESTORE_FOOD', payload: { date: selectedDate, food } });
+      },
+    });
   };
 
   const handleEditFood = (food) => {
@@ -572,11 +582,14 @@ const FoodLogger = ({ selectedDate, onDateChange }) => {
 
       {/* 添加食物弹窗 */}
       {showAddModal && (
-        <div style={styles.modalOverlay} onClick={closeAddModal}>
-          <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
+        <ModalShell
+          isOpen={showAddModal}
+          onClose={closeAddModal}
+          title={selectedFood ? selectedFood.name : editingFoodId ? '编辑食物' : '手动输入食物'}
+          maxWidth="500px"
+        >
             {selectedFood ? (
               <>
-                <h3 style={styles.modalTitle}>{selectedFood.name}</h3>
                 <div style={styles.modalContent}>
                   <label style={styles.label}>
                     <span>重量（克）</span>
@@ -639,7 +652,6 @@ const FoodLogger = ({ selectedDate, onDateChange }) => {
               </>
             ) : (
               <>
-                <h3 style={styles.modalTitle}>{editingFoodId ? '编辑食物' : '手动输入食物'}</h3>
                 <div style={styles.modalContent}>
                   <label style={styles.label}>
                     <span>食物名称*</span>
@@ -725,15 +737,17 @@ const FoodLogger = ({ selectedDate, onDateChange }) => {
                 </div>
               </>
             )}
-          </div>
-        </div>
+        </ModalShell>
       )}
 
       {/* AI识别弹窗 */}
       {showAIModal && (
-        <div style={styles.modalOverlay} onClick={() => { setShowAIModal(false); setAiResults([]); setAiError(''); }}>
-          <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
-            <h3 style={styles.modalTitle}>AI 智能识别</h3>
+        <ModalShell
+          isOpen={showAIModal}
+          onClose={() => { setShowAIModal(false); setAiResults([]); setAiError(''); }}
+          title="AI 智能识别"
+          maxWidth="500px"
+        >
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
               <span style={{
                 padding: '3px 10px',
@@ -785,17 +799,81 @@ const FoodLogger = ({ selectedDate, onDateChange }) => {
               {aiResults.length > 0 && (
                 <div style={{ marginTop: '12px' }}>
                   <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
-                    识别到 {aiResults.length} 项食物：
+                    识别到 {aiResults.length} 项食物，可在确认前直接修改：
                   </div>
                   {aiResults.map((item, i) => (
-                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', background: 'var(--bg-secondary)', borderRadius: '8px', marginBottom: '6px' }}>
-                      <div>
-                        <span style={{ color: 'var(--text-heading)', fontSize: '14px', fontWeight: '500' }}>{item.name}</span>
-                        <span style={{ color: 'var(--text-muted)', fontSize: '12px', marginLeft: '8px' }}>{item.grams}g</span>
+                    <div key={`${item.name}-${i}`} style={styles.aiResultCard}>
+                      <div style={styles.aiResultHeader}>
+                        <div>
+                          <span style={{ color: 'var(--text-heading)', fontSize: '14px', fontWeight: '500' }}>{item.name || `食物 ${i + 1}`}</span>
+                          <span style={{ color: 'var(--text-muted)', fontSize: '12px', marginLeft: '8px' }}>{item.grams || 0}g</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeAIResult(i)}
+                          style={styles.aiResultDelete}
+                          className="btn-interactive"
+                          aria-label={`删除识别结果 ${item.name || i + 1}`}
+                        >
+                          <X size={14} />
+                        </button>
                       </div>
-                      <span style={{ color: 'var(--accent)', fontSize: '14px', fontWeight: '600' }}>
-                        {Math.round(item.calories)} kcal
-                      </span>
+                      <div style={styles.aiEditorGrid}>
+                        <label style={styles.aiEditorField}>
+                          <span>名称</span>
+                          <input
+                            type="text"
+                            value={item.name}
+                            onChange={(e) => updateAIResult(i, 'name', e.target.value)}
+                            style={styles.input}
+                          />
+                        </label>
+                        <label style={styles.aiEditorField}>
+                          <span>克数</span>
+                          <input
+                            type="number"
+                            value={item.grams}
+                            onChange={(e) => updateAIResult(i, 'grams', e.target.value)}
+                            style={styles.input}
+                          />
+                        </label>
+                        <label style={styles.aiEditorField}>
+                          <span>热量</span>
+                          <input
+                            type="number"
+                            value={item.calories}
+                            onChange={(e) => updateAIResult(i, 'calories', e.target.value)}
+                            style={styles.input}
+                          />
+                        </label>
+                        <label style={styles.aiEditorField}>
+                          <span>蛋白</span>
+                          <input
+                            type="number"
+                            value={item.protein}
+                            onChange={(e) => updateAIResult(i, 'protein', e.target.value)}
+                            style={styles.input}
+                          />
+                        </label>
+                        <label style={styles.aiEditorField}>
+                          <span>碳水</span>
+                          <input
+                            type="number"
+                            value={item.carbs}
+                            onChange={(e) => updateAIResult(i, 'carbs', e.target.value)}
+                            style={styles.input}
+                          />
+                        </label>
+                        <label style={styles.aiEditorField}>
+                          <span>脂肪</span>
+                          <input
+                            type="number"
+                            value={item.fat}
+                            onChange={(e) => updateAIResult(i, 'fat', e.target.value)}
+                            style={styles.input}
+                          />
+                        </label>
+                      </div>
                     </div>
                   ))}
                   <div style={{ display: 'flex', justifyContent: 'flex-end', fontSize: '14px', fontWeight: '600', color: 'var(--success)', marginTop: '4px', padding: '0 12px' }}>
@@ -813,13 +891,12 @@ const FoodLogger = ({ selectedDate, onDateChange }) => {
                   {aiLoading ? '分析中...' : '识别'}
                 </button>
               ) : (
-                <button type="button" onClick={handleConfirmAIResults} style={{ ...styles.confirmButton, background: 'var(--success)' }}>
+                <button type="button" onClick={handleConfirmAIResults} style={{ ...styles.confirmButton, background: 'var(--success)' }} disabled={aiResults.length === 0}>
                   确认添加
                 </button>
               )}
             </div>
-          </div>
-        </div>
+        </ModalShell>
       )}
     </div>
   );
@@ -1185,6 +1262,43 @@ const styles = {
     color: 'var(--text-muted)',
     marginTop: '8px',
     fontStyle: 'italic'
+  },
+  aiResultCard: {
+    padding: '12px',
+    background: 'var(--bg-secondary)',
+    borderRadius: '10px',
+    marginBottom: '10px',
+    border: '1px solid var(--border)'
+  },
+  aiResultHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: '10px'
+  },
+  aiResultDelete: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '32px',
+    height: '32px',
+    borderRadius: '8px',
+    border: 'none',
+    background: 'var(--danger-bg)',
+    color: 'var(--danger)',
+    cursor: 'pointer'
+  },
+  aiEditorGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(2, 1fr)',
+    gap: '10px'
+  },
+  aiEditorField: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '6px',
+    fontSize: '12px',
+    color: 'var(--text-secondary)'
   },
   modalActions: {
     display: 'flex',

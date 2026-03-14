@@ -98,6 +98,22 @@ describe('reducer', () => {
     expect(nextState.dailyLogs['2026-03-06'].foods[0].calories).toBe(180);
   });
 
+  it('可以恢复删除的食物记录', () => {
+    const nextState = reducer(createDefaultState(), {
+      type: 'RESTORE_FOOD',
+      payload: {
+        date: '2026-03-06',
+        food: { id: 'food-keep', name: '鸡胸肉', calories: 160 },
+      },
+    });
+
+    expect(nextState.dailyLogs['2026-03-06'].foods[0]).toEqual({
+      id: 'food-keep',
+      name: '鸡胸肉',
+      calories: 160,
+    });
+  });
+
   it('会按 id 更新运动记录', () => {
     const state = normalizeState({
       dailyLogs: {
@@ -122,5 +138,21 @@ describe('reducer', () => {
     expect(nextState.dailyLogs['2026-03-06'].exercises[0].id).toBe('exercise-1');
     expect(nextState.dailyLogs['2026-03-06'].exercises[0].name).toBe('椭圆机');
     expect(nextState.dailyLogs['2026-03-06'].exercises[0].duration).toBe(35);
+  });
+
+  it('可以恢复删除的运动记录', () => {
+    const nextState = reducer(createDefaultState(), {
+      type: 'RESTORE_EXERCISE',
+      payload: {
+        date: '2026-03-06',
+        exercise: { id: 'exercise-keep', name: '快走', calories: 180 },
+      },
+    });
+
+    expect(nextState.dailyLogs['2026-03-06'].exercises[0]).toEqual({
+      id: 'exercise-keep',
+      name: '快走',
+      calories: 180,
+    });
   });
 });

@@ -10,8 +10,8 @@ import {
   calculateProgress,
   calculateProteinTarget,
   formatDate,
+  getDaysBetween,
   getDailyTip,
-  getWeekDates,
 } from '../utils/calculations';
 import { buildDailyActionPlan } from '../utils/tracking';
 import {
@@ -69,14 +69,14 @@ const Dashboard = ({ selectedDate, onDateChange, onOpenWeightLogger }) => {
   // useMemo 缓存 BMR/TDEE/目标值计算
   const targets = useMemo(() => {
     const bmr = profile.height && profile.age && profile.currentWeight
-      ? calculateBMR(profile.currentWeight, profile.height, profile.age)
+      ? calculateBMR(profile.currentWeight, profile.height, profile.age, profile.sex)
       : 0;
     const tdee = bmr && profile.activityLevel ? calculateTDEE(bmr, profile.activityLevel) : 0;
     const calorieTarget = tdee ? calculateDailyCalorieTarget(tdee, 0.5) : 0;
     const proteinTarget = profile.currentWeight ? calculateProteinTarget(profile.currentWeight) : 0;
 
     return { bmr, tdee, calorieTarget, proteinTarget };
-  }, [profile.currentWeight, profile.height, profile.age, profile.activityLevel]);
+  }, [profile.currentWeight, profile.height, profile.age, profile.activityLevel, profile.sex]);
 
   // useMemo 缓存进度计算
   const progressData = useMemo(() => {
@@ -92,9 +92,7 @@ const Dashboard = ({ selectedDate, onDateChange, onOpenWeightLogger }) => {
       : 0;
 
     // 计算已坚持天数（从首次体重记录开始）
-    const daysPersisted = state.weightHistory.length > 0
-      ? Math.floor((new Date() - new Date(state.weightHistory[0].date)) / (1000 * 60 * 60 * 24))
-      : 0;
+    const daysPersisted = profile.startDate ? getDaysBetween(profile.startDate, new Date()) : 0;
 
     // 计算平均每周减重速度
     const weeksElapsed = daysPersisted / 7;
@@ -104,26 +102,13 @@ const Dashboard = ({ selectedDate, onDateChange, onOpenWeightLogger }) => {
     const daysRemaining = avgWeeklyLoss > 0 ? Math.ceil((weightToGo / avgWeeklyLoss) * 7) : 0;
 
     return { progress, weightLost, weightToGo, daysPersisted, avgWeeklyLoss, daysRemaining };
-  }, [profile.startWeight, profile.currentWeight, profile.targetWeight, state.weightHistory]);
-
-  // useMemo 缓存周热量数据
-  const weeklyCalorieData = useMemo(() => {
-    return getWeekDates(new Date(selectedDate)).map((date) => {
-      const dateKey = formatDate(date);
-      const log = state.dailyLogs[dateKey] || { foods: [], exercises: [] };
-      return {
-        date: formatDate(date, 'MM/DD'),
-        calories: Math.round(log.foods.reduce((sum, food) => sum + (food.calories || 0), 0)),
-        target: Math.round(targets.calorieTarget),
-      };
-    });
-  }, [selectedDate, state.dailyLogs, targets.calorieTarget]);
+  }, [profile.startDate, profile.startWeight, profile.currentWeight, profile.targetWeight]);
 
   // useMemo 缓存体重趋势数据
   const weightTrendData = useMemo(() => {
     return state.weightHistory.length > 0
       ? state.weightHistory.slice(-14).map((entry) => ({
-          date: formatDate(new Date(entry.date), 'MM/DD'),
+          date: formatDate(entry.date, 'MM/DD'),
           weight: entry.weight,
         }))
       : [{ date: formatDate(new Date(), 'MM/DD'), weight: profile.currentWeight || 0 }];
@@ -157,7 +142,7 @@ const Dashboard = ({ selectedDate, onDateChange, onOpenWeightLogger }) => {
     }
 
     // 默认返回每日健康提示
-    return getDailyTip(tips, new Date(selectedDate));
+    return getDailyTip(tips, selectedDate);
   }, [dailyStats, targets, selectedDate]);
 
   // 判断是否有数据
@@ -166,6 +151,7 @@ const Dashboard = ({ selectedDate, onDateChange, onOpenWeightLogger }) => {
 
   // 计算统计卡片颜色
   const getCalorieColor = () => {
+    if (!targets.calorieTarget) return 'var(--accent)';
     const ratio = dailyStats.caloriesConsumed / targets.calorieTarget;
     if (ratio > 1) return 'var(--danger)';
     if (ratio >= 0.9) return 'var(--warning)';
@@ -173,6 +159,7 @@ const Dashboard = ({ selectedDate, onDateChange, onOpenWeightLogger }) => {
   };
 
   const getProteinColor = () => {
+    if (!targets.proteinTarget) return 'var(--accent)';
     const ratio = dailyStats.proteinConsumed / targets.proteinTarget;
     if (ratio > 1.2) return 'var(--danger)';
     if (ratio >= 0.9) return 'var(--success)';
@@ -353,7 +340,7 @@ const Dashboard = ({ selectedDate, onDateChange, onOpenWeightLogger }) => {
         </div>
       </div>
       <Suspense fallback={<div style={styles.chartSkeleton}>图表加载中...</div>}>
-        <DashboardCharts weeklyCalorieData={weeklyCalorieData} weightTrendData={weightTrendData} />
+        <DashboardCharts selectedDate={selectedDate} calorieTarget={targets.calorieTarget} weightTrendData={weightTrendData} />
       </Suspense>
       <div style={styles.tipCard} className="card-hover">
         <Lightbulb size={24} style={styles.tipIcon} />

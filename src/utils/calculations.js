@@ -1,6 +1,34 @@
-// BMR 计算，当前按常见男性公式估算
-export function calculateBMR(weightKg, heightCm, age) {
-  return 10 * weightKg + 6.25 * heightCm - 5 * age + 5;
+import {
+  addDays,
+  differenceInCalendarDays,
+  eachDayOfInterval,
+  format as formatWithPattern,
+  isValid,
+  parseISO,
+  startOfWeek,
+} from 'date-fns';
+
+function normalizePattern(pattern = 'yyyy-MM-dd') {
+  return pattern
+    .replaceAll('YYYY', 'yyyy')
+    .replaceAll('DD', 'dd');
+}
+
+export function toDate(value = new Date()) {
+  if (value instanceof Date) return value;
+  if (typeof value === 'string') return parseISO(value);
+  return new Date(value);
+}
+
+// BMR 计算（Mifflin-St Jeor 估算）
+export function calculateBMR(weightKg, heightCm, age, sex = 'male') {
+  const base = 10 * weightKg + 6.25 * heightCm - 5 * age;
+
+  if (sex === 'female') {
+    return base - 161;
+  }
+
+  return base + 5;
 }
 
 // TDEE计算
@@ -26,6 +54,17 @@ export function calculateDaysToGoal(currentWeight, targetWeight, weeklyLossKg) {
   if (currentWeight <= targetWeight) return 0;
   const totalToLose = currentWeight - targetWeight;
   return Math.ceil((totalToLose / weeklyLossKg) * 7);
+}
+
+export function getDaysBetween(startDate, endDate = new Date()) {
+  const start = toDate(startDate);
+  const end = toDate(endDate);
+
+  if (!isValid(start) || !isValid(end)) {
+    return 0;
+  }
+
+  return Math.max(differenceInCalendarDays(end, start), 0);
 }
 
 // 推荐每周减重速度（基于需要减的总重量）
@@ -69,30 +108,32 @@ export function getBMICategory(bmi) {
 
 // 获取一周的日期数组
 export function getWeekDates(date = new Date()) {
-  const startOfWeek = new Date(date);
-  const day = startOfWeek.getDay();
-  const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1);
-  startOfWeek.setDate(diff);
-  const dates = [];
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(startOfWeek);
-    d.setDate(startOfWeek.getDate() + i);
-    dates.push(d);
-  }
-  return dates;
+  const currentDate = toDate(date);
+  const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
+
+  return eachDayOfInterval({
+    start: weekStart,
+    end: addDays(weekStart, 6),
+  });
+}
+
+export function getDateRange(endDate = new Date(), days = 7) {
+  const end = toDate(endDate);
+  const safeDays = Math.max(days, 1);
+  const start = addDays(end, -(safeDays - 1));
+
+  return eachDayOfInterval({ start, end });
 }
 
 // 格式化日期
 export function formatDate(date, format) {
-  const d = date instanceof Date ? date : new Date(date);
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const dd = String(d.getDate()).padStart(2, '0');
-  if (!format) return `${yyyy}-${mm}-${dd}`;
-  return format
-    .replace('YYYY', yyyy)
-    .replace('MM', mm)
-    .replace('DD', dd);
+  const parsedDate = toDate(date);
+
+  if (!isValid(parsedDate)) {
+    return '';
+  }
+
+  return formatWithPattern(parsedDate, normalizePattern(format));
 }
 
 export function getDailyTip(tips, date = new Date()) {

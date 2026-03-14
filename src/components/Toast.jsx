@@ -15,17 +15,41 @@ export function ToastProvider({ children }) {
   const timersRef = useRef({});
 
   const removeToast = useCallback((id) => {
+    if (timersRef.current[id]) {
+      clearTimeout(timersRef.current[id]);
+      delete timersRef.current[id];
+    }
+
     setToasts(prev => prev.map(t => t.id === id ? { ...t, exiting: true } : t));
     setTimeout(() => {
       setToasts(prev => prev.filter(t => t.id !== id));
     }, 200);
   }, []);
 
-  const showToast = useCallback((message, type = 'success', duration = 2500) => {
+  const showToast = useCallback((messageOrOptions, type = 'success', duration = 2500) => {
+    const options = typeof messageOrOptions === 'string'
+      ? { message: messageOrOptions, type, duration }
+      : messageOrOptions;
+
     const id = Date.now() + Math.random();
-    setToasts(prev => [...prev.slice(-2), { id, message, type, exiting: false }]);
-    timersRef.current[id] = setTimeout(() => removeToast(id), duration);
+    const toast = {
+      id,
+      message: options.message,
+      type: options.type || 'success',
+      duration: options.duration || 2500,
+      actionLabel: options.actionLabel,
+      onAction: options.onAction,
+      exiting: false,
+    };
+
+    setToasts(prev => [...prev.slice(-2), toast]);
+    timersRef.current[id] = setTimeout(() => removeToast(id), toast.duration);
     return id;
+  }, [removeToast]);
+
+  const handleToastAction = useCallback((toast) => {
+    toast.onAction?.();
+    removeToast(toast.id);
   }, [removeToast]);
 
   useEffect(() => {
@@ -48,6 +72,15 @@ export function ToastProvider({ children }) {
               >
                 <Icon size={16} />
                 <span>{toast.message}</span>
+                {toast.actionLabel && toast.onAction && (
+                  <button
+                    type="button"
+                    className="toast-action"
+                    onClick={() => handleToastAction(toast)}
+                  >
+                    {toast.actionLabel}
+                  </button>
+                )}
               </div>
             );
           })}

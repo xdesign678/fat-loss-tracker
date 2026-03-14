@@ -2,6 +2,7 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Mic, MicOff, X, Check, RotateCcw, Loader, Utensils, Dumbbell } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { formatDate } from '../utils/calculations';
+import { requestAIJson } from '../utils/ai';
 import { useToast } from './Toast';
 
 const AI_GATEWAY_URL = 'https://ai-gateway.happycapy.ai/api/v1/chat/completions';
@@ -19,9 +20,142 @@ const VoiceRecorder = ({ isOpen, onClose }) => {
   const [pulseAnim, setPulseAnim] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
   const recognitionRef = useRef(null);
-  const processingTimeoutRef = useRef(null);
   const recordingTimerRef = useRef(null);
   const today = formatDate(new Date());
+
+  const stopRecording = useCallback(() => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      recognitionRef.current = null;
+    }
+  }, []);
+
+  const getAPIConfig = useCallback(() => {
+    if (AI_GATEWAY_KEY) {
+      return { url: AI_GATEWAY_URL, key: AI_GATEWAY_KEY, model: 'anthropic/claude-haiku-4.5' };
+    }
+
+    const aiSettings = state.aiSettings || {};
+    if (aiSettings.apiKey && aiSettings.selectedModel) {
+      return {
+        url: 'https://openrouter.ai/api/v1/chat/completions',
+        key: aiSettings.apiKey,
+        model: aiSettings.selectedModel,
+      };
+    }
+
+    return null;
+  }, [state.aiSettings]);
+
+  const normalizeFoodItem = useCallback((item = {}) => ({
+    name: item.name || '',
+    grams: Math.round(item.grams || 0),
+    calories: Math.round(item.calories || 0),
+    protein: Math.round(item.protein || 0),
+    carbs: Math.round(item.carbs || 0),
+    fat: Math.round(item.fat || 0),
+  }), []);
+
+  const normalizeExerciseItem = useCallback((item = {}) => ({
+    name: item.name || '',
+    duration: Math.round(item.duration || 30),
+    calories: Math.round(item.calories || 0),
+    category: item.category || '其他',
+  }), []);
+
+  const normalizeResults = useCallback((parsed, isLocal = false) => {
+    if (parsed?.type === 'mixed') {
+      return {
+        type: 'mixed',
+        foods: Array.isArray(parsed.foods) ? parsed.foods.map(normalizeFoodItem) : [],
+        exercises: Array.isArray(parsed.exercises) ? parsed.exercises.map(normalizeExerciseItem) : [],
+        isLocal,
+      };
+    }
+
+    if (parsed?.type === 'exercise') {
+      return {
+        type: 'exercise',
+        items: Array.isArray(parsed.items) ? parsed.items.map(normalizeExerciseItem) : [],
+        isLocal,
+      };
+    }
+
+    return {
+      type: 'food',
+      items: Array.isArray(parsed?.items) ? parsed.items.map(normalizeFoodItem) : [],
+      isLocal,
+    };
+  }, [normalizeExerciseItem, normalizeFoodItem]);
+
+  const localFallbackAnalysis = useCallback((text) => {
+    const exerciseKeywords = ['跑步', '走路', '游泳', '骑车', '骑行', '健身', '深蹲', '俯卧撑',
+      '瑜伽', '跳绳', '打球', '篮球', '足球', '羽毛球', '乒乓球', '网球',
+      '拉伸', '举重', '卧推', '引体向上', '平板支撑', '开合跳', '爬楼梯',
+      '散步', '慢跑', '快走', '登山', '太极', '跳舞', '运动'];
+    const foodKeywords = ['吃', '喝', '早餐', '午餐', '晚餐', '零食', '饭', '面', '菜',
+      '肉', '鸡', '鱼', '虾', '蛋', '奶', '茶', '咖啡', '果汁', '水果',
+      '米饭', '面条', '包子', '饺子', '馒头', '粥', '汤', '沙拉', '牛排'];
+
+    const isExercise = exerciseKeywords.some(k => text.includes(k));
+    const isFood = foodKeywords.some(k => text.includes(k));
+
+    const fallbackResult = isExercise && !isFood
+      ? {
+          type: 'exercise',
+          items: [{ name: text, duration: 30, calories: 150, category: '其他' }],
+        }
+      : {
+          type: 'food',
+          items: [{ name: text, grams: 100, calories: 200, protein: 10, carbs: 20, fat: 5 }],
+        };
+
+    setResults(normalizeResults(fallbackResult, true));
+    setStatus('results');
+  }, [normalizeResults]);
+
+  const analyzeWithAI = useCallback(async (text) => {
+    setStatus('processing');
+    setError('');
+
+    const apiConfig = getAPIConfig();
+    if (!apiConfig) {
+      localFallbackAnalysis(text);
+      return;
+    }
+
+    try {
+      const parsed = await requestAIJson({
+        apiKey: apiConfig.key,
+        model: apiConfig.model,
+        url: apiConfig.url,
+        responseType: 'object',
+        systemPrompt: `你是一个健康记录助手。用户会用语音告诉你他吃了什么或做了什么运动。
+请分析用户的输入，判断是【饮食】还是【运动】，然后返回JSON。
+
+如果是饮食，返回格式：
+{"type":"food","items":[{"name":"食物名","grams":克数,"calories":总热量kcal,"protein":蛋白质g,"carbs":碳水g,"fat":脂肪g}]}
+
+如果是运动，返回格式：
+{"type":"exercise","items":[{"name":"运动名","duration":分钟数,"calories":消耗热量kcal,"category":"运动类别"}]}
+
+运动类别可选：有氧、力量、柔韧、球类、日常、其他
+
+注意：
+- calories/protein/carbs/fat 是该份量的总量，不是每100g
+- 如果用户同时提到了饮食和运动，返回 type:"mixed"，同时包含 foods 和 exercises 两个数组
+- mixed格式：{"type":"mixed","foods":[...],"exercises":[...]}
+- 只返回JSON，不要有其他文字`,
+        userPrompt: text,
+      });
+
+      setResults(normalizeResults(parsed));
+      setStatus('results');
+    } catch (e) {
+      setError(`AI 分析失败: ${e.message}`);
+      setStatus('error');
+    }
+  }, [getAPIConfig, localFallbackAnalysis, normalizeResults]);
 
   // Reset state when modal opens
   useEffect(() => {
@@ -34,16 +168,12 @@ const VoiceRecorder = ({ isOpen, onClose }) => {
       setRecordingDuration(0);
     } else {
       stopRecording();
-      if (processingTimeoutRef.current) {
-        clearTimeout(processingTimeoutRef.current);
-        processingTimeoutRef.current = null;
-      }
       if (recordingTimerRef.current) {
         clearInterval(recordingTimerRef.current);
         recordingTimerRef.current = null;
       }
     }
-  }, [isOpen]);
+  }, [isOpen, stopRecording]);
 
   // Pulse animation and timer for recording
   useEffect(() => {
@@ -126,13 +256,6 @@ const VoiceRecorder = ({ isOpen, onClose }) => {
     recognition.start();
   }, []);
 
-  const stopRecording = useCallback(() => {
-    if (recognitionRef.current) {
-      recognitionRef.current.stop();
-      recognitionRef.current = null;
-    }
-  }, []);
-
   const handleStopAndProcess = useCallback(async () => {
     stopRecording();
     const text = transcript || interimText;
@@ -144,134 +267,73 @@ const VoiceRecorder = ({ isOpen, onClose }) => {
     setTranscript(text);
     setInterimText('');
     await analyzeWithAI(text);
-  }, [transcript, interimText]);
+  }, [transcript, interimText, analyzeWithAI, stopRecording]);
 
-  const getAPIConfig = () => {
-    // Prefer AI Gateway
-    if (AI_GATEWAY_KEY) {
-      return { url: AI_GATEWAY_URL, key: AI_GATEWAY_KEY, model: 'anthropic/claude-haiku-4.5' };
-    }
-    // Fallback to user's OpenRouter settings
-    const aiSettings = state.aiSettings || {};
-    if (aiSettings.apiKey && aiSettings.selectedModel) {
+  const getFoodResults = () => {
+    if (!results) return [];
+    if (results.type === 'mixed') return results.foods || [];
+    if (results.type === 'food') return results.items || [];
+    return [];
+  };
+
+  const getExerciseResults = () => {
+    if (!results) return [];
+    if (results.type === 'mixed') return results.exercises || [];
+    if (results.type === 'exercise') return results.items || [];
+    return [];
+  };
+
+  const updateResultItem = (group, index, field, value) => {
+    setResults((prev) => {
+      if (!prev) return prev;
+
+      const listKey = prev.type === 'mixed' ? group : 'items';
+      const nextItems = (prev[listKey] || []).map((item, itemIndex) => {
+        if (itemIndex !== index) return item;
+
+        return {
+          ...item,
+          [field]: field === 'name' || field === 'category'
+            ? value
+            : value === ''
+              ? ''
+              : Number(value),
+        };
+      });
+
       return {
-        url: 'https://openrouter.ai/api/v1/chat/completions',
-        key: aiSettings.apiKey,
-        model: aiSettings.selectedModel,
+        ...prev,
+        [listKey]: nextItems,
       };
-    }
-    return null;
+    });
   };
 
-  const analyzeWithAI = async (text) => {
-    setStatus('processing');
-    setError('');
+  const removeResultItem = (group, index) => {
+    setResults((prev) => {
+      if (!prev) return prev;
 
-    const apiConfig = getAPIConfig();
-    if (!apiConfig) {
-      // Local fallback
-      localFallbackAnalysis(text);
-      return;
-    }
-
-    try {
-      const res = await fetch(apiConfig.url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiConfig.key}`,
-        },
-        body: JSON.stringify({
-          model: apiConfig.model,
-          messages: [{
-            role: 'system',
-            content: `你是一个健康记录助手。用户会用语音告诉你他吃了什么或做了什么运动。
-请分析用户的输入，判断是【饮食】还是【运动】，然后返回JSON。
-
-如果是饮食，返回格式：
-{"type":"food","items":[{"name":"食物名","grams":克数,"calories":总热量kcal,"protein":蛋白质g,"carbs":碳水g,"fat":脂肪g}]}
-
-如果是运动，返回格式：
-{"type":"exercise","items":[{"name":"运动名","duration":分钟数,"calories":消耗热量kcal,"category":"运动类别"}]}
-
-运动类别可选：有氧、力量、柔韧、球类、日常、其他
-
-注意：
-- calories/protein/carbs/fat 是该份量的总量，不是每100g
-- 如果用户同时提到了饮食和运动，返回 type:"mixed"，同时包含 foods 和 exercises 两个数组
-- mixed格式：{"type":"mixed","foods":[...],"exercises":[...]}
-- 只返回JSON，不要有其他文字`
-          }, {
-            role: 'user',
-            content: text,
-          }],
-          max_tokens: 1000,
-          temperature: 0.1,
-        }),
-      });
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error?.message || `API错误 ${res.status}`);
-      }
-
-      const data = await res.json();
-      const content = data.choices?.[0]?.message?.content || '';
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) throw new Error('AI返回格式异常');
-
-      const parsed = JSON.parse(jsonMatch[0]);
-      setResults(parsed);
-      setStatus('results');
-    } catch (e) {
-      setError(`AI 分析失败: ${e.message}`);
-      setStatus('error');
-    }
-  };
-
-  const localFallbackAnalysis = (text) => {
-    // Simple keyword matching
-    const exerciseKeywords = ['跑步', '走路', '游泳', '骑车', '骑行', '健身', '深蹲', '俯卧撑',
-      '瑜伽', '跳绳', '打球', '篮球', '足球', '羽毛球', '乒乓球', '网球',
-      '拉伸', '举重', '卧推', '引体向上', '平板支撑', '开合跳', '爬楼梯',
-      '散步', '慢跑', '快走', '登山', '太极', '跳舞', '运动'];
-    const foodKeywords = ['吃', '喝', '早餐', '午餐', '晚餐', '零食', '饭', '面', '菜',
-      '肉', '鸡', '鱼', '虾', '蛋', '奶', '茶', '咖啡', '果汁', '水果',
-      '米饭', '面条', '包子', '饺子', '馒头', '粥', '汤', '沙拉', '牛排'];
-
-    const isExercise = exerciseKeywords.some(k => text.includes(k));
-    const isFood = foodKeywords.some(k => text.includes(k));
-
-    if (isExercise && !isFood) {
-      setResults({
-        type: 'exercise',
-        items: [{ name: text, duration: 30, calories: 150, category: '其他' }],
-        isLocal: true,
-      });
-    } else {
-      setResults({
-        type: 'food',
-        items: [{ name: text, grams: 100, calories: 200, protein: 10, carbs: 20, fat: 5 }],
-        isLocal: true,
-      });
-    }
-    setStatus('results');
+      const listKey = prev.type === 'mixed' ? group : 'items';
+      return {
+        ...prev,
+        [listKey]: (prev[listKey] || []).filter((_, itemIndex) => itemIndex !== index),
+      };
+    });
   };
 
   const handleConfirm = () => {
     if (!results) return;
     const time = new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+    const foods = getFoodResults();
+    const exercises = getExerciseResults();
 
-    if (results.type === 'food' || results.type === 'mixed') {
-      const foods = results.type === 'mixed' ? results.foods : results.items;
-      (foods || []).forEach(item => {
+    foods.forEach(item => {
         dispatch({
           type: 'LOG_FOOD',
           payload: {
             date: today,
             food: {
               name: item.name,
-              grams: item.grams || 0,
+              grams: Number(item.grams) || 0,
               calories: Math.round(item.calories || 0),
               protein: Math.round(item.protein || 0),
               carbs: Math.round(item.carbs || 0),
@@ -281,18 +343,15 @@ const VoiceRecorder = ({ isOpen, onClose }) => {
           },
         });
       });
-    }
 
-    if (results.type === 'exercise' || results.type === 'mixed') {
-      const exercises = results.type === 'mixed' ? results.exercises : results.items;
-      (exercises || []).forEach(item => {
+    exercises.forEach(item => {
         dispatch({
           type: 'LOG_EXERCISE',
           payload: {
             date: today,
             exercise: {
               name: item.name,
-              duration: item.duration || 30,
+              duration: Number(item.duration) || 30,
               calories: Math.round(item.calories || 0),
               category: item.category || '其他',
               time,
@@ -300,7 +359,8 @@ const VoiceRecorder = ({ isOpen, onClose }) => {
           },
         });
       });
-    }
+
+    showToast(`已添加 ${foods.length} 条饮食、${exercises.length} 条运动记录`, 'success');
 
     onClose();
   };
@@ -316,6 +376,10 @@ const VoiceRecorder = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   const displayText = transcript || interimText;
+  const foodResults = getFoodResults();
+  const exerciseResults = getExerciseResults();
+  const hasAnyResults = foodResults.length + exerciseResults.length > 0;
+  const recordingTimeLabel = `${String(Math.floor(recordingDuration / 60)).padStart(2, '0')}:${String(recordingDuration % 60).padStart(2, '0')}`;
 
   const renderTypeTag = (type) => {
     if (type === 'food') {
@@ -385,6 +449,7 @@ const VoiceRecorder = ({ isOpen, onClose }) => {
                 ))}
               </div>
               <div style={styles.recordingText}>正在聆听...</div>
+              <div style={styles.recordingDuration}>{recordingTimeLabel}</div>
               {displayText && (
                 <div style={styles.transcriptPreview}>
                   {displayText}
@@ -425,17 +490,78 @@ const VoiceRecorder = ({ isOpen, onClose }) => {
                   <div style={styles.resultSectionTitle}>
                     <Utensils size={16} color="#f59e0b" /> 饮食
                   </div>
-                  {(results.type === 'mixed' ? results.foods : results.items || []).map((item, i) => (
-                    <div key={i} style={styles.resultItem}>
+                  {foodResults.map((item, i) => (
+                    <div key={`food-${i}`} style={styles.resultItem}>
                       <div style={styles.resultItemHeader}>
-                        <span style={styles.resultItemName}>{item.name}</span>
-                        <span style={styles.resultItemCal}>{Math.round(item.calories)} kcal</span>
+                        <span style={styles.resultItemName}>{item.name || `食物 ${i + 1}`}</span>
+                        <div style={styles.resultItemActions}>
+                          <span style={styles.resultItemCal}>{Math.round(item.calories)} kcal</span>
+                          <button
+                            type="button"
+                            onClick={() => removeResultItem(results.type === 'mixed' ? 'foods' : 'items', i)}
+                            style={styles.removeItemButton}
+                            className="btn-interactive"
+                            aria-label={`删除饮食识别结果 ${item.name || i + 1}`}
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
                       </div>
-                      <div style={styles.resultItemDetail}>
-                        {item.grams > 0 && <span>{item.grams}g</span>}
-                        {item.protein > 0 && <span>蛋白 {Math.round(item.protein)}g</span>}
-                        {item.carbs > 0 && <span>碳水 {Math.round(item.carbs)}g</span>}
-                        {item.fat > 0 && <span>脂肪 {Math.round(item.fat)}g</span>}
+                      <div style={styles.editorGrid}>
+                        <label style={styles.editorField}>
+                          <span>名称</span>
+                          <input
+                            type="text"
+                            value={item.name}
+                            onChange={(e) => updateResultItem(results.type === 'mixed' ? 'foods' : 'items', i, 'name', e.target.value)}
+                            style={styles.editorInput}
+                          />
+                        </label>
+                        <label style={styles.editorField}>
+                          <span>克数</span>
+                          <input
+                            type="number"
+                            value={item.grams}
+                            onChange={(e) => updateResultItem(results.type === 'mixed' ? 'foods' : 'items', i, 'grams', e.target.value)}
+                            style={styles.editorInput}
+                          />
+                        </label>
+                        <label style={styles.editorField}>
+                          <span>热量</span>
+                          <input
+                            type="number"
+                            value={item.calories}
+                            onChange={(e) => updateResultItem(results.type === 'mixed' ? 'foods' : 'items', i, 'calories', e.target.value)}
+                            style={styles.editorInput}
+                          />
+                        </label>
+                        <label style={styles.editorField}>
+                          <span>蛋白</span>
+                          <input
+                            type="number"
+                            value={item.protein}
+                            onChange={(e) => updateResultItem(results.type === 'mixed' ? 'foods' : 'items', i, 'protein', e.target.value)}
+                            style={styles.editorInput}
+                          />
+                        </label>
+                        <label style={styles.editorField}>
+                          <span>碳水</span>
+                          <input
+                            type="number"
+                            value={item.carbs}
+                            onChange={(e) => updateResultItem(results.type === 'mixed' ? 'foods' : 'items', i, 'carbs', e.target.value)}
+                            style={styles.editorInput}
+                          />
+                        </label>
+                        <label style={styles.editorField}>
+                          <span>脂肪</span>
+                          <input
+                            type="number"
+                            value={item.fat}
+                            onChange={(e) => updateResultItem(results.type === 'mixed' ? 'foods' : 'items', i, 'fat', e.target.value)}
+                            style={styles.editorInput}
+                          />
+                        </label>
                       </div>
                     </div>
                   ))}
@@ -448,15 +574,60 @@ const VoiceRecorder = ({ isOpen, onClose }) => {
                   <div style={styles.resultSectionTitle}>
                     <Dumbbell size={16} color="#2ecc71" /> 运动
                   </div>
-                  {(results.type === 'mixed' ? results.exercises : results.items || []).map((item, i) => (
-                    <div key={i} style={styles.resultItem}>
+                  {exerciseResults.map((item, i) => (
+                    <div key={`exercise-${i}`} style={styles.resultItem}>
                       <div style={styles.resultItemHeader}>
-                        <span style={styles.resultItemName}>{item.name}</span>
-                        <span style={styles.resultItemCalGreen}>-{Math.round(item.calories)} kcal</span>
+                        <span style={styles.resultItemName}>{item.name || `运动 ${i + 1}`}</span>
+                        <div style={styles.resultItemActions}>
+                          <span style={styles.resultItemCalGreen}>-{Math.round(item.calories)} kcal</span>
+                          <button
+                            type="button"
+                            onClick={() => removeResultItem(results.type === 'mixed' ? 'exercises' : 'items', i)}
+                            style={styles.removeItemButton}
+                            className="btn-interactive"
+                            aria-label={`删除运动识别结果 ${item.name || i + 1}`}
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
                       </div>
-                      <div style={styles.resultItemDetail}>
-                        <span>{item.duration}分钟</span>
-                        <span>{item.category}</span>
+                      <div style={styles.editorGrid}>
+                        <label style={styles.editorField}>
+                          <span>名称</span>
+                          <input
+                            type="text"
+                            value={item.name}
+                            onChange={(e) => updateResultItem(results.type === 'mixed' ? 'exercises' : 'items', i, 'name', e.target.value)}
+                            style={styles.editorInput}
+                          />
+                        </label>
+                        <label style={styles.editorField}>
+                          <span>时长</span>
+                          <input
+                            type="number"
+                            value={item.duration}
+                            onChange={(e) => updateResultItem(results.type === 'mixed' ? 'exercises' : 'items', i, 'duration', e.target.value)}
+                            style={styles.editorInput}
+                          />
+                        </label>
+                        <label style={styles.editorField}>
+                          <span>热量</span>
+                          <input
+                            type="number"
+                            value={item.calories}
+                            onChange={(e) => updateResultItem(results.type === 'mixed' ? 'exercises' : 'items', i, 'calories', e.target.value)}
+                            style={styles.editorInput}
+                          />
+                        </label>
+                        <label style={styles.editorField}>
+                          <span>分类</span>
+                          <input
+                            type="text"
+                            value={item.category}
+                            onChange={(e) => updateResultItem(results.type === 'mixed' ? 'exercises' : 'items', i, 'category', e.target.value)}
+                            style={styles.editorInput}
+                          />
+                        </label>
                       </div>
                     </div>
                   ))}
@@ -495,7 +666,7 @@ const VoiceRecorder = ({ isOpen, onClose }) => {
                 <RotateCcw size={18} />
                 <span>重试</span>
               </button>
-              <button onClick={handleConfirm} style={styles.confirmButton}>
+              <button onClick={handleConfirm} style={styles.confirmButton} disabled={!hasAnyResults}>
                 <Check size={18} />
                 <span>确认记录</span>
               </button>
@@ -627,6 +798,11 @@ const styles = {
     fontWeight: '500',
     color: 'var(--danger)',
   },
+  recordingDuration: {
+    fontSize: '14px',
+    color: 'var(--text-secondary, #9ca3af)',
+    fontVariantNumeric: 'tabular-nums',
+  },
   transcriptPreview: {
     fontSize: '15px',
     color: 'var(--text-heading, #fff)',
@@ -752,12 +928,17 @@ const styles = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: '6px',
+    marginBottom: '10px',
   },
   resultItemName: {
     fontSize: '15px',
     fontWeight: '500',
     color: 'var(--text-heading, #fff)',
+  },
+  resultItemActions: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
   },
   resultItemCal: {
     fontSize: '14px',
@@ -769,11 +950,39 @@ const styles = {
     fontWeight: '600',
     color: '#2ecc71',
   },
-  resultItemDetail: {
+  removeItemButton: {
     display: 'flex',
-    gap: '12px',
-    fontSize: '13px',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '28px',
+    height: '28px',
+    borderRadius: '8px',
+    border: 'none',
+    background: 'rgba(239, 68, 68, 0.12)',
+    color: 'var(--danger)',
+    cursor: 'pointer',
+  },
+  editorGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+    gap: '10px',
+  },
+  editorField: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '6px',
+    fontSize: '12px',
     color: 'var(--text-secondary, #9ca3af)',
+  },
+  editorInput: {
+    width: '100%',
+    padding: '10px 12px',
+    borderRadius: '8px',
+    border: '1px solid var(--border, #252a38)',
+    background: 'var(--bg-secondary, #1a1e28)',
+    color: 'var(--text-heading, #fff)',
+    fontSize: '14px',
+    outline: 'none',
   },
   // Error
   errorArea: {
@@ -869,6 +1078,7 @@ const styles = {
     fontWeight: '600',
     cursor: 'pointer',
     boxShadow: '0 4px 16px rgba(79, 142, 247, 0.3)',
+    transition: 'opacity 0.2s ease',
   },
   retryButtonFull: {
     display: 'flex',

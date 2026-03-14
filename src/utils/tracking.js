@@ -1,7 +1,7 @@
-import { formatDate } from './calculations';
+import { formatDate, toDate } from './calculations';
 
 export function shiftDate(dateString, days) {
-  const date = new Date(dateString);
+  const date = toDate(dateString);
   date.setDate(date.getDate() + days);
   return formatDate(date);
 }

@@ -28,7 +28,7 @@ export default defineConfig([
       ...reactHooks.configs.recommended.rules,
       'react-refresh/only-export-components': ['warn', {
         allowConstantExport: true,
-        allowExportNames: ['useApp', 'createDefaultState', 'normalizeState', 'reducer'],
+        allowExportNames: ['useApp', 'useTheme', 'useToast', 'MODAL_STYLES', 'createDefaultState', 'normalizeState', 'reducer'],
       }],
       'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
     },

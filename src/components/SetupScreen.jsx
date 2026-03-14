@@ -1,7 +1,16 @@
 import { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { calculateBMI, getBMICategory, recommendedWeeklyLoss } from '../utils/calculations';
-import { Target, Activity, TrendingDown } from 'lucide-react';
+import {
+  calculateBMI,
+  calculateBMR,
+  calculateDaysToGoal,
+  calculateDailyCalorieTarget,
+  calculateTDEE,
+  formatDate,
+  getBMICategory,
+  recommendedWeeklyLoss,
+} from '../utils/calculations';
+import { Target, Activity, TrendingDown, UserRound } from 'lucide-react';
 import { useToast } from './Toast';
 
 const SetupScreen = () => {
@@ -10,10 +19,16 @@ const SetupScreen = () => {
 
   const [height, setHeight] = useState('');
   const [age, setAge] = useState('');
+  const [sex, setSex] = useState('male');
   const [currentWeight, setCurrentWeight] = useState('');
   const [targetWeight, setTargetWeight] = useState('');
   const [activityLevel, setActivityLevel] = useState('sedentary');
   const [errors, setErrors] = useState({});
+
+  const sexOptions = [
+    { value: 'male', label: '男' },
+    { value: 'female', label: '女' },
+  ];
 
   const activityLevels = [
     { value: 'sedentary', label: '久坐', description: '几乎不运动' },
@@ -24,15 +39,25 @@ const SetupScreen = () => {
 
   const bmi = height && currentWeight ? calculateBMI(parseFloat(currentWeight), parseFloat(height)) : null;
   const bmiCategory = bmi ? getBMICategory(bmi) : null;
-  const weeklyLoss = height && age && currentWeight && targetWeight && activityLevel
+  const weeklyLoss = currentWeight && targetWeight
     ? recommendedWeeklyLoss(parseFloat(currentWeight), parseFloat(targetWeight))
+    : null;
+  const estimatedBMR = height && age && currentWeight
+    ? calculateBMR(parseFloat(currentWeight), parseFloat(height), parseInt(age), sex)
+    : null;
+  const estimatedTDEE = estimatedBMR ? calculateTDEE(estimatedBMR, activityLevel) : null;
+  const estimatedTargetCalories = estimatedTDEE && weeklyLoss
+    ? calculateDailyCalorieTarget(estimatedTDEE, weeklyLoss)
+    : null;
+  const estimatedDaysToGoal = weeklyLoss && currentWeight && targetWeight
+    ? calculateDaysToGoal(parseFloat(currentWeight), parseFloat(targetWeight), weeklyLoss)
     : null;
 
   const validateField = (field, value) => {
     const newErrors = { ...errors };
 
     switch(field) {
-      case 'height':
+      case 'height': {
         const h = parseFloat(value);
         if (!value) {
           newErrors.height = '请输入身高';
@@ -42,7 +67,8 @@ const SetupScreen = () => {
           delete newErrors.height;
         }
         break;
-      case 'age':
+      }
+      case 'age': {
         const a = parseInt(value);
         if (!value) {
           newErrors.age = '请输入年龄';
@@ -52,7 +78,8 @@ const SetupScreen = () => {
           delete newErrors.age;
         }
         break;
-      case 'currentWeight':
+      }
+      case 'currentWeight': {
         const cw = parseFloat(value);
         if (!value) {
           newErrors.currentWeight = '请输入当前体重';
@@ -62,7 +89,8 @@ const SetupScreen = () => {
           delete newErrors.currentWeight;
         }
         break;
-      case 'targetWeight':
+      }
+      case 'targetWeight': {
         const tw = parseFloat(value);
         const current = parseFloat(currentWeight);
         if (!value) {
@@ -75,6 +103,7 @@ const SetupScreen = () => {
           delete newErrors.targetWeight;
         }
         break;
+      }
     }
 
     setErrors(newErrors);
@@ -122,11 +151,12 @@ const SetupScreen = () => {
       return;
     }
 
-    const startDate = new Date().toISOString();
+    const startDate = formatDate(new Date());
 
     dispatch({
       type: 'SET_PROFILE',
       payload: {
+        sex,
         height: parseFloat(height),
         age: parseInt(age),
         startWeight: parseFloat(currentWeight),
@@ -186,6 +216,12 @@ const SetupScreen = () => {
       display: 'flex',
       flexDirection: 'column',
       gap: '8px'
+    },
+    optionGrid: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(2, 1fr)',
+      gap: '12px',
+      marginTop: '8px'
     },
     label: {
       fontSize: '14px',
@@ -301,6 +337,30 @@ const SetupScreen = () => {
         </div>
 
         <form style={styles.form} onSubmit={handleSubmit}>
+          <div style={styles.formGroup}>
+            <label style={styles.label}>
+              <UserRound size={16} />
+              性别
+            </label>
+            <div style={styles.optionGrid} role="radiogroup" aria-label="性别">
+              {sexOptions.map((option) => (
+                <button
+                  type="button"
+                  key={option.value}
+                  style={{
+                    ...styles.activityOption,
+                    ...(sex === option.value ? styles.activityOptionActive : {})
+                  }}
+                  onClick={() => setSex(option.value)}
+                  role="radio"
+                  aria-checked={sex === option.value}
+                >
+                  <div style={styles.activityLabel}>{option.label}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div style={styles.formGroup}>
             <label style={styles.label}>
               <Target size={16} />
@@ -431,6 +491,21 @@ const SetupScreen = () => {
                   <span style={styles.bmiValue}>{weeklyLoss.toFixed(1)} kg</span>
                 </div>
               )}
+              {estimatedTargetCalories && (
+                <div style={styles.bmiRow}>
+                  <span style={styles.bmiLabel}>建议每日热量</span>
+                  <span style={styles.bmiValue}>{Math.round(estimatedTargetCalories)} kcal</span>
+                </div>
+              )}
+              {estimatedDaysToGoal > 0 && (
+                <div style={styles.bmiRow}>
+                  <span style={styles.bmiLabel}>预计达标时间</span>
+                  <span style={styles.bmiValue}>{Math.ceil(estimatedDaysToGoal / 7)} 周</span>
+                </div>
+              )}
+              <div style={{ ...styles.errorText, color: 'var(--text-secondary)', marginLeft: 0 }}>
+                基础代谢采用 Mifflin-St Jeor 估算公式，仅作参考。
+              </div>
             </div>
           )}
 

@@ -43,6 +43,7 @@ function normalizeDailyLogs(dailyLogs) {
 export function createDefaultState() {
   return {
     profile: {
+      sex: 'male',
       height: 175,
       age: 30,
       startWeight: 110,
@@ -130,6 +131,17 @@ export function reducer(state, action) {
         dailyLogs: { ...state.dailyLogs, [date]: { ...existing, foods } }
       };
     }
+    case 'RESTORE_FOOD': {
+      const date = action.payload.date;
+      const existing = state.dailyLogs[date] || { foods: [], exercises: [] };
+      return {
+        ...state,
+        dailyLogs: {
+          ...state.dailyLogs,
+          [date]: { ...existing, foods: [...existing.foods, action.payload.food] }
+        }
+      };
+    }
     case 'UPDATE_FOOD': {
       const date = action.payload.date;
       const existing = state.dailyLogs[date];
@@ -171,6 +183,17 @@ export function reducer(state, action) {
         dailyLogs: { ...state.dailyLogs, [date]: { ...existing, exercises } }
       };
     }
+    case 'RESTORE_EXERCISE': {
+      const date = action.payload.date;
+      const existing = state.dailyLogs[date] || { foods: [], exercises: [] };
+      return {
+        ...state,
+        dailyLogs: {
+          ...state.dailyLogs,
+          [date]: { ...existing, exercises: [...existing.exercises, action.payload.exercise] }
+        }
+      };
+    }
     case 'UPDATE_EXERCISE': {
       const date = action.payload.date;
       const existing = state.dailyLogs[date];
@@ -208,7 +231,11 @@ export function AppProvider({ children }) {
   const [state, dispatch] = useReducer(reducer, loadState() || createDefaultState());
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch (error) {
+      console.error('Failed to persist state', error);
+    }
   }, [state]);
 
   return (

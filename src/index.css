@@ -325,6 +325,23 @@ textarea:focus-visible,
   animation: toastIn 0.25s ease;
   box-shadow: var(--shadow-modal);
 }
+
+.toast-action {
+  margin-left: 8px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.toast-action:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
 .toast-item.toast-exit {
   animation: toastOut 0.2s ease forwards;
 }

@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import { formatDate } from '../utils/calculations';
-import { X, Plus, Minus } from 'lucide-react';
+import ModalShell from './ModalShell';
+import { Plus, Minus } from 'lucide-react';
 import { useToast } from './Toast';
 
 const WeightLogger = ({ isOpen, onClose }) => {
@@ -72,7 +73,7 @@ const WeightLogger = ({ isOpen, onClose }) => {
     }
   };
 
-  const handleKeyPress = (e) => {
+  const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
       handleSave();
     } else if (e.key === 'Escape') {
@@ -86,68 +87,6 @@ const WeightLogger = ({ isOpen, onClose }) => {
   };
 
   if (!isOpen) return null;
-
-  // Handle ESC key
-  useEffect(() => {
-    const handleEsc = (e) => {
-      if (e.key === 'Escape' && isOpen) {
-        onClose();
-      }
-    };
-    window.addEventListener('keydown', handleEsc);
-    return () => window.removeEventListener('keydown', handleEsc);
-  }, [isOpen, onClose]);
-
-  const overlayStyle = {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    background: 'var(--bg-overlay)',
-    backdropFilter: 'blur(10px)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 1000,
-    padding: '20px'
-  };
-
-  const modalStyle = {
-    background: 'var(--bg-tertiary)',
-    borderRadius: '20px',
-    padding: '32px',
-    maxWidth: '400px',
-    width: '100%',
-    boxShadow: 'var(--shadow-modal)',
-    position: 'relative'
-  };
-
-  const closeButtonStyle = {
-    position: 'absolute',
-    top: '16px',
-    right: '16px',
-    background: 'transparent',
-    border: 'none',
-    color: 'var(--text-secondary)',
-    cursor: 'pointer',
-    padding: '8px',
-    minWidth: '44px',
-    minHeight: '44px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: '8px',
-    transition: 'all 0.2s'
-  };
-
-  const titleStyle = {
-    fontSize: '1.8em',
-    fontWeight: '700',
-    color: 'var(--text-heading)',
-    marginBottom: '24px',
-    textAlign: 'center'
-  };
 
   const currentWeightStyle = {
     textAlign: 'center',
@@ -280,27 +219,14 @@ const WeightLogger = ({ isOpen, onClose }) => {
   const recentRecords = getRecentRecords();
 
   return (
-    <div style={overlayStyle} onClick={onClose} className="modal-overlay">
-      <div style={modalStyle} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="记录体重" className="modal-content">
-        <button
-          type="button"
-          style={closeButtonStyle}
-          onClick={onClose}
-          aria-label="关闭体重记录弹窗"
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'var(--border)';
-            e.currentTarget.style.color = 'var(--text-heading)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'transparent';
-            e.currentTarget.style.color = 'var(--text-secondary)';
-          }}
-        >
-          <X size={24} />
-        </button>
-
-        <h2 style={titleStyle}>记录体重</h2>
-
+    <ModalShell
+      isOpen={isOpen}
+      onClose={onClose}
+      title="记录体重"
+      maxWidth="400px"
+      bodyPadding="24px 32px 32px"
+      contentStyle={{ borderRadius: '20px' }}
+    >
         <div style={currentWeightStyle}>
           <div style={labelStyle}>当前体重</div>
           <div style={weightDisplayStyle}>
@@ -370,7 +296,7 @@ const WeightLogger = ({ isOpen, onClose }) => {
               inputMode="decimal"
               value={newWeight}
               onChange={handleInputChange}
-              onKeyPress={handleKeyPress}
+              onKeyDown={handleKeyDown}
               style={inputStyle}
               placeholder="0.0"
               aria-label="输入当前体重"
@@ -460,8 +386,7 @@ const WeightLogger = ({ isOpen, onClose }) => {
             </div>
           </div>
         )}
-      </div>
-    </div>
+    </ModalShell>
   );
 };
 

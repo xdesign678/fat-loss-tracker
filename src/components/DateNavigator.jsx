@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { formatDate } from '../utils/calculations';
+import { formatDate, toDate } from '../utils/calculations';
 import { shiftDate } from '../utils/tracking';
 
 const DateNavigator = ({ selectedDate, onChange }) => {
@@ -10,7 +10,6 @@ const DateNavigator = ({ selectedDate, onChange }) => {
   const isYesterday = selectedDate === yesterday;
 
   const [touchStartX, setTouchStartX] = useState(0);
-  const [touchEndX, setTouchEndX] = useState(0);
   const containerRef = useRef(null);
 
   // 格式化日期标签
@@ -19,7 +18,7 @@ const DateNavigator = ({ selectedDate, onChange }) => {
     if (isYesterday) return '昨天';
 
     // 解析日期并获取星期
-    const date = new Date(selectedDate);
+    const date = toDate(selectedDate);
     const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
     const month = date.getMonth() + 1;
     const day = date.getDate();
@@ -34,8 +33,6 @@ const DateNavigator = ({ selectedDate, onChange }) => {
   };
 
   const handleTouchEnd = (e) => {
-    setTouchEndX(e.changedTouches[0].clientX);
-
     const deltaX = touchStartX - e.changedTouches[0].clientX;
     const minSwipeDistance = 50; // 最小滑动距离
 

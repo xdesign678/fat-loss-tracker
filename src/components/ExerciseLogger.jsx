@@ -1,16 +1,18 @@
 import { useState, useMemo } from 'react';
-import { Activity, Edit3, X, ChevronDown, ChevronUp, Dumbbell } from 'lucide-react';
+import { Activity, Edit3, X, ChevronDown, ChevronUp, Dumbbell, Search } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import DateNavigator from './DateNavigator';
-import { exerciseDatabase, adjustCaloriesBurn } from '../utils/foodDatabase';
+import { exerciseDatabase, adjustCaloriesBurn, searchExercise } from '../utils/foodDatabase';
 import { formatDate } from '../utils/calculations';
 import { getRecentEntries } from '../utils/tracking';
 import EmptyState from './EmptyState';
+import ModalShell from './ModalShell';
 import { useToast } from './Toast';
 
 const ExerciseLogger = ({ selectedDate, onDateChange }) => {
   const { state, dispatch } = useApp();
   const [expandedCategory, setExpandedCategory] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingExerciseId, setEditingExerciseId] = useState(null);
   const [selectedExercise, setSelectedExercise] = useState(null);
@@ -29,6 +31,10 @@ const ExerciseLogger = ({ selectedDate, onDateChange }) => {
   const todayLogs = useMemo(() => state.dailyLogs[selectedDate]?.exercises || [], [selectedDate, state.dailyLogs]);
   const recentExercises = useMemo(() => getRecentEntries(state.dailyLogs, 'exercises', 4), [state.dailyLogs]);
   const userWeight = state.profile.currentWeight || 70;
+  const searchResults = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    return searchExercise(searchQuery).slice(0, 8);
+  }, [searchQuery]);
 
   // Group exerciseDatabase array by category
   const groupedExercises = useMemo(() => {
@@ -132,8 +138,18 @@ const ExerciseLogger = ({ selectedDate, onDateChange }) => {
 
   const handleDeleteExercise = (id) => {
     const exercise = todayLogs.find(e => e.id === id);
+    if (!exercise) return;
+
     dispatch({ type: 'REMOVE_EXERCISE', payload: { date: selectedDate, id } });
-    showToast(`已删除 ${exercise?.name || '运动'}`, 'success');
+    showToast({
+      message: `已删除 ${exercise.name}`,
+      type: 'info',
+      duration: 4000,
+      actionLabel: '撤销',
+      onAction: () => {
+        dispatch({ type: 'RESTORE_EXERCISE', payload: { date: selectedDate, exercise } });
+      },
+    });
   };
 
   const handleEditExercise = (exercise) => {
@@ -210,6 +226,50 @@ const ExerciseLogger = ({ selectedDate, onDateChange }) => {
             <span style={{ marginLeft: '6px' }}>手动输入</span>
           </button>
         </div>
+
+        <div style={styles.searchBox}>
+          <Search size={18} style={styles.searchIcon} />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="搜索运动，例如：快走、骑车、力量"
+            style={styles.searchInput}
+            aria-label="搜索运动"
+          />
+        </div>
+
+        {searchResults.length > 0 && (
+          <div style={styles.searchResults}>
+            {searchResults.map((exercise, index) => (
+              <button
+                type="button"
+                key={`${exercise.name}-${index}`}
+                style={styles.searchResultCard}
+                className="btn-interactive"
+                onClick={() => handleExerciseSelect(exercise, exercise.category)}
+                aria-label={`添加运动 ${exercise.name}`}
+              >
+                <div style={styles.exerciseHeader}>
+                  <span style={styles.exerciseName}>{exercise.name}</span>
+                  <span
+                    style={{
+                      ...styles.impactBadge,
+                      background: getJointImpactColor(exercise.jointImpact),
+                    }}
+                  >
+                    {exercise.jointImpact}冲击
+                  </span>
+                </div>
+                <div style={styles.exerciseInfo}>
+                  <span>{exercise.category}</span>
+                  <span style={styles.divider}>|</span>
+                  <span>{exercise.caloriesPer30Min}千卡/30分钟</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
 
         {categories.map((category) => (
           <div key={category} style={styles.categoryCard}>
@@ -337,11 +397,14 @@ const ExerciseLogger = ({ selectedDate, onDateChange }) => {
 
       {/* 添加运动弹窗 */}
       {showAddModal && (
-        <div style={styles.modalOverlay} onClick={closeAddModal}>
-          <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
+        <ModalShell
+          isOpen={showAddModal}
+          onClose={closeAddModal}
+          title={selectedExercise ? selectedExercise.name : editingExerciseId ? '编辑运动' : '手动输入运动'}
+          maxWidth="500px"
+        >
             {selectedExercise ? (
               <>
-                <h3 style={styles.modalTitle}>{selectedExercise.name}</h3>
                 <div style={styles.modalContent}>
                   <div style={styles.exerciseDetails}>
                     <div style={styles.detailItem}>
@@ -409,7 +472,6 @@ const ExerciseLogger = ({ selectedDate, onDateChange }) => {
               </>
             ) : (
               <>
-                <h3 style={styles.modalTitle}>{editingExerciseId ? '编辑运动' : '手动输入运动'}</h3>
                 <div style={styles.modalContent}>
                   <label style={styles.label}>
                     <span>运动名称*</span>
@@ -475,8 +537,7 @@ const ExerciseLogger = ({ selectedDate, onDateChange }) => {
                 </div>
               </>
             )}
-          </div>
-        </div>
+        </ModalShell>
       )}
     </div>
   );
@@ -520,6 +581,42 @@ const styles = {
   },
   categoriesSection: {
     marginBottom: '20px'
+  },
+  searchBox: {
+    position: 'relative',
+    marginBottom: '12px'
+  },
+  searchIcon: {
+    position: 'absolute',
+    left: '12px',
+    top: '50%',
+    transform: 'translateY(-50%)',
+    color: 'var(--text-muted)'
+  },
+  searchInput: {
+    width: '100%',
+    padding: '12px 12px 12px 40px',
+    borderRadius: '10px',
+    border: '1px solid var(--border)',
+    background: 'var(--bg-tertiary)',
+    color: 'var(--text-heading)',
+    fontSize: '14px',
+    outline: 'none'
+  },
+  searchResults: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+    marginBottom: '12px'
+  },
+  searchResultCard: {
+    width: '100%',
+    padding: '12px 14px',
+    borderRadius: '10px',
+    border: '1px solid var(--border)',
+    background: 'var(--bg-secondary)',
+    cursor: 'pointer',
+    textAlign: 'left'
   },
   header: {
     display: 'flex',
