@@ -185,56 +185,56 @@ const SetupScreen = () => {
       width: '100%',
       background: 'var(--bg-blur)',
       backdropFilter: 'blur(20px)',
-      borderRadius: '24px',
+      borderRadius: 'var(--radius-2xl)',
       border: '1px solid var(--accent-border-subtle)',
-      padding: '48px',
+      padding: 'var(--space-2xl)',
       boxShadow: 'var(--shadow-modal)'
     },
     header: {
       textAlign: 'center',
-      marginBottom: '40px'
+      marginBottom: 'var(--space-2xl)'
     },
     title: {
-      fontSize: '32px',
+      fontSize: 'var(--text-5xl)',
       fontWeight: '700',
       background: 'var(--accent-gradient)',
       WebkitBackgroundClip: 'text',
       WebkitTextFillColor: 'transparent',
-      marginBottom: '12px'
+      marginBottom: 'var(--space-md)'
     },
     subtitle: {
-      fontSize: '16px',
+      fontSize: 'var(--text-lg)',
       color: 'var(--text-secondary)',
       lineHeight: '1.6'
     },
     form: {
       display: 'flex',
       flexDirection: 'column',
-      gap: '24px'
+      gap: 'var(--space-xl)'
     },
     formGroup: {
       display: 'flex',
       flexDirection: 'column',
-      gap: '8px'
+      gap: 'var(--space-sm)'
     },
     optionGrid: {
       display: 'grid',
       gridTemplateColumns: 'repeat(2, 1fr)',
-      gap: '12px',
-      marginTop: '8px'
+      gap: 'var(--space-md)',
+      marginTop: 'var(--space-sm)'
     },
     label: {
-      fontSize: '14px',
+      fontSize: 'var(--text-base)',
       fontWeight: '600',
       color: 'var(--text-primary)',
       display: 'flex',
       alignItems: 'center',
-      gap: '8px'
+      gap: 'var(--space-sm)'
     },
     inputWrapper: {
       position: 'relative',
       background: 'var(--input-gradient-border)',
-      borderRadius: '12px',
+      borderRadius: 'var(--radius-lg)',
       padding: '1px'
     },
     inputWrapperError: {
@@ -242,34 +242,34 @@ const SetupScreen = () => {
     },
     input: {
       width: '100%',
-      padding: '14px 16px',
+      padding: 'var(--space-md) var(--space-base)',
       background: 'var(--bg-primary)',
       border: 'none',
-      borderRadius: '11px',
-      fontSize: '16px',
+      borderRadius: 'calc(var(--radius-lg) - 1px)',
+      fontSize: 'var(--text-lg)',
       color: 'var(--text-primary)',
       outline: 'none',
-      transition: 'all 0.3s ease'
+      transition: 'all var(--duration-slow) ease'
     },
     errorText: {
-      fontSize: '13px',
+      fontSize: 'var(--text-sm)',
       color: 'var(--danger)',
-      marginTop: '4px',
-      marginLeft: '4px'
+      marginTop: 'var(--space-xs)',
+      marginLeft: 'var(--space-xs)'
     },
     activityGrid: {
       display: 'grid',
       gridTemplateColumns: 'repeat(2, 1fr)',
-      gap: '12px',
-      marginTop: '8px'
+      gap: 'var(--space-md)',
+      marginTop: 'var(--space-sm)'
     },
     activityOption: {
-      padding: '16px',
+      padding: 'var(--space-md) var(--space-base)',
       background: 'var(--bg-primary)',
       border: '2px solid var(--border)',
-      borderRadius: '12px',
+      borderRadius: 'var(--radius-lg)',
       cursor: 'pointer',
-      transition: 'all 0.3s ease',
+      transition: 'all var(--duration-slow) ease',
       textAlign: 'center'
     },
     activityOptionActive: {
@@ -278,53 +278,53 @@ const SetupScreen = () => {
       transform: 'scale(1.02)'
     },
     activityLabel: {
-      fontSize: '14px',
+      fontSize: 'var(--text-base)',
       fontWeight: '600',
       color: 'var(--text-primary)',
-      marginBottom: '4px'
+      marginBottom: 'var(--space-xs)'
     },
     activityDesc: {
-      fontSize: '12px',
+      fontSize: 'var(--text-xs)',
       color: 'var(--text-secondary)'
     },
     bmiCard: {
       background: 'var(--accent-bg)',
       border: '1px solid var(--accent-border)',
-      borderRadius: '12px',
-      padding: '20px',
-      marginTop: '8px'
+      borderRadius: 'var(--radius-lg)',
+      padding: 'var(--space-lg)',
+      marginTop: 'var(--space-sm)'
     },
     bmiRow: {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
-      marginBottom: '8px'
+      marginBottom: 'var(--space-sm)'
     },
     bmiLabel: {
-      fontSize: '14px',
+      fontSize: 'var(--text-base)',
       color: 'var(--text-secondary)'
     },
     bmiValue: {
-      fontSize: '18px',
+      fontSize: 'var(--text-xl)',
       fontWeight: '700',
       color: 'var(--accent)'
     },
     button: {
       width: '100%',
-      padding: '16px',
+      padding: 'var(--space-base)',
       background: 'linear-gradient(135deg, #4f8ef7, #7c5cf7)',
       border: 'none',
-      borderRadius: '12px',
-      fontSize: '16px',
+      borderRadius: 'var(--radius-lg)',
+      fontSize: 'var(--text-lg)',
       fontWeight: '600',
       color: '#ffffff',
       cursor: 'pointer',
-      transition: 'all 0.3s ease',
-      marginTop: '16px',
+      transition: 'all var(--duration-slow) ease',
+      marginTop: 'var(--space-base)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: '8px'
+      gap: 'var(--space-sm)'
     }
   };
 

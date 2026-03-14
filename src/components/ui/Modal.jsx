@@ -47,13 +47,13 @@ const overlayStyle = {
   alignItems: 'center',
   justifyContent: 'center',
   zIndex: 1000,
-  padding: '20px',
+  padding: 'var(--space-lg)',
 };
 
 const modalStyle = {
   background: 'var(--bg-tertiary)',
-  borderRadius: '16px',
-  padding: '24px',
+  borderRadius: 'var(--radius-xl)',
+  padding: 'var(--space-xl)',
   width: '100%',
   maxHeight: '90vh',
   overflow: 'auto',
@@ -61,10 +61,10 @@ const modalStyle = {
 };
 
 const titleStyle = {
-  fontSize: '18px',
-  fontWeight: '600',
+  fontSize: 'var(--text-2xl)',
+  fontWeight: '700',
   color: 'var(--text-heading)',
-  margin: '0 0 20px 0',
+  margin: '0 0 var(--space-lg) 0',
 };
 
 export default Modal;

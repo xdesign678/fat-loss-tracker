@@ -14,21 +14,21 @@ FormField.displayName = 'FormField';
 const labelStyle = {
   display: 'flex',
   flexDirection: 'column',
-  marginBottom: '16px',
-  fontSize: '14px',
+  marginBottom: 'var(--space-base)',
+  fontSize: 'var(--text-base)',
   color: 'var(--text-secondary)',
 };
 
 export default FormField;
 
 export const inputStyle = {
-  marginTop: '6px',
-  padding: '10px',
+  marginTop: 'var(--space-sm)',
+  padding: 'var(--space-md)',
   background: 'var(--bg-secondary)',
   border: '1px solid var(--border)',
-  borderRadius: '6px',
+  borderRadius: 'var(--radius-base)',
   color: 'var(--text-heading)',
-  fontSize: '14px',
+  fontSize: 'var(--text-base)',
   outline: 'none',
 };
 

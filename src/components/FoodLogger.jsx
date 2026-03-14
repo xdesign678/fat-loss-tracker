@@ -470,9 +470,9 @@ const FoodLogger = ({ selectedDate, onDateChange }) => {
       <Modal isOpen={showAddModal} onClose={closeAddModal} title={selectedFood ? selectedFood.name : (editingFoodId ? '编辑食物' : '手动输入食物')}>
         {selectedFood ? (
           <>
-            <div style={{ marginBottom: '20px' }}>
+            <div style={{ marginBottom: 'var(--space-lg)' }}>
               <FormField label="重量（克）">
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: 'var(--space-sm)', alignItems: 'center' }}>
                   <input type="number" value={grams} onChange={(e) => setGrams(e.target.value)} style={{ ...inputStyle, marginTop: 0, flex: 1 }} autoFocus min="0" max="5000" />
                   <QuickValueButtons values={[50, 100, 150, 200]} onSelect={setGrams} unit="g" selectedValue={parseInt(grams)} />
                 </div>
@@ -495,12 +495,12 @@ const FoodLogger = ({ selectedDate, onDateChange }) => {
           </>
         ) : (
           <>
-            <div style={{ marginBottom: '20px' }}>
+            <div style={{ marginBottom: 'var(--space-lg)' }}>
               <FormField label="食物名称" required>
                 <input type="text" value={manualFood.name} onChange={(e) => setManualFood({ ...manualFood, name: e.target.value })} style={inputStyle} placeholder="例：鸡胸肉" />
               </FormField>
               <FormField label="重量（克）">
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: 'var(--space-sm)', alignItems: 'center' }}>
                   <input type="number" value={manualFood.grams} onChange={(e) => setManualFood({ ...manualFood, grams: e.target.value })} style={{ ...inputStyle, marginTop: 0, flex: 1 }} placeholder="例：150" min="0" max="5000" />
                   <QuickValueButtons values={[50, 100, 150, 200]} onSelect={(v) => setManualFood({ ...manualFood, grams: v.toString() })} unit="g" />
                 </div>
@@ -525,18 +525,18 @@ const FoodLogger = ({ selectedDate, onDateChange }) => {
 
       {/* AI recognition modal */}
       <Modal isOpen={showAIModal} onClose={closeAIModal} title="AI 智能识别">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', marginBottom: 'var(--space-base)' }}>
           <span style={{
-            padding: '3px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: '600',
+            padding: '3px var(--space-sm)', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-xs)', fontWeight: '600',
             background: hasAI ? 'var(--success-bg-badge)' : 'var(--warning-bg)',
             color: hasAI ? 'var(--success)' : 'var(--warning)',
           }}>
             {hasAI ? `AI: ${aiSettings.selectedModel.split('/').pop()}` : '本地匹配模式'}
           </span>
-          {!hasAI && <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>在设置中配置 API 可识别任意食物</span>}
+          {!hasAI && <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>在设置中配置 API 可识别任意食物</span>}
         </div>
 
-        <div style={{ marginBottom: '20px' }}>
+        <div style={{ marginBottom: 'var(--space-lg)' }}>
           <FormField label="描述你吃了什么">
             <textarea
               value={aiInput}
@@ -554,21 +554,21 @@ const FoodLogger = ({ selectedDate, onDateChange }) => {
               多个食物用逗号、空格或顿号分隔
             </div>
           )}
-          {aiLoading && <div style={{ textAlign: 'center', padding: '20px', color: 'var(--accent)', fontSize: '14px' }}>AI 正在分析中...</div>}
-          {aiError && <div style={{ color: 'var(--danger)', fontSize: '13px', marginTop: '8px', padding: '8px 12px', background: 'var(--danger-bg)', borderRadius: '6px' }}>{aiError}</div>}
+          {aiLoading && <div style={{ textAlign: 'center', padding: 'var(--space-lg)', color: 'var(--accent)', fontSize: 'var(--text-base)' }}>AI 正在分析中...</div>}
+          {aiError && <div style={{ color: 'var(--danger)', fontSize: 'var(--text-sm)', marginTop: 'var(--space-sm)', padding: 'var(--space-sm) var(--space-md)', background: 'var(--danger-bg)', borderRadius: 'var(--radius-sm)' }}>{aiError}</div>}
           {aiResults.length > 0 && (
-            <div style={{ marginTop: '12px' }}>
-              <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '8px' }}>识别到 {aiResults.length} 项食物：</div>
+            <div style={{ marginTop: 'var(--space-md)' }}>
+              <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', marginBottom: 'var(--space-sm)' }}>识别到 {aiResults.length} 项食物：</div>
               {aiResults.map((item, i) => (
-                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', background: 'var(--bg-secondary)', borderRadius: '8px', marginBottom: '6px' }}>
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 'var(--space-sm) var(--space-md)', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-base)', marginBottom: '6px' }}>
                   <div>
-                    <span style={{ color: 'var(--text-heading)', fontSize: '14px', fontWeight: '500' }}>{item.name}</span>
-                    <span style={{ color: 'var(--text-muted)', fontSize: '12px', marginLeft: '8px' }}>{item.grams}g</span>
+                    <span style={{ color: 'var(--text-heading)', fontSize: 'var(--text-base)', fontWeight: '500' }}>{item.name}</span>
+                    <span style={{ color: 'var(--text-muted)', fontSize: 'var(--text-xs)', marginLeft: 'var(--space-sm)' }}>{item.grams}g</span>
                   </div>
-                  <span style={{ color: 'var(--accent)', fontSize: '14px', fontWeight: '600' }}>{Math.round(item.calories)} kcal</span>
+                  <span style={{ color: 'var(--accent)', fontSize: 'var(--text-base)', fontWeight: '600' }}>{Math.round(item.calories)} kcal</span>
                 </div>
               ))}
-              <div style={{ display: 'flex', justifyContent: 'flex-end', fontSize: '14px', fontWeight: '600', color: 'var(--success)', marginTop: '4px', padding: '0 12px' }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', fontSize: 'var(--text-base)', fontWeight: '600', color: 'var(--success)', marginTop: 'var(--space-xs)', padding: '0 var(--space-md)' }}>
                 合计：{aiResults.reduce((s, item) => s + (item.calories || 0), 0).toFixed(0)} kcal
               </div>
             </div>
@@ -589,52 +589,52 @@ const FoodLogger = ({ selectedDate, onDateChange }) => {
 // --- Styles (modal-related styles removed, handled by ui/Modal) ---
 
 const styles = {
-  container: { padding: '20px', maxWidth: '800px', margin: '0 auto' },
-  quickSection: { marginBottom: '20px' },
-  quickHeader: { fontSize: '14px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '10px' },
-  quickList: { display: 'flex', flexWrap: 'wrap', gap: '8px' },
-  quickChip: { display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid var(--border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', borderRadius: '999px', padding: '8px 12px', cursor: 'pointer', fontSize: '13px' },
-  quickMeta: { color: 'var(--text-nav)', fontSize: '12px' },
-  searchSection: { marginBottom: '20px' },
-  searchBox: { position: 'relative', marginBottom: '12px' },
-  searchIcon: { position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' },
-  searchInput: { width: '100%', padding: '12px 40px 12px 44px', background: 'var(--bg-tertiary)', border: '1px solid var(--border)', borderRadius: '8px', color: 'var(--text-heading)', fontSize: '14px', outline: 'none', transition: 'border-color 0.3s' },
-  clearButton: { position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px', display: 'flex' },
-  actionButtons: { display: 'flex', gap: '12px' },
-  aiButton: { flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '12px', background: 'var(--ai-button-gradient)', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '14px', fontWeight: '500', cursor: 'pointer', transition: 'opacity 0.3s' },
-  manualButton: { flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '12px', background: 'var(--bg-tertiary)', border: '1px solid var(--border)', borderRadius: '8px', color: 'var(--text-heading)', fontSize: '14px', fontWeight: '500', cursor: 'pointer', transition: 'background 0.3s' },
-  searchResults: { marginBottom: '20px' },
-  foodCard: { display: 'flex', width: '100%', background: 'var(--bg-secondary)', borderRadius: '8px', marginBottom: '8px', cursor: 'pointer', overflow: 'hidden', transition: 'transform 0.2s', border: '1px solid var(--border)', padding: 0, textAlign: 'left' },
+  container: { padding: 'var(--space-lg)', maxWidth: '800px', margin: '0 auto' },
+  quickSection: { marginBottom: 'var(--space-lg)' },
+  quickHeader: { fontSize: 'var(--text-base)', fontWeight: '600', color: 'var(--text-muted)', marginBottom: 'var(--space-sm)' },
+  quickList: { display: 'flex', flexWrap: 'wrap', gap: 'var(--space-sm)' },
+  quickChip: { display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', border: '1px solid var(--border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', borderRadius: 'var(--radius-full)', padding: 'var(--space-sm) var(--space-md)', cursor: 'pointer', fontSize: 'var(--text-sm)' },
+  quickMeta: { color: 'var(--text-nav)', fontSize: 'var(--text-xs)' },
+  searchSection: { marginBottom: 'var(--space-lg)' },
+  searchBox: { position: 'relative', marginBottom: 'var(--space-md)' },
+  searchIcon: { position: 'absolute', left: 'var(--space-md)', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' },
+  searchInput: { width: '100%', padding: 'var(--space-md) 40px var(--space-md) 44px', background: 'var(--bg-tertiary)', border: '1px solid var(--border)', borderRadius: 'var(--radius-base)', color: 'var(--text-heading)', fontSize: 'var(--text-base)', outline: 'none', transition: 'border-color var(--duration-slow)' },
+  clearButton: { position: 'absolute', right: 'var(--space-md)', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 'var(--space-xs)', display: 'flex' },
+  actionButtons: { display: 'flex', gap: 'var(--space-md)' },
+  aiButton: { flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'var(--space-md)', background: 'var(--ai-button-gradient)', border: 'none', borderRadius: 'var(--radius-base)', color: '#fff', fontSize: 'var(--text-base)', fontWeight: '500', cursor: 'pointer', transition: 'opacity var(--duration-slow)' },
+  manualButton: { flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'var(--space-md)', background: 'var(--bg-tertiary)', border: '1px solid var(--border)', borderRadius: 'var(--radius-base)', color: 'var(--text-heading)', fontSize: 'var(--text-base)', fontWeight: '500', cursor: 'pointer', transition: 'background var(--duration-slow)' },
+  searchResults: { marginBottom: 'var(--space-lg)' },
+  foodCard: { display: 'flex', width: '100%', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-base)', marginBottom: 'var(--space-sm)', cursor: 'pointer', overflow: 'hidden', transition: 'transform var(--duration-base)', border: '1px solid var(--border)', padding: 0, textAlign: 'left' },
   categoryBar: { width: '4px', flexShrink: 0 },
-  foodContent: { flex: 1, padding: '12px' },
-  foodHeader: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' },
-  foodName: { margin: 0, fontSize: '15px', fontWeight: '500', color: 'var(--text-heading)' },
-  categoryBadge: { padding: '2px 8px', background: 'var(--border)', borderRadius: '4px', fontSize: '12px', color: 'var(--text-secondary)' },
-  foodNutrition: { display: 'flex', alignItems: 'center', fontSize: '13px', color: 'var(--text-secondary)' },
-  divider: { margin: '0 8px', color: 'var(--border-divider)' },
-  todaySection: { marginBottom: '20px' },
-  sectionTitle: { fontSize: '16px', fontWeight: '600', color: 'var(--text-heading)', marginBottom: '12px' },
-  logsList: { display: 'flex', flexDirection: 'column', gap: '8px' },
-  logItem: { display: 'flex', alignItems: 'center', background: 'var(--bg-secondary)', borderRadius: '8px', padding: '12px', transition: 'background 0.2s' },
+  foodContent: { flex: 1, padding: 'var(--space-md)' },
+  foodHeader: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-sm)' },
+  foodName: { margin: 0, fontSize: 'var(--text-md)', fontWeight: '500', color: 'var(--text-heading)' },
+  categoryBadge: { padding: '2px var(--space-sm)', background: 'var(--border)', borderRadius: '4px', fontSize: 'var(--text-xs)', color: 'var(--text-secondary)' },
+  foodNutrition: { display: 'flex', alignItems: 'center', fontSize: 'var(--text-sm)', color: 'var(--text-secondary)' },
+  divider: { margin: '0 var(--space-sm)', color: 'var(--border-divider)' },
+  todaySection: { marginBottom: 'var(--space-lg)' },
+  sectionTitle: { fontSize: 'var(--text-lg)', fontWeight: '600', color: 'var(--text-heading)', marginBottom: 'var(--space-md)' },
+  logsList: { display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' },
+  logItem: { display: 'flex', alignItems: 'center', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-base)', padding: 'var(--space-md)', transition: 'background var(--duration-base)' },
   logContent: { flex: 1 },
   logHeader: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' },
-  logName: { fontSize: '15px', fontWeight: '500', color: 'var(--text-heading)' },
-  logTime: { fontSize: '12px', color: 'var(--text-muted)' },
-  logNutrition: { display: 'flex', alignItems: 'center', fontSize: '13px', color: 'var(--text-secondary)' },
+  logName: { fontSize: 'var(--text-md)', fontWeight: '500', color: 'var(--text-heading)' },
+  logTime: { fontSize: 'var(--text-xs)', color: 'var(--text-muted)' },
+  logNutrition: { display: 'flex', alignItems: 'center', fontSize: 'var(--text-sm)', color: 'var(--text-secondary)' },
   logCalories: { color: 'var(--accent)', fontWeight: '500' },
   logActions: { display: 'flex', alignItems: 'center' },
-  editButton: { display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '44px', minHeight: '44px', width: '44px', height: '44px', background: 'transparent', border: 'none', borderRadius: '6px', color: 'var(--accent)', cursor: 'pointer', transition: 'all 0.2s', marginLeft: '8px' },
-  deleteButton: { display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '44px', minHeight: '44px', width: '44px', height: '44px', background: 'transparent', border: 'none', borderRadius: '6px', color: 'var(--text-muted)', cursor: 'pointer', transition: 'all 0.2s', marginLeft: '8px' },
-  summary: { background: 'var(--bg-secondary)', borderRadius: '12px', padding: '16px' },
-  summaryTitle: { fontSize: '16px', fontWeight: '600', color: 'var(--text-heading)', marginBottom: '12px' },
-  summaryGrid: { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' },
-  summaryItem: { display: 'flex', flexDirection: 'column', padding: '12px', background: 'var(--bg-tertiary)', borderRadius: '8px' },
-  summaryLabel: { fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '4px' },
-  summaryValue: { fontSize: '20px', fontWeight: '600', color: 'var(--accent)' },
-  nutritionPreview: { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginTop: '16px', padding: '16px', background: 'var(--bg-secondary)', borderRadius: '8px' },
-  previewItem: { display: 'flex', flexDirection: 'column', fontSize: '13px', color: 'var(--text-secondary)' },
-  previewValue: { marginTop: '4px', fontSize: '16px', fontWeight: '600', color: 'var(--text-heading)' },
-  aiHint: { fontSize: '12px', color: 'var(--text-muted)', marginTop: '8px', fontStyle: 'italic' },
+  editButton: { display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '44px', minHeight: '44px', width: '44px', height: '44px', background: 'transparent', border: 'none', borderRadius: 'var(--radius-sm)', color: 'var(--accent)', cursor: 'pointer', transition: 'all var(--duration-base)', marginLeft: 'var(--space-sm)' },
+  deleteButton: { display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '44px', minHeight: '44px', width: '44px', height: '44px', background: 'transparent', border: 'none', borderRadius: 'var(--radius-sm)', color: 'var(--text-muted)', cursor: 'pointer', transition: 'all var(--duration-base)', marginLeft: 'var(--space-sm)' },
+  summary: { background: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)', padding: 'var(--space-base)' },
+  summaryTitle: { fontSize: 'var(--text-lg)', fontWeight: '600', color: 'var(--text-heading)', marginBottom: 'var(--space-md)' },
+  summaryGrid: { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 'var(--space-md)' },
+  summaryItem: { display: 'flex', flexDirection: 'column', padding: 'var(--space-md)', background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-base)' },
+  summaryLabel: { fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', marginBottom: 'var(--space-xs)' },
+  summaryValue: { fontSize: 'var(--text-2xl)', fontWeight: '600', color: 'var(--accent)' },
+  nutritionPreview: { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 'var(--space-md)', marginTop: 'var(--space-base)', padding: 'var(--space-base)', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-base)' },
+  previewItem: { display: 'flex', flexDirection: 'column', fontSize: 'var(--text-sm)', color: 'var(--text-secondary)' },
+  previewValue: { marginTop: 'var(--space-xs)', fontSize: 'var(--text-lg)', fontWeight: '600', color: 'var(--text-heading)' },
+  aiHint: { fontSize: 'var(--text-xs)', color: 'var(--text-muted)', marginTop: 'var(--space-sm)', fontStyle: 'italic' },
 };
 
 export default FoodLogger;

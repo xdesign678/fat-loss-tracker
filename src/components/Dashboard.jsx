@@ -168,39 +168,39 @@ const Dashboard = ({ selectedDate, onDateChange, onOpenWeightLogger }) => {
   };
 
   const styles = {
-    container: { minHeight: '100vh', background: 'var(--bg-primary)', padding: '24px', color: 'var(--text-primary)' },
-    header: { marginBottom: '24px' },
-    date: { fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '8px' },
-    greeting: { fontSize: '28px', fontWeight: '700', background: 'var(--accent-gradient)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' },
-    progressCard: { background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: '16px', padding: '24px', marginBottom: '24px' },
-    progressHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' },
-    progressTitle: { fontSize: '16px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px' },
-    progressPercent: { fontSize: '24px', fontWeight: '700', background: 'var(--accent-gradient)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' },
-    progressBar: { width: '100%', height: '12px', background: 'var(--bg-primary)', borderRadius: '6px', overflow: 'hidden', marginBottom: '12px' },
-    progressFill: { height: '100%', background: 'linear-gradient(90deg, var(--accent), var(--accent-secondary))', borderRadius: '6px', transition: 'width 0.5s ease' },
-    progressLabels: { display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: 'var(--text-secondary)' },
-    progressMeta: { display: 'flex', gap: '16px', marginTop: '12px', fontSize: '12px', color: 'var(--text-secondary)', flexWrap: 'wrap' },
+    container: { minHeight: '100vh', background: 'var(--bg-primary)', padding: 'var(--space-lg)', color: 'var(--text-primary)' },
+    header: { marginBottom: 'var(--space-lg)' },
+    date: { fontSize: 'var(--text-base)', color: 'var(--text-secondary)', marginBottom: 'var(--space-xs)' },
+    greeting: { fontSize: 'var(--text-4xl)', fontWeight: '700', background: 'var(--accent-gradient)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' },
+    progressCard: { background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: 'var(--space-lg)', marginBottom: 'var(--space-xl)' },
+    progressHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-md)' },
+    progressTitle: { fontSize: 'var(--text-md)', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px' },
+    progressPercent: { fontSize: 'var(--text-3xl)', fontWeight: '700', background: 'var(--accent-gradient)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' },
+    progressBar: { width: '100%', height: '10px', background: 'var(--bg-primary)', borderRadius: 'var(--radius-full)', overflow: 'hidden', marginBottom: '12px' },
+    progressFill: { height: '100%', background: 'linear-gradient(90deg, var(--accent), var(--accent-secondary))', borderRadius: 'var(--radius-full)', transition: 'width 0.5s ease' },
+    progressLabels: { display: 'flex', justifyContent: 'space-between', fontSize: 'var(--text-sm)', color: 'var(--text-secondary)' },
+    progressMeta: { display: 'flex', gap: 'var(--space-base)', marginTop: 'var(--space-md)', fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', flexWrap: 'wrap' },
     progressMetaItem: { display: 'flex', alignItems: 'center', gap: '4px' },
-    statCard: { background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: '16px', padding: '20px', cursor: 'pointer', transition: 'all 0.3s ease' },
+    statCard: { background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: 'var(--space-lg)', cursor: 'pointer', transition: 'all var(--duration-base) ease' },
     statHeader: { display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' },
-    statLabel: { fontSize: '14px', color: 'var(--text-secondary)' },
-    statValue: { fontSize: '32px', fontWeight: '700', marginBottom: '4px' },
-    statSubtext: { fontSize: '12px', color: 'var(--text-secondary)' },
-    emptyStateContainer: { background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: '16px', padding: '24px', marginBottom: '24px' },
-    actionCard: { background: 'rgba(79,142,247,0.08)', border: '1px solid rgba(79,142,247,0.2)', borderRadius: '16px', padding: '18px 20px', marginBottom: '24px' },
+    statLabel: { fontSize: 'var(--text-base)', color: 'var(--text-secondary)' },
+    statValue: { fontSize: 'var(--text-5xl)', fontWeight: '700', marginBottom: 'var(--space-xs)' },
+    statSubtext: { fontSize: 'var(--text-sm)', color: 'var(--text-secondary)' },
+    emptyStateContainer: { background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: 'var(--space-lg)', marginBottom: 'var(--space-xl)' },
+    actionCard: { background: 'rgba(79,142,247,0.08)', border: '1px solid rgba(79,142,247,0.2)', borderRadius: 'var(--radius-xl)', padding: 'var(--space-lg)', marginBottom: 'var(--space-xl)' },
     actionCardCalm: { background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)' },
     actionCardWarning: { background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' },
-    actionTitle: { fontSize: '18px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '8px' },
-    actionHint: { fontSize: '14px', color: 'var(--text-secondary)', lineHeight: '1.6', marginBottom: '6px' },
-    actionSubHint: { fontSize: '13px', color: 'var(--text-muted)' },
+    actionTitle: { fontSize: 'var(--text-xl)', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '8px' },
+    actionHint: { fontSize: 'var(--text-base)', color: 'var(--text-secondary)', lineHeight: '1.55', marginBottom: '6px' },
+    actionSubHint: { fontSize: 'var(--text-sm)', color: 'var(--text-muted)' },
     actionButtons: { display: 'flex', gap: '8px', marginTop: '12px', flexWrap: 'wrap' },
-    actionButton: { padding: '6px 12px', fontSize: '13px', borderRadius: '8px', border: 'none', cursor: 'pointer', background: 'var(--accent)', color: 'white', transition: 'all 0.2s' },
-    tipCard: { background: 'var(--success-bg)', border: '1px solid var(--success-border)', borderRadius: '16px', padding: '20px', display: 'flex', gap: '16px' },
+    actionButton: { padding: '6px var(--space-md)', fontSize: 'var(--text-sm)', borderRadius: 'var(--radius-base)', border: 'none', cursor: 'pointer', background: 'var(--accent)', color: 'white', transition: 'all 0.2s' },
+    tipCard: { background: 'var(--success-bg)', border: '1px solid var(--success-border)', borderRadius: 'var(--radius-xl)', padding: 'var(--space-lg)', display: 'flex', gap: 'var(--space-md)' },
     tipIcon: { color: 'var(--success)', flexShrink: 0 },
     tipContent: { flex: 1 },
-    tipTitle: { fontSize: '14px', fontWeight: '600', color: 'var(--success)', marginBottom: '8px' },
-    tipText: { fontSize: '14px', color: 'var(--text-primary)', lineHeight: '1.6' },
-    chartSkeleton: { background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: '16px', padding: '24px', marginBottom: '24px', minHeight: '180px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: '14px' },
+    tipTitle: { fontSize: 'var(--text-base)', fontWeight: '600', color: 'var(--success)', marginBottom: '8px' },
+    tipText: { fontSize: 'var(--text-base)', color: 'var(--text-primary)', lineHeight: '1.55' },
+    chartSkeleton: { background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: 'var(--space-xl)', marginBottom: 'var(--space-xl)', minHeight: '180px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: 'var(--text-base)' },
   };
 
   return (
@@ -257,7 +257,7 @@ const Dashboard = ({ selectedDate, onDateChange, onOpenWeightLogger }) => {
           />
         </div>
       ) : (
-        <div className="responsive-grid-4" style={{ marginBottom: '24px' }}>
+        <div className="responsive-grid-4" style={{ marginBottom: 'var(--space-xl)' }}>
           <div style={styles.statCard} className="card-hover">
             <div style={styles.statHeader}>
               <Flame size={20} style={{ color: getCalorieColor() }} />

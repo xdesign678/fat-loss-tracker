@@ -42,7 +42,7 @@ export default function ModalShell({
             <X size={20} />
           </button>
         </div>
-        <div style={{ ...styles.body, padding: bodyPadding }}>
+        <div style={styles.body}>
           {children}
         </div>
         {footer && <div style={styles.footer}>{footer}</div>}
@@ -68,7 +68,7 @@ const styles = {
   },
   content: {
     background: 'var(--bg-tertiary)',
-    borderRadius: '16px',
+    borderRadius: 'var(--radius-xl)',
     width: '100%',
     maxHeight: '90vh',
     display: 'flex',
@@ -79,11 +79,11 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: '20px 24px 0',
-    gap: '12px',
+    padding: 'var(--space-lg) var(--space-xl) 0',
+    gap: 'var(--space-md)',
   },
   title: {
-    fontSize: '20px',
+    fontSize: 'var(--text-2xl)',
     fontWeight: '700',
     color: 'var(--text-heading)',
     margin: 0,
@@ -103,10 +103,11 @@ const styles = {
   body: {
     overflowY: 'auto',
     flex: 1,
+    padding: 'var(--space-xl)',
   },
   footer: {
     display: 'flex',
-    gap: '12px',
-    padding: '0 24px 24px',
+    gap: 'var(--space-md)',
+    padding: '0 var(--space-xl) var(--space-xl)',
   },
 };

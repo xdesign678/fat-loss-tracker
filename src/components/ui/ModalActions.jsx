@@ -22,34 +22,34 @@ ModalActions.displayName = 'ModalActions';
 
 const containerStyle = {
   display: 'flex',
-  gap: '12px',
-  marginTop: '20px',
+  gap: 'var(--space-md)',
+  marginTop: 'var(--space-lg)',
 };
 
 const cancelButtonStyle = {
   flex: 1,
-  padding: '12px',
+  padding: 'var(--space-md)',
   background: 'var(--bg-secondary)',
   border: '1px solid var(--border)',
-  borderRadius: '8px',
+  borderRadius: 'var(--radius-base)',
   color: 'var(--text-heading)',
-  fontSize: '14px',
+  fontSize: 'var(--text-base)',
   fontWeight: '500',
   cursor: 'pointer',
-  transition: 'background 0.3s',
+  transition: 'background var(--duration-base)',
 };
 
 const confirmButtonStyle = {
   flex: 1,
-  padding: '12px',
+  padding: 'var(--space-md)',
   background: 'var(--accent)',
   border: 'none',
-  borderRadius: '8px',
+  borderRadius: 'var(--radius-base)',
   color: '#fff',
-  fontSize: '14px',
+  fontSize: 'var(--text-base)',
   fontWeight: '500',
   cursor: 'pointer',
-  transition: 'background 0.3s',
+  transition: 'background var(--duration-base)',
 };
 
 export default ModalActions;

@@ -367,7 +367,7 @@ const ExerciseLogger = ({ selectedDate, onDateChange }) => {
               </div>
 
               <FormField label="运动时长（分钟）">
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: 'var(--space-sm)', alignItems: 'center' }}>
                   <input
                     type="number"
                     value={duration}
@@ -408,7 +408,7 @@ const ExerciseLogger = ({ selectedDate, onDateChange }) => {
                 />
               </FormField>
               <FormField label="时长（分钟）" required>
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: 'var(--space-sm)', alignItems: 'center' }}>
                   <input
                     type="number"
                     value={manualExercise.duration}
@@ -455,51 +455,51 @@ const ExerciseLogger = ({ selectedDate, onDateChange }) => {
 
 const styles = {
   container: {
-    padding: '20px',
+    padding: 'var(--space-lg)',
     maxWidth: '800px',
     margin: '0 auto'
   },
   quickSection: {
-    marginBottom: '20px'
+    marginBottom: 'var(--space-lg)'
   },
   quickHeader: {
-    fontSize: '14px',
+    fontSize: 'var(--text-base)',
     fontWeight: '600',
     color: 'var(--text-muted)',
-    marginBottom: '10px'
+    marginBottom: 'var(--space-sm)'
   },
   quickList: {
     display: 'flex',
     flexWrap: 'wrap',
-    gap: '8px'
+    gap: 'var(--space-sm)'
   },
   quickChip: {
     display: 'flex',
     alignItems: 'center',
-    gap: '8px',
+    gap: 'var(--space-sm)',
     border: '1px solid var(--border)',
     background: 'var(--bg-tertiary)',
     color: 'var(--text-heading)',
-    borderRadius: '999px',
-    padding: '8px 12px',
+    borderRadius: 'var(--radius-full)',
+    padding: 'var(--space-sm) var(--space-md)',
     cursor: 'pointer',
-    fontSize: '13px'
+    fontSize: 'var(--text-sm)'
   },
   quickMeta: {
     color: 'var(--text-secondary)',
-    fontSize: '12px'
+    fontSize: 'var(--text-xs)'
   },
   categoriesSection: {
-    marginBottom: '20px'
+    marginBottom: 'var(--space-lg)'
   },
   header: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: '12px'
+    marginBottom: 'var(--space-md)'
   },
   sectionTitle: {
-    fontSize: '16px',
+    fontSize: 'var(--text-lg)',
     fontWeight: '600',
     color: 'var(--text-heading)',
     margin: 0
@@ -507,20 +507,20 @@ const styles = {
   manualButton: {
     display: 'flex',
     alignItems: 'center',
-    padding: '8px 16px',
+    padding: 'var(--space-sm) var(--space-base)',
     background: 'var(--bg-tertiary)',
     border: '1px solid var(--border)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-base)',
     color: 'var(--text-heading)',
-    fontSize: '14px',
+    fontSize: 'var(--text-base)',
     fontWeight: '500',
     cursor: 'pointer',
-    transition: 'background 0.3s'
+    transition: 'background var(--duration-slow)'
   },
   categoryCard: {
     background: 'var(--bg-secondary)',
-    borderRadius: '8px',
-    marginBottom: '8px',
+    borderRadius: 'var(--radius-base)',
+    marginBottom: 'var(--space-sm)',
     overflow: 'hidden'
   },
   categoryHeader: {
@@ -530,7 +530,7 @@ const styles = {
     width: '100%',
     padding: '14px',
     cursor: 'pointer',
-    transition: 'background 0.2s',
+    transition: 'background var(--duration-base)',
     background: 'transparent',
     border: 'none',
     textAlign: 'left'
@@ -538,29 +538,29 @@ const styles = {
   categoryTitleRow: {
     display: 'flex',
     alignItems: 'center',
-    gap: '10px',
+    gap: 'var(--space-sm)',
     flex: 1
   },
   categoryTitle: {
-    fontSize: '15px',
+    fontSize: 'var(--text-md)',
     fontWeight: '500',
     color: 'var(--text-heading)'
   },
   categoryCount: {
-    fontSize: '13px',
+    fontSize: 'var(--text-sm)',
     color: 'var(--text-muted)',
     marginLeft: 'auto',
-    marginRight: '12px'
+    marginRight: 'var(--space-md)'
   },
   exerciseList: {
     borderTop: '1px solid var(--border)'
   },
   exerciseItem: {
     width: '100%',
-    padding: '12px 14px',
+    padding: 'var(--space-md) 14px',
     borderBottom: '1px solid var(--border)',
     cursor: 'pointer',
-    transition: 'background 0.2s',
+    transition: 'background var(--duration-base)',
     background: 'transparent',
     borderLeft: 'none',
     borderRight: 'none',
@@ -578,42 +578,42 @@ const styles = {
     justifyContent: 'space-between'
   },
   exerciseName: {
-    fontSize: '14px',
+    fontSize: 'var(--text-base)',
     fontWeight: '500',
     color: 'var(--text-heading)'
   },
   impactBadge: {
-    padding: '2px 8px',
+    padding: '2px var(--space-sm)',
     borderRadius: '4px',
-    fontSize: '11px',
+    fontSize: 'var(--text-xs)',
     fontWeight: '500',
     color: '#fff'
   },
   exerciseInfo: {
     display: 'flex',
     alignItems: 'center',
-    fontSize: '13px',
+    fontSize: 'var(--text-sm)',
     color: 'var(--text-secondary)'
   },
   divider: {
-    margin: '0 8px',
+    margin: '0 var(--space-sm)',
     color: 'var(--border-divider)'
   },
   todaySection: {
-    marginBottom: '20px'
+    marginBottom: 'var(--space-lg)'
   },
   logsList: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '8px'
+    gap: 'var(--space-sm)'
   },
   logItem: {
     display: 'flex',
     alignItems: 'center',
     background: 'var(--bg-secondary)',
-    borderRadius: '8px',
-    padding: '12px',
-    transition: 'background 0.2s'
+    borderRadius: 'var(--radius-base)',
+    padding: 'var(--space-md)',
+    transition: 'background var(--duration-base)'
   },
   logContent: {
     flex: 1
@@ -625,18 +625,18 @@ const styles = {
     marginBottom: '6px'
   },
   logName: {
-    fontSize: '15px',
+    fontSize: 'var(--text-md)',
     fontWeight: '500',
     color: 'var(--text-heading)'
   },
   logTime: {
-    fontSize: '12px',
+    fontSize: 'var(--text-xs)',
     color: 'var(--text-muted)'
   },
   logInfo: {
     display: 'flex',
     alignItems: 'center',
-    fontSize: '13px',
+    fontSize: 'var(--text-sm)',
     color: 'var(--text-secondary)'
   },
   logCategory: {
@@ -656,11 +656,11 @@ const styles = {
     height: '44px',
     background: 'transparent',
     border: 'none',
-    borderRadius: '6px',
+    borderRadius: 'var(--radius-sm)',
     color: 'var(--text-muted)',
     cursor: 'pointer',
-    transition: 'all 0.2s',
-    marginLeft: '8px'
+    transition: 'all var(--duration-base)',
+    marginLeft: 'var(--space-sm)'
   },
   editButton: {
     display: 'flex',
@@ -672,11 +672,11 @@ const styles = {
     height: '44px',
     background: 'transparent',
     border: 'none',
-    borderRadius: '6px',
+    borderRadius: 'var(--radius-sm)',
     color: 'var(--accent)',
     cursor: 'pointer',
-    transition: 'all 0.2s',
-    marginLeft: '8px'
+    transition: 'all var(--duration-base)',
+    marginLeft: 'var(--space-sm)'
   },
   logActions: {
     display: 'flex',
@@ -684,8 +684,8 @@ const styles = {
   },
   summary: {
     background: 'var(--bg-secondary)',
-    borderRadius: '12px',
-    padding: '20px'
+    borderRadius: 'var(--radius-md)',
+    padding: 'var(--space-lg)'
   },
   summaryContent: {
     display: 'flex',
@@ -693,44 +693,44 @@ const styles = {
     justifyContent: 'space-between'
   },
   summaryLabel: {
-    fontSize: '16px',
+    fontSize: 'var(--text-lg)',
     fontWeight: '500',
     color: 'var(--text-secondary)'
   },
   summaryValue: {
-    fontSize: '28px',
+    fontSize: 'var(--text-4xl)',
     fontWeight: '700',
     color: 'var(--success)'
   },
   modalContent: {
-    marginBottom: '20px'
+    marginBottom: 'var(--space-lg)'
   },
   exerciseDetails: {
     background: 'var(--bg-secondary)',
-    borderRadius: '8px',
-    padding: '12px',
-    marginBottom: '16px'
+    borderRadius: 'var(--radius-base)',
+    padding: 'var(--space-md)',
+    marginBottom: 'var(--space-base)'
   },
   detailItem: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: '8px 0'
+    padding: 'var(--space-sm) 0'
   },
   detailLabel: {
-    fontSize: '13px',
+    fontSize: 'var(--text-sm)',
     color: 'var(--text-secondary)'
   },
   detailValue: {
-    fontSize: '14px',
+    fontSize: 'var(--text-base)',
     fontWeight: '500',
     color: 'var(--text-heading)'
   },
   description: {
-    marginTop: '8px',
-    paddingTop: '8px',
+    marginTop: 'var(--space-sm)',
+    paddingTop: 'var(--space-sm)',
     borderTop: '1px solid var(--border)',
-    fontSize: '13px',
+    fontSize: 'var(--text-sm)',
     color: 'var(--text-secondary)',
     lineHeight: '1.5'
   },
@@ -738,22 +738,22 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: '16px',
+    padding: 'var(--space-base)',
     background: 'var(--bg-secondary)',
-    borderRadius: '8px',
-    marginBottom: '8px'
+    borderRadius: 'var(--radius-base)',
+    marginBottom: 'var(--space-sm)'
   },
   previewLabel: {
-    fontSize: '14px',
+    fontSize: 'var(--text-base)',
     color: 'var(--text-secondary)'
   },
   previewValue: {
-    fontSize: '24px',
+    fontSize: 'var(--text-3xl)',
     fontWeight: '700',
     color: 'var(--success)'
   },
   hint: {
-    fontSize: '12px',
+    fontSize: 'var(--text-xs)',
     color: 'var(--text-muted)',
     textAlign: 'center',
     fontStyle: 'italic'

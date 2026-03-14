@@ -144,19 +144,19 @@ const WeightLogger = ({ isOpen, onClose }) => {
 };
 
 const s = {
-  title: { fontSize: '1.8em', fontWeight: '700', color: 'var(--text-heading)', marginBottom: '24px', textAlign: 'center' },
-  currentWeight: { textAlign: 'center', marginBottom: '24px' },
-  label: { fontSize: '0.9em', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px' },
-  weightDisplay: { fontSize: '3em', fontWeight: '700', background: 'var(--weight-gradient)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', marginBottom: '8px' },
-  quickBtn: { padding: '6px 12px', fontSize: '0.85em', background: 'var(--border)', border: 'none', borderRadius: '8px', color: 'var(--text-secondary)', cursor: 'pointer', transition: 'all 0.2s' },
-  inputContainer: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', marginBottom: '24px' },
-  adjustBtn: { width: '48px', height: '48px', borderRadius: '50%', background: 'var(--border)', border: 'none', color: 'var(--text-heading)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', flexShrink: 0 },
-  input: { width: '140px', padding: '16px', fontSize: '2em', fontWeight: '600', textAlign: 'center', background: 'var(--border)', border: '2px solid var(--border-light)', borderRadius: '12px', color: 'var(--text-heading)', outline: 'none', transition: 'border-color 0.2s' },
-  changeIndicator: { textAlign: 'center', marginBottom: '24px', fontSize: '1.1em', fontWeight: '600' },
-  saveBtn: { width: '100%', padding: '16px', fontSize: '1.1em', fontWeight: '600', color: '#ffffff', background: 'var(--weight-gradient)', border: 'none', borderRadius: '12px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: 'var(--shadow-button)' },
-  history: { marginTop: '24px', paddingTop: '24px', borderTop: '1px solid var(--border-light)' },
-  historyTitle: { fontSize: '0.9em', color: 'var(--text-secondary)', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '1px' },
-  historyItem: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'var(--border)', borderRadius: '8px', fontSize: '0.95em' },
+  title: { fontSize: 'var(--text-4xl)', fontWeight: '700', color: 'var(--text-heading)', marginBottom: 'var(--space-xl)', textAlign: 'center' },
+  currentWeight: { textAlign: 'center', marginBottom: 'var(--space-xl)' },
+  label: { fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px' },
+  weightDisplay: { fontSize: 'var(--text-5xl)', fontWeight: '700', background: 'var(--weight-gradient)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', marginBottom: 'var(--space-sm)' },
+  quickBtn: { padding: 'var(--space-xs) var(--space-md)', fontSize: 'var(--text-sm)', background: 'var(--border)', border: 'none', borderRadius: 'var(--radius-base)', color: 'var(--text-secondary)', cursor: 'pointer', transition: 'all var(--duration-base)' },
+  inputContainer: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-md)', marginBottom: 'var(--space-xl)' },
+  adjustBtn: { width: '48px', height: '48px', borderRadius: 'var(--radius-full)', background: 'var(--border)', border: 'none', color: 'var(--text-heading)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all var(--duration-base)', flexShrink: 0 },
+  input: { width: '140px', padding: 'var(--space-base)', fontSize: 'var(--text-4xl)', fontWeight: '600', textAlign: 'center', background: 'var(--border)', border: '2px solid var(--border-light)', borderRadius: 'var(--radius-lg)', color: 'var(--text-heading)', outline: 'none', transition: 'border-color var(--duration-base)' },
+  changeIndicator: { textAlign: 'center', marginBottom: 'var(--space-xl)', fontSize: 'var(--text-lg)', fontWeight: '600' },
+  saveBtn: { width: '100%', padding: 'var(--space-base)', fontSize: 'var(--text-lg)', fontWeight: '600', color: '#ffffff', background: 'var(--weight-gradient)', border: 'none', borderRadius: 'var(--radius-lg)', cursor: 'pointer', transition: 'all var(--duration-base)', boxShadow: 'var(--shadow-button)' },
+  history: { marginTop: 'var(--space-xl)', paddingTop: 'var(--space-xl)', borderTop: '1px solid var(--border-light)' },
+  historyTitle: { fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', marginBottom: 'var(--space-md)', textTransform: 'uppercase', letterSpacing: '1px' },
+  historyItem: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 'var(--space-sm) var(--space-md)', background: 'var(--border)', borderRadius: 'var(--radius-base)', fontSize: 'var(--text-base)' },
 };
 
 export default WeightLogger;
