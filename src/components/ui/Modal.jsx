@@ -51,7 +51,7 @@ const overlayStyle = {
 };
 
 const modalStyle = {
-  background: 'var(--bg-tertiary)',
+  background: 'var(--bg-secondary)',
   borderRadius: 'var(--radius-xl)',
   padding: 'var(--space-xl)',
   width: '100%',

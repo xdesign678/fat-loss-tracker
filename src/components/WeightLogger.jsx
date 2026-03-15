@@ -105,7 +105,7 @@ const WeightLogger = ({ isOpen, onClose }) => {
         </div>
       </div>
 
-      <div style={{ ...s.changeIndicator, color: weightChange === null ? 'var(--text-secondary)' : weightChange > 0 ? 'var(--danger)' : weightChange < 0 ? 'var(--success-alt)' : 'var(--text-secondary)' }}>
+      <div style={{ ...s.changeIndicator, color: weightChange === null ? 'var(--text-secondary)' : weightChange > 0 ? 'var(--danger)' : weightChange < 0 ? 'var(--success)' : 'var(--text-secondary)' }}>
         {weightChange !== null && weightChange !== 0 ? (
           <>{weightChange > 0 ? '↑' : '↓'} {Math.abs(weightChange).toFixed(1)} kg{weightChange > 0 ? ' (增加)' : ' (减少)'}</>
         ) : weightChange === 0 ? '与上次记录相同' : '首次记录'}
@@ -128,7 +128,7 @@ const WeightLogger = ({ isOpen, onClose }) => {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '600', color: 'var(--text-heading)' }}>
                     <span>{record.weight.toFixed(1)} kg</span>
                     {change !== null && (
-                      <span style={{ fontSize: '0.9em', color: change > 0 ? 'var(--danger)' : change < 0 ? 'var(--success-alt)' : 'var(--text-secondary)' }}>
+                      <span style={{ fontSize: '0.9em', color: change > 0 ? 'var(--danger)' : change < 0 ? 'var(--success)' : 'var(--text-secondary)' }}>
                         {change > 0 ? `+${change.toFixed(1)}` : change.toFixed(1)}
                       </span>
                     )}
@@ -147,13 +147,13 @@ const s = {
   title: { fontSize: 'var(--text-4xl)', fontWeight: '700', color: 'var(--text-heading)', marginBottom: 'var(--space-xl)', textAlign: 'center' },
   currentWeight: { textAlign: 'center', marginBottom: 'var(--space-xl)' },
   label: { fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px' },
-  weightDisplay: { fontSize: 'var(--text-5xl)', fontWeight: '700', background: 'var(--weight-gradient)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', marginBottom: 'var(--space-sm)' },
+  weightDisplay: { fontSize: 'var(--text-4xl)', fontWeight: '700', color: 'var(--text-heading)', marginBottom: 'var(--space-sm)' },
   quickBtn: { padding: 'var(--space-xs) var(--space-md)', fontSize: 'var(--text-sm)', background: 'var(--border)', border: 'none', borderRadius: 'var(--radius-base)', color: 'var(--text-secondary)', cursor: 'pointer', transition: 'all var(--duration-base)' },
   inputContainer: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-md)', marginBottom: 'var(--space-xl)' },
   adjustBtn: { width: '48px', height: '48px', borderRadius: 'var(--radius-full)', background: 'var(--border)', border: 'none', color: 'var(--text-heading)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all var(--duration-base)', flexShrink: 0 },
   input: { width: '140px', padding: 'var(--space-base)', fontSize: 'var(--text-4xl)', fontWeight: '600', textAlign: 'center', background: 'var(--border)', border: '2px solid var(--border-light)', borderRadius: 'var(--radius-lg)', color: 'var(--text-heading)', outline: 'none', transition: 'border-color var(--duration-base)' },
   changeIndicator: { textAlign: 'center', marginBottom: 'var(--space-xl)', fontSize: 'var(--text-lg)', fontWeight: '600' },
-  saveBtn: { width: '100%', padding: 'var(--space-base)', fontSize: 'var(--text-lg)', fontWeight: '600', color: '#ffffff', background: 'var(--weight-gradient)', border: 'none', borderRadius: 'var(--radius-lg)', cursor: 'pointer', transition: 'all var(--duration-base)', boxShadow: 'var(--shadow-button)' },
+  saveBtn: { width: '100%', padding: 'var(--space-base)', fontSize: 'var(--text-lg)', fontWeight: '600', color: '#ffffff', background: 'var(--accent)', border: 'none', borderRadius: 'var(--radius-lg)', cursor: 'pointer', transition: 'all var(--duration-base)', boxShadow: 'var(--shadow-button)' },
   history: { marginTop: 'var(--space-xl)', paddingTop: 'var(--space-xl)', borderTop: '1px solid var(--border-light)' },
   historyTitle: { fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', marginBottom: 'var(--space-md)', textTransform: 'uppercase', letterSpacing: '1px' },
   historyItem: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 'var(--space-sm) var(--space-md)', background: 'var(--border)', borderRadius: 'var(--radius-base)', fontSize: 'var(--text-base)' },

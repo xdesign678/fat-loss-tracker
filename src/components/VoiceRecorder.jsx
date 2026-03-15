@@ -488,7 +488,7 @@ const VoiceRecorder = ({ isOpen, onClose }) => {
               {(results.type === 'food' || results.type === 'mixed') && (
                 <div style={styles.resultSection}>
                   <div style={styles.resultSectionTitle}>
-                    <Utensils size={16} color="#f59e0b" /> 饮食
+                    <Utensils size={16} color="var(--warning)" /> 饮食
                   </div>
                   {foodResults.map((item, i) => (
                     <div key={`food-${i}`} style={styles.resultItem}>
@@ -572,7 +572,7 @@ const VoiceRecorder = ({ isOpen, onClose }) => {
               {(results.type === 'exercise' || results.type === 'mixed') && (
                 <div style={styles.resultSection}>
                   <div style={styles.resultSectionTitle}>
-                    <Dumbbell size={16} color="#2ecc71" /> 运动
+                    <Dumbbell size={16} color="var(--success)" /> 运动
                   </div>
                   {exerciseResults.map((item, i) => (
                     <div key={`exercise-${i}`} style={styles.resultItem}>
@@ -855,8 +855,8 @@ const styles = {
     borderRadius: 'var(--radius-xl)',
     fontSize: 'var(--text-sm)',
     fontWeight: '600',
-    background: 'rgba(245, 158, 11, 0.15)',
-    color: '#f59e0b',
+    background: 'var(--warning-bg)',
+    color: 'var(--warning)',
   },
   typeTagExercise: {
     display: 'inline-flex',
@@ -866,8 +866,8 @@ const styles = {
     borderRadius: 'var(--radius-xl)',
     fontSize: 'var(--text-sm)',
     fontWeight: '600',
-    background: 'rgba(46, 204, 113, 0.15)',
-    color: '#2ecc71',
+    background: 'var(--success-bg)',
+    color: 'var(--success)',
   },
   typeTagMixed: {
     display: 'inline-flex',
@@ -877,8 +877,8 @@ const styles = {
     borderRadius: 'var(--radius-xl)',
     fontSize: 'var(--text-sm)',
     fontWeight: '600',
-    background: 'rgba(79, 142, 247, 0.15)',
-    color: '#4f8ef7',
+    background: 'var(--accent-bg)',
+    color: 'var(--accent)',
   },
   localTag: {
     padding: 'var(--space-xs) var(--space-md)',
@@ -943,12 +943,12 @@ const styles = {
   resultItemCal: {
     fontSize: 'var(--text-base)',
     fontWeight: '600',
-    color: '#f59e0b',
+    color: 'var(--warning)',
   },
   resultItemCalGreen: {
     fontSize: 'var(--text-base)',
     fontWeight: '600',
-    color: '#2ecc71',
+    color: 'var(--success)',
   },
   removeItemButton: {
     display: 'flex',
@@ -1010,7 +1010,7 @@ const styles = {
     width: '72px',
     height: '72px',
     borderRadius: '50%',
-    background: 'linear-gradient(135deg, #4f8ef7, #6366f1)',
+    background: 'var(--accent)',
     border: 'none',
     cursor: 'pointer',
     display: 'flex',
@@ -1070,7 +1070,7 @@ const styles = {
     justifyContent: 'center',
     gap: 'var(--space-sm)',
     padding: 'var(--space-base)',
-    background: 'linear-gradient(135deg, #4f8ef7, #6366f1)',
+    background: 'var(--accent)',
     border: 'none',
     borderRadius: 'var(--radius-lg)',
     color: '#fff',

@@ -7,9 +7,9 @@ const THEME_KEY = 'fatLossTrackerTheme';
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(() => {
     try {
-      return localStorage.getItem(THEME_KEY) || 'dark';
+      return localStorage.getItem(THEME_KEY) || 'light';
     } catch {
-      return 'dark';
+      return 'light';
     }
   });
 

@@ -1,85 +1,87 @@
-/* === Design System — Inspired by Claude/Anthropic === */
+/* === Design System — Claude/Anthropic Inspired === */
 
-/* Dark mode (default) */
+/* Light mode (default — matches Claude's warm, literary aesthetic) */
 :root {
-  /* --- Background Colors --- */
-  --bg-primary: #0f1117;
-  --bg-secondary: #181b24;
-  --bg-tertiary: #1e2230;
-  --bg-blur: rgba(24, 27, 36, 0.92);
-  --bg-nav: rgba(24, 27, 36, 0.95);
-  --bg-overlay: rgba(0, 0, 0, 0.6);
-  --bg-overlay-heavy: rgba(0, 0, 0, 0.75);
+  /* --- Background Colors (warm cream/parchment) --- */
+  --bg-primary: #FAF8F5;
+  --bg-secondary: #FFFFFF;
+  --bg-tertiary: #F3EFE9;
+  --bg-surface: #F7F4F0;
+  --bg-blur: rgba(250, 248, 245, 0.92);
+  --bg-nav: rgba(255, 255, 255, 0.96);
+  --bg-overlay: rgba(0, 0, 0, 0.4);
+  --bg-overlay-heavy: rgba(0, 0, 0, 0.55);
+  --bg-hover: rgba(0, 0, 0, 0.03);
 
   /* --- Border Colors --- */
-  --border: rgba(255, 255, 255, 0.08);
-  --border-light: rgba(255, 255, 255, 0.12);
-  --border-divider: rgba(255, 255, 255, 0.06);
+  --border: #E8E2D9;
+  --border-light: #EDE8E1;
+  --border-divider: #F0EBE4;
 
-  /* --- Text Colors --- */
-  --text-primary: #e8eaf0;
-  --text-heading: #f4f5f7;
-  --text-secondary: rgba(232, 234, 240, 0.65);
-  --text-muted: rgba(232, 234, 240, 0.4);
-  --text-nav: rgba(232, 234, 240, 0.45);
-  --text-body: rgba(232, 234, 240, 0.8);
+  /* --- Text Colors (warm, high-contrast) --- */
+  --text-primary: #1A1815;
+  --text-heading: #1A1815;
+  --text-secondary: #706B63;
+  --text-muted: #A09A91;
+  --text-nav: #8A8478;
+  --text-body: #3D3833;
 
-  /* --- Accent Colors --- */
-  --accent: #5b93f5;
-  --accent-secondary: #8068f0;
-  --accent-gradient: linear-gradient(135deg, #5b93f5, #8068f0);
-  --accent-bg: rgba(91, 147, 245, 0.1);
-  --accent-border: rgba(91, 147, 245, 0.18);
-  --accent-border-subtle: rgba(91, 147, 245, 0.08);
-  --input-gradient-border: linear-gradient(135deg, rgba(91, 147, 245, 0.12), rgba(128, 104, 240, 0.12));
+  /* --- Accent Colors (warm terracotta/sienna — Claude signature) --- */
+  --accent: #C27035;
+  --accent-hover: #B0632E;
+  --accent-secondary: #A6845C;
+  --accent-gradient: linear-gradient(135deg, #C27035, #D4944E);
+  --accent-bg: rgba(194, 112, 53, 0.06);
+  --accent-border: rgba(194, 112, 53, 0.16);
+  --accent-border-subtle: rgba(194, 112, 53, 0.08);
 
   /* --- Status Colors --- */
-  --success: #3ddc84;
-  --success-alt: #3ddc84;
-  --success-bg: rgba(61, 220, 132, 0.08);
-  --success-border: rgba(61, 220, 132, 0.18);
-  --success-bg-badge: rgba(61, 220, 132, 0.14);
+  --success: #2F8654;
+  --success-bg: rgba(47, 134, 84, 0.06);
+  --success-border: rgba(47, 134, 84, 0.14);
+  --success-bg-badge: rgba(47, 134, 84, 0.1);
 
-  --danger: #f06060;
-  --danger-bg: rgba(240, 96, 96, 0.1);
+  --danger: #C4442D;
+  --danger-bg: rgba(196, 68, 45, 0.06);
 
-  --warning: #f0a040;
-  --warning-bg: rgba(240, 160, 64, 0.12);
+  --warning: #C08820;
+  --warning-bg: rgba(192, 136, 32, 0.06);
 
   /* --- Chart Colors --- */
-  --chart-grid: rgba(255, 255, 255, 0.06);
-  --chart-text: rgba(232, 234, 240, 0.5);
+  --chart-grid: #E8E2D9;
+  --chart-text: #A09A91;
 
   /* --- Misc --- */
-  --scrollbar-thumb: rgba(255, 255, 255, 0.1);
-  --selection-bg: rgba(91, 147, 245, 0.3);
-  --selection-text: #fff;
+  --scrollbar-thumb: rgba(0, 0, 0, 0.08);
+  --selection-bg: rgba(194, 112, 53, 0.15);
+  --selection-text: #1A1815;
 
-  /* --- Shadows --- */
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.2);
-  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.2);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.25);
-  --shadow-modal: 0 16px 48px rgba(0, 0, 0, 0.4);
-  --shadow-button: 0 4px 12px rgba(91, 147, 245, 0.3);
-  --shadow-button-hover: 0 6px 20px rgba(91, 147, 245, 0.4);
+  /* --- Shadows (warm, subtle) --- */
+  --shadow-xs: 0 1px 2px rgba(26, 24, 21, 0.04);
+  --shadow-card: 0 1px 3px rgba(26, 24, 21, 0.04), 0 1px 2px rgba(26, 24, 21, 0.02);
+  --shadow-md: 0 4px 12px rgba(26, 24, 21, 0.06);
+  --shadow-lg: 0 8px 24px rgba(26, 24, 21, 0.08);
+  --shadow-modal: 0 16px 48px rgba(26, 24, 21, 0.12);
+  --shadow-button: 0 1px 3px rgba(194, 112, 53, 0.12);
+  --shadow-button-hover: 0 2px 8px rgba(194, 112, 53, 0.18);
 
-  /* --- Gradients --- */
-  --weight-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  --ai-button-gradient: linear-gradient(135deg, #8068f0, #a78bfa);
+  /* --- Legacy gradients mapped to new palette --- */
+  --weight-gradient: linear-gradient(135deg, #C27035 0%, #D4944E 100%);
+  --ai-button-gradient: linear-gradient(135deg, #C27035, #D4944E);
 
-  /* --- Typography Scale (Claude-style) --- */
-  --text-xs: 0.6875rem;    /* 11px */
-  --text-sm: 0.8125rem;    /* 13px */
-  --text-base: 0.875rem;   /* 14px */
-  --text-md: 0.9375rem;    /* 15px */
-  --text-lg: 1rem;         /* 16px */
-  --text-xl: 1.125rem;     /* 18px */
-  --text-2xl: 1.25rem;     /* 20px */
-  --text-3xl: 1.5rem;      /* 24px */
-  --text-4xl: 1.75rem;     /* 28px */
-  --text-5xl: 2rem;        /* 32px */
+  /* --- Typography Scale (literary, generous) --- */
+  --text-xs: 0.75rem;       /* 12px */
+  --text-sm: 0.8125rem;     /* 13px */
+  --text-base: 0.875rem;    /* 14px */
+  --text-md: 0.9375rem;     /* 15px */
+  --text-lg: 1rem;          /* 16px */
+  --text-xl: 1.125rem;      /* 18px */
+  --text-2xl: 1.3125rem;    /* 21px */
+  --text-3xl: 1.5rem;       /* 24px */
+  --text-4xl: 1.75rem;      /* 28px */
+  --text-5xl: 2rem;         /* 32px */
 
-  /* --- Spacing Scale (8px base) --- */
+  /* --- Spacing Scale --- */
   --space-xs: 4px;
   --space-sm: 8px;
   --space-md: 12px;
@@ -89,7 +91,7 @@
   --space-2xl: 32px;
   --space-3xl: 48px;
 
-  /* --- Border Radius (Claude-style hierarchy) --- */
+  /* --- Border Radius --- */
   --radius-sm: 6px;
   --radius-base: 8px;
   --radius-md: 10px;
@@ -99,69 +101,71 @@
   --radius-full: 9999px;
 
   /* --- Transition Durations --- */
-  --duration-fast: 150ms;
+  --duration-fast: 120ms;
   --duration-base: 200ms;
   --duration-slow: 300ms;
   --duration-slower: 500ms;
 }
 
-/* Light mode — Claude/Anthropic warm palette */
-[data-theme="light"] {
-  --bg-primary: #faf9f5;
-  --bg-secondary: #ffffff;
-  --bg-tertiary: #f5f4ee;
-  --bg-blur: rgba(250, 249, 245, 0.92);
-  --bg-nav: rgba(255, 255, 255, 0.96);
-  --bg-overlay: rgba(20, 20, 19, 0.35);
-  --bg-overlay-heavy: rgba(20, 20, 19, 0.5);
+/* Dark mode — warm charcoal (not cold blue-black) */
+[data-theme="dark"] {
+  --bg-primary: #1C1B18;
+  --bg-secondary: #252420;
+  --bg-tertiary: #2E2C27;
+  --bg-surface: #2A2824;
+  --bg-blur: rgba(28, 27, 24, 0.94);
+  --bg-nav: rgba(37, 36, 32, 0.96);
+  --bg-overlay: rgba(0, 0, 0, 0.55);
+  --bg-overlay-heavy: rgba(0, 0, 0, 0.7);
+  --bg-hover: rgba(255, 255, 255, 0.04);
 
-  --border: rgba(20, 20, 19, 0.08);
-  --border-light: rgba(20, 20, 19, 0.12);
-  --border-divider: rgba(20, 20, 19, 0.06);
+  --border: #3D3A34;
+  --border-light: #474339;
+  --border-divider: #34312C;
 
-  --text-primary: #1a1a19;
-  --text-heading: #1a1a19;
-  --text-secondary: rgba(26, 26, 25, 0.6);
-  --text-muted: rgba(26, 26, 25, 0.35);
-  --text-nav: rgba(26, 26, 25, 0.5);
-  --text-body: rgba(26, 26, 25, 0.78);
+  --text-primary: #E8E4DE;
+  --text-heading: #F0ECE6;
+  --text-secondary: #A09A91;
+  --text-muted: #706B63;
+  --text-nav: #8A8478;
+  --text-body: #C8C2B8;
 
-  --accent: #4a86e8;
-  --accent-secondary: #7058d6;
-  --accent-gradient: linear-gradient(135deg, #4a86e8, #7058d6);
-  --accent-bg: rgba(74, 134, 232, 0.07);
-  --accent-border: rgba(74, 134, 232, 0.16);
-  --accent-border-subtle: rgba(74, 134, 232, 0.06);
-  --input-gradient-border: linear-gradient(135deg, rgba(74, 134, 232, 0.12), rgba(112, 88, 214, 0.12));
+  --accent: #D4944E;
+  --accent-hover: #E0A260;
+  --accent-secondary: #C0A47C;
+  --accent-gradient: linear-gradient(135deg, #D4944E, #E0A260);
+  --accent-bg: rgba(212, 148, 78, 0.08);
+  --accent-border: rgba(212, 148, 78, 0.18);
+  --accent-border-subtle: rgba(212, 148, 78, 0.08);
 
-  --success: #16a34a;
-  --success-alt: #16a34a;
-  --success-bg: rgba(22, 163, 74, 0.06);
-  --success-border: rgba(22, 163, 74, 0.16);
-  --success-bg-badge: rgba(22, 163, 74, 0.1);
+  --success: #4CAF6E;
+  --success-bg: rgba(76, 175, 110, 0.08);
+  --success-border: rgba(76, 175, 110, 0.16);
+  --success-bg-badge: rgba(76, 175, 110, 0.12);
 
-  --danger: #dc2626;
-  --danger-bg: rgba(220, 38, 38, 0.06);
+  --danger: #E05A44;
+  --danger-bg: rgba(224, 90, 68, 0.08);
 
-  --warning: #d97706;
-  --warning-bg: rgba(217, 119, 6, 0.08);
+  --warning: #D4A030;
+  --warning-bg: rgba(212, 160, 48, 0.08);
 
-  --chart-grid: rgba(20, 20, 19, 0.06);
-  --chart-text: rgba(26, 26, 25, 0.45);
+  --chart-grid: rgba(255, 255, 255, 0.06);
+  --chart-text: #706B63;
 
-  --scrollbar-thumb: rgba(20, 20, 19, 0.1);
-  --selection-bg: rgba(74, 134, 232, 0.2);
-  --selection-text: #1a1a19;
+  --scrollbar-thumb: rgba(255, 255, 255, 0.08);
+  --selection-bg: rgba(212, 148, 78, 0.2);
+  --selection-text: #F0ECE6;
 
-  --shadow-xs: 0 1px 2px rgba(20, 20, 19, 0.04);
-  --shadow-card: 0 1px 3px rgba(20, 20, 19, 0.04), 0 1px 2px rgba(20, 20, 19, 0.02);
-  --shadow-md: 0 4px 12px rgba(20, 20, 19, 0.06);
-  --shadow-modal: 0 16px 48px rgba(20, 20, 19, 0.12);
-  --shadow-button: 0 2px 8px rgba(74, 134, 232, 0.18);
-  --shadow-button-hover: 0 4px 16px rgba(74, 134, 232, 0.24);
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.25);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.3);
+  --shadow-modal: 0 16px 48px rgba(0, 0, 0, 0.4);
+  --shadow-button: 0 2px 6px rgba(212, 148, 78, 0.2);
+  --shadow-button-hover: 0 4px 12px rgba(212, 148, 78, 0.3);
 
-  --weight-gradient: linear-gradient(135deg, #4a86e8 0%, #7058d6 100%);
-  --ai-button-gradient: linear-gradient(135deg, #7058d6, #a78bfa);
+  --weight-gradient: linear-gradient(135deg, #D4944E 0%, #E0A260 100%);
+  --ai-button-gradient: linear-gradient(135deg, #D4944E, #E0A260);
 }
 
 /* === Base Styles === */
@@ -176,13 +180,13 @@ html, body, #root {
   width: 100%;
   background: var(--bg-primary);
   color: var(--text-primary);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
   font-size: var(--text-base);
-  line-height: 1.55;
-  letter-spacing: -0.01em;
+  line-height: 1.6;
+  letter-spacing: -0.005em;
   transition: background var(--duration-slow) ease, color var(--duration-slow) ease;
 }
 
@@ -227,9 +231,12 @@ textarea:focus-visible,
   outline-offset: 2px;
 }
 
-/* Theme transition for smooth switching */
-[data-theme="light"] * {
-  transition: background-color var(--duration-base) ease, border-color var(--duration-base) ease, color var(--duration-base) ease;
+/* Smooth theme transitions */
+[data-theme="light"] *,
+[data-theme="dark"] * {
+  transition: background-color var(--duration-base) ease,
+              border-color var(--duration-base) ease,
+              color var(--duration-base) ease;
 }
 
 /* === Animations === */
@@ -284,7 +291,7 @@ textarea:focus-visible,
 }
 
 @keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.92); }
+  from { opacity: 0; transform: scale(0.96); }
   to { opacity: 1; transform: scale(1); }
 }
 
@@ -339,7 +346,7 @@ textarea:focus-visible,
   }
 }
 
-/* === Interactive States (pseudo-class supplements) === */
+/* === Interactive States === */
 .btn-interactive {
   transition: transform var(--duration-fast) ease, box-shadow var(--duration-fast) ease, opacity var(--duration-fast) ease;
 }
@@ -351,7 +358,7 @@ textarea:focus-visible,
 }
 
 .nav-btn-hover:hover {
-  background: var(--accent-bg);
+  background: var(--bg-hover);
 }
 
 .card-hover {
@@ -359,7 +366,6 @@ textarea:focus-visible,
 }
 .card-hover:hover {
   box-shadow: var(--shadow-md);
-  transform: translateY(-1px);
   border-color: var(--border-light);
 }
 
@@ -419,7 +425,7 @@ textarea:focus-visible,
 .toast-error {
   background: var(--danger-bg);
   color: var(--danger);
-  border: 1px solid rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(196, 68, 45, 0.16);
 }
 .toast-info {
   background: var(--accent-bg);
@@ -429,7 +435,7 @@ textarea:focus-visible,
 .toast-warning {
   background: var(--warning-bg);
   color: var(--warning);
-  border: 1px solid rgba(245, 158, 11, 0.2);
+  border: 1px solid rgba(192, 136, 32, 0.16);
 }
 
 /* === Tab Content Transition === */

@@ -67,7 +67,7 @@ const styles = {
     padding: '20px',
   },
   content: {
-    background: 'var(--bg-tertiary)',
+    background: 'var(--bg-secondary)',
     borderRadius: 'var(--radius-xl)',
     width: '100%',
     maxHeight: '90vh',

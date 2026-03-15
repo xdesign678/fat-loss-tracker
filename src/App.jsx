@@ -94,32 +94,37 @@ function App() {
 
   return (
     <div style={styles.container}>
-      {/* Top right buttons */}
-      <div style={styles.topButtons}>
-        <button
-          type="button"
-          onClick={toggleTheme}
-          style={styles.topBtn}
-          className="btn-interactive"
-          title={theme === 'dark' ? '切换浅色模式' : '切换深色模式'}
-          aria-label="切换主题"
-        >
-          {theme === 'dark'
-            ? <Sun size={18} color="var(--text-muted)" />
-            : <Moon size={18} color="var(--text-muted)" />
-          }
-        </button>
-        <button
-          type="button"
-          onClick={() => setSettingsOpen(true)}
-          style={styles.topBtn}
-          className="btn-interactive"
-          title="AI 设置"
-          aria-label="打开 AI 设置"
-        >
-          <SettingsIcon size={18} color={state.aiSettings?.apiKey ? 'var(--accent)' : 'var(--text-nav)'} />
-        </button>
-      </div>
+      {/* Header Bar */}
+      <header style={styles.header}>
+        <div style={styles.headerLeft}>
+          <h1 style={styles.appTitle}>Kalos</h1>
+        </div>
+        <div style={styles.headerRight}>
+          <button
+            type="button"
+            onClick={toggleTheme}
+            style={styles.headerBtn}
+            className="btn-interactive"
+            title={theme === 'dark' ? '切换浅色模式' : '切换深色模式'}
+            aria-label="切换主题"
+          >
+            {theme === 'dark'
+              ? <Sun size={18} color="var(--text-muted)" />
+              : <Moon size={18} color="var(--text-muted)" />
+            }
+          </button>
+          <button
+            type="button"
+            onClick={() => setSettingsOpen(true)}
+            style={styles.headerBtn}
+            className="btn-interactive"
+            title="AI 设置"
+            aria-label="打开 AI 设置"
+          >
+            <SettingsIcon size={18} color={state.aiSettings?.apiKey ? 'var(--accent)' : 'var(--text-muted)'} />
+          </button>
+        </div>
+      </header>
 
       <div style={styles.content}>
         <ErrorBoundary>
@@ -150,15 +155,16 @@ function App() {
               <Icon
                 size={20}
                 color={isActive ? 'var(--accent)' : 'var(--text-nav)'}
-                strokeWidth={isActive ? 2.5 : 1.8}
+                strokeWidth={isActive ? 2 : 1.5}
               />
               <span style={{
                 ...styles.navLabel,
                 color: isActive ? 'var(--accent)' : 'var(--text-nav)',
-                fontWeight: isActive ? 600 : 400,
+                fontWeight: isActive ? 500 : 400,
               }}>
                 {tab.label}
               </span>
+              {isActive && <div style={styles.activeIndicator} />}
             </button>
           );
         })}
@@ -172,7 +178,7 @@ function App() {
           aria-label="语音记录"
         >
           <div style={styles.voiceBtnInner}>
-            <Mic size={24} color="#fff" strokeWidth={2.2} />
+            <Mic size={22} color="#fff" strokeWidth={2} />
           </div>
           <span style={styles.voiceLabel}>语音</span>
         </button>
@@ -196,15 +202,16 @@ function App() {
               <Icon
                 size={20}
                 color={isActive ? 'var(--accent)' : 'var(--text-nav)'}
-                strokeWidth={isActive ? 2.5 : 1.8}
+                strokeWidth={isActive ? 2 : 1.5}
               />
               <span style={{
                 ...styles.navLabel,
                 color: isActive ? 'var(--accent)' : 'var(--text-nav)',
-                fontWeight: isActive ? 600 : 400,
+                fontWeight: isActive ? 500 : 400,
               }}>
                 {tab.label}
               </span>
+              {isActive && <div style={styles.activeIndicator} />}
             </button>
           );
         })}
@@ -231,24 +238,43 @@ const styles = {
     flexDirection: 'column',
     position: 'relative',
   },
-  topButtons: {
-    position: 'fixed',
-    top: 'var(--space-md)',
-    right: 'var(--space-md)',
-    zIndex: 50,
+  header: {
     display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 'var(--space-md) var(--space-lg)',
+    background: 'var(--bg-primary)',
+    borderBottom: '1px solid var(--border)',
+    position: 'sticky',
+    top: 0,
+    zIndex: 50,
+  },
+  headerLeft: {
+    display: 'flex',
+    alignItems: 'center',
+  },
+  appTitle: {
+    fontSize: '22px',
+    fontWeight: 500,
+    color: 'var(--text-primary)',
+    margin: 0,
+    letterSpacing: '-0.3px',
+  },
+  headerRight: {
+    display: 'flex',
+    alignItems: 'center',
     gap: 'var(--space-sm)',
   },
-  topBtn: {
-    background: 'var(--bg-blur)',
-    border: '1px solid var(--border)',
+  headerBtn: {
+    background: 'none',
+    border: 'none',
     borderRadius: 'var(--radius-md)',
     padding: 'var(--space-sm)',
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    backdropFilter: 'blur(12px)',
+    transition: 'background var(--duration-base)',
   },
   content: {
     flex: 1,
@@ -283,16 +309,24 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    gap: 'var(--space-xs)',
+    gap: '3px',
     background: 'none',
     border: 'none',
     cursor: 'pointer',
     padding: 'var(--space-sm) var(--space-md)',
     borderRadius: 'var(--radius-lg)',
     transition: 'all var(--duration-base)',
+    position: 'relative',
   },
   navBtnActive: {
-    background: 'var(--accent-bg)',
+    background: 'transparent',
+  },
+  activeIndicator: {
+    width: '4px',
+    height: '4px',
+    borderRadius: '50%',
+    background: 'var(--accent)',
+    marginTop: '2px',
   },
   navLabel: {
     fontSize: 'var(--text-xs)',
@@ -307,18 +341,18 @@ const styles = {
     border: 'none',
     cursor: 'pointer',
     padding: '0',
-    marginTop: '-28px',
+    marginTop: '-20px',
     position: 'relative',
   },
   voiceBtnInner: {
-    width: '52px',
-    height: '52px',
+    width: '46px',
+    height: '46px',
     borderRadius: '50%',
-    background: 'var(--accent-gradient)',
+    background: 'var(--accent)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    boxShadow: 'var(--shadow-button)',
+    boxShadow: '0 2px 8px rgba(194, 112, 53, 0.3)',
     transition: 'transform var(--duration-base), box-shadow var(--duration-base)',
   },
   voiceLabel: {

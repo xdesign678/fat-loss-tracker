@@ -24,6 +24,7 @@ const SetupScreen = () => {
   const [targetWeight, setTargetWeight] = useState('');
   const [activityLevel, setActivityLevel] = useState('sedentary');
   const [errors, setErrors] = useState({});
+  const [focusedInput, setFocusedInput] = useState(null);
 
   const sexOptions = [
     { value: 'male', label: '男' },
@@ -183,8 +184,7 @@ const SetupScreen = () => {
     card: {
       maxWidth: '600px',
       width: '100%',
-      background: 'var(--bg-blur)',
-      backdropFilter: 'blur(20px)',
+      background: 'var(--bg-secondary)',
       borderRadius: 'var(--radius-2xl)',
       border: '1px solid var(--accent-border-subtle)',
       padding: 'var(--space-2xl)',
@@ -197,9 +197,7 @@ const SetupScreen = () => {
     title: {
       fontSize: 'var(--text-5xl)',
       fontWeight: '700',
-      background: 'var(--accent-gradient)',
-      WebkitBackgroundClip: 'text',
-      WebkitTextFillColor: 'transparent',
+      color: 'var(--text-heading)',
       marginBottom: 'var(--space-md)'
     },
     subtitle: {
@@ -233,19 +231,14 @@ const SetupScreen = () => {
     },
     inputWrapper: {
       position: 'relative',
-      background: 'var(--input-gradient-border)',
-      borderRadius: 'var(--radius-lg)',
-      padding: '1px'
-    },
-    inputWrapperError: {
-      background: 'var(--danger)',
+      borderRadius: 'var(--radius-lg)'
     },
     input: {
       width: '100%',
       padding: 'var(--space-md) var(--space-base)',
       background: 'var(--bg-primary)',
-      border: 'none',
-      borderRadius: 'calc(var(--radius-lg) - 1px)',
+      border: '1px solid var(--border)',
+      borderRadius: 'var(--radius-lg)',
       fontSize: 'var(--text-lg)',
       color: 'var(--text-primary)',
       outline: 'none',
@@ -274,8 +267,7 @@ const SetupScreen = () => {
     },
     activityOptionActive: {
       background: 'var(--accent-bg)',
-      border: '2px solid var(--accent)',
-      transform: 'scale(1.02)'
+      border: '2px solid var(--accent)'
     },
     activityLabel: {
       fontSize: 'var(--text-base)',
@@ -312,7 +304,7 @@ const SetupScreen = () => {
     button: {
       width: '100%',
       padding: 'var(--space-base)',
-      background: 'linear-gradient(135deg, #4f8ef7, #7c5cf7)',
+      background: 'var(--accent)',
       border: 'none',
       borderRadius: 'var(--radius-lg)',
       fontSize: 'var(--text-lg)',
@@ -366,12 +358,14 @@ const SetupScreen = () => {
               <Target size={16} />
               身高 (cm)
             </label>
-            <div style={{...styles.inputWrapper, ...(errors.height ? styles.inputWrapperError : {})}}>
+            <div style={styles.inputWrapper}>
               <input
                 type="number"
-                style={styles.input}
+                style={{...styles.input, ...(focusedInput === 'height' ? {border: '1px solid var(--accent)'} : {}), ...(errors.height ? {borderColor: 'var(--danger)'} : {})}}
                 value={height}
                 onChange={handleHeightChange}
+                onFocus={() => setFocusedInput('height')}
+                onBlur={() => setFocusedInput(null)}
                 placeholder="例如: 170"
                 required
               />
@@ -384,12 +378,14 @@ const SetupScreen = () => {
               <Target size={16} />
               年龄
             </label>
-            <div style={{...styles.inputWrapper, ...(errors.age ? styles.inputWrapperError : {})}}>
+            <div style={styles.inputWrapper}>
               <input
                 type="number"
-                style={styles.input}
+                style={{...styles.input, ...(focusedInput === 'age' ? {border: '1px solid var(--accent)'} : {}), ...(errors.age ? {borderColor: 'var(--danger)'} : {})}}
                 value={age}
                 onChange={handleAgeChange}
+                onFocus={() => setFocusedInput('age')}
+                onBlur={() => setFocusedInput(null)}
                 placeholder="例如: 25"
                 required
               />
@@ -402,13 +398,15 @@ const SetupScreen = () => {
               <TrendingDown size={16} />
               当前体重 (kg)
             </label>
-            <div style={{...styles.inputWrapper, ...(errors.currentWeight ? styles.inputWrapperError : {})}}>
+            <div style={styles.inputWrapper}>
               <input
                 type="number"
                 step="0.1"
-                style={styles.input}
+                style={{...styles.input, ...(focusedInput === 'currentWeight' ? {border: '1px solid var(--accent)'} : {}), ...(errors.currentWeight ? {borderColor: 'var(--danger)'} : {})}}
                 value={currentWeight}
                 onChange={handleCurrentWeightChange}
+                onFocus={() => setFocusedInput('currentWeight')}
+                onBlur={() => setFocusedInput(null)}
                 placeholder="例如: 70.5"
                 required
               />
@@ -421,13 +419,15 @@ const SetupScreen = () => {
               <Target size={16} />
               目标体重 (kg)
             </label>
-            <div style={{...styles.inputWrapper, ...(errors.targetWeight ? styles.inputWrapperError : {})}}>
+            <div style={styles.inputWrapper}>
               <input
                 type="number"
                 step="0.1"
-                style={styles.input}
+                style={{...styles.input, ...(focusedInput === 'targetWeight' ? {border: '1px solid var(--accent)'} : {}), ...(errors.targetWeight ? {borderColor: 'var(--danger)'} : {})}}
                 value={targetWeight}
                 onChange={handleTargetWeightChange}
+                onFocus={() => setFocusedInput('targetWeight')}
+                onBlur={() => setFocusedInput(null)}
                 placeholder="例如: 65.0"
                 required
               />
