@@ -293,6 +293,19 @@ textarea:focus-visible,
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* === Grid Layouts === */
+.responsive-grid-4 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-md);
+}
+
+.responsive-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-md);
+}
+
 /* === Responsive Breakpoints === */
 @media (max-width: 480px) {
   .responsive-grid-4 { grid-template-columns: 1fr !important; }
