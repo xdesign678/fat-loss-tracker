@@ -96,7 +96,12 @@ export async function transcribeAudio({ audioBlob, aiSettings, timeout = 30000 }
   if (!config) throw new Error('未配置 AI 服务');
 
   const arrayBuffer = await audioBlob.arrayBuffer();
-  const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+  const bytes = new Uint8Array(arrayBuffer);
+  let binary = '';
+  for (let i = 0; i < bytes.length; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  const base64 = btoa(binary);
 
   const mimeType = audioBlob.type || 'audio/webm';
   const format = mimeType.includes('wav') ? 'wav' : mimeType.includes('mp4') ? 'mp4' : 'webm';
