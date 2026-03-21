@@ -65,6 +65,7 @@ const VoiceRecorder = ({ isOpen, onClose }) => {
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const streamRef = useRef(null);
+  const recognitionRef = useRef(null);
   const recordingTimerRef = useRef(null);
   const today = formatDate(new Date());
 
@@ -75,12 +76,20 @@ const VoiceRecorder = ({ isOpen, onClose }) => {
     }
   }, []);
 
+  const stopSpeechRecognition = useCallback(() => {
+    if (recognitionRef.current) {
+      try { recognitionRef.current.stop(); } catch (_) { /* ignore */ }
+      recognitionRef.current = null;
+    }
+  }, []);
+
   const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       mediaRecorderRef.current.stop();
     }
     mediaRecorderRef.current = null;
-  }, []);
+    stopSpeechRecognition();
+  }, [stopSpeechRecognition]);
 
   useEffect(() => {
     return () => {
@@ -176,7 +185,7 @@ const VoiceRecorder = ({ isOpen, onClose }) => {
       setRecordingDuration(0);
       audioChunksRef.current = [];
     } else {
-      stopRecording();
+      stopRecording(); // also stops SpeechRecognition
       stopMediaStream();
       if (recordingTimerRef.current) {
         clearInterval(recordingTimerRef.current);
@@ -204,6 +213,38 @@ const VoiceRecorder = ({ isOpen, onClose }) => {
     setPulseAnim(false);
   }, [status]);
 
+  const startSpeechPreview = useCallback(() => {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) return; // graceful: no real-time preview on unsupported browsers
+
+    const recognition = new SR();
+    recognition.lang = 'zh-CN';
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.maxAlternatives = 1;
+
+    recognition.onresult = (event) => {
+      let finalText = '';
+      let interim = '';
+      for (let i = 0; i < event.results.length; i++) {
+        if (event.results[i].isFinal) {
+          finalText += event.results[i][0].transcript;
+        } else {
+          interim += event.results[i][0].transcript;
+        }
+      }
+      if (finalText) setTranscript(finalText);
+      setInterimText(interim);
+    };
+
+    // SpeechRecognition errors are non-fatal (recording continues via MediaRecorder)
+    recognition.onerror = () => {};
+    recognition.onend = () => { recognitionRef.current = null; };
+
+    recognitionRef.current = recognition;
+    try { recognition.start(); } catch (_) { /* ignore */ }
+  }, []);
+
   const startRecording = useCallback(async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -229,11 +270,14 @@ const VoiceRecorder = ({ isOpen, onClose }) => {
       };
 
       mediaRecorderRef.current = recorder;
-      recorder.start(500); // collect data every 500ms
+      recorder.start(500);
       setStatus('recording');
       setTranscript('');
       setInterimText('');
       setError('');
+
+      // Start Web Speech API in parallel for real-time text preview
+      startSpeechPreview();
     } catch (e) {
       if (e.name === 'NotAllowedError') {
         setError('麦克风权限被拒绝，请在浏览器设置中允许');
@@ -242,10 +286,13 @@ const VoiceRecorder = ({ isOpen, onClose }) => {
       }
       setStatus('error');
     }
-  }, [stopMediaStream]);
+  }, [stopMediaStream, startSpeechPreview]);
 
   const handleStopAndProcess = useCallback(async () => {
-    // Stop the MediaRecorder and wait for final data
+    // Stop SpeechRecognition preview
+    stopSpeechRecognition();
+
+    // Stop MediaRecorder and collect audio
     const recorder = mediaRecorderRef.current;
     if (!recorder || recorder.state === 'inactive') {
       setError('录音未启动');
@@ -269,9 +316,9 @@ const VoiceRecorder = ({ isOpen, onClose }) => {
       return;
     }
 
-    // Step 1: Transcribe audio
+    // Step 1: AI transcription (Gemini) for accurate result
     setStatus('processing');
-    setInterimText('AI 转写中...');
+    setInterimText('AI 精准转写中...');
     try {
       const text = await transcribeAudio({ audioBlob, aiSettings: state.aiSettings });
       setTranscript(text);
@@ -279,10 +326,18 @@ const VoiceRecorder = ({ isOpen, onClose }) => {
       // Step 2: Analyze the transcript
       await analyzeWithAI(text);
     } catch (e) {
-      setError(`语音识别失败: ${e.message}`);
-      setStatus('error');
+      // If Gemini transcription fails, fall back to Web Speech API result
+      const fallbackText = transcript || interimText;
+      if (fallbackText?.trim()) {
+        setTranscript(fallbackText);
+        setInterimText('');
+        await analyzeWithAI(fallbackText);
+      } else {
+        setError(`语音识别失败: ${e.message}`);
+        setStatus('error');
+      }
     }
-  }, [analyzeWithAI, stopMediaStream, state.aiSettings]);
+  }, [analyzeWithAI, stopMediaStream, stopSpeechRecognition, state.aiSettings, transcript, interimText]);
 
   const getFoodResults = () => {
     if (!results) return [];
@@ -465,6 +520,11 @@ const VoiceRecorder = ({ isOpen, onClose }) => {
               </div>
               <div style={styles.recordingText}>正在聆听...</div>
               <div style={styles.recordingDuration}>{recordingTimeLabel}</div>
+              {displayText && (
+                <div style={styles.transcriptPreview}>
+                  {displayText}
+                </div>
+              )}
             </div>
           )}
 
