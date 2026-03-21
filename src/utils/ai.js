@@ -1,7 +1,7 @@
 const AI_GATEWAY_URL = 'https://ai-gateway.happycapy.ai/api/v1/chat/completions';
 const AI_GATEWAY_KEY = import.meta.env.VITE_AI_GATEWAY_API_KEY;
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const DEFAULT_GATEWAY_MODEL = 'anthropic/claude-sonnet-4.6';
+const DEFAULT_GATEWAY_MODEL = 'anthropic/claude-opus-4.6';
 
 export function getAIConfig(aiSettings) {
   if (AI_GATEWAY_KEY) {
