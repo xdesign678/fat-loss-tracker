@@ -28,28 +28,28 @@ const containerStyle = {
 
 const cancelButtonStyle = {
   flex: 1,
-  padding: 'var(--space-md)',
-  background: 'var(--bg-secondary)',
+  padding: '8px 16px',
+  background: 'transparent',
   border: '1px solid var(--border)',
-  borderRadius: 'var(--radius-base)',
-  color: 'var(--text-heading)',
+  borderRadius: '7.5px',
+  color: 'var(--text-primary)',
   fontSize: 'var(--text-base)',
-  fontWeight: '500',
+  fontWeight: '400',
   cursor: 'pointer',
-  transition: 'background var(--duration-base)',
+  transition: 'background 200ms ease',
 };
 
 const confirmButtonStyle = {
   flex: 1,
-  padding: 'var(--space-md)',
-  background: 'var(--accent)',
+  padding: '8px 16px',
+  background: 'var(--btn-primary-bg)',
   border: 'none',
-  borderRadius: 'var(--radius-base)',
-  color: '#fff',
+  borderRadius: '7.5px',
+  color: 'var(--btn-primary-text)',
   fontSize: 'var(--text-base)',
-  fontWeight: '500',
+  fontWeight: '400',
   cursor: 'pointer',
-  transition: 'background var(--duration-base)',
+  transition: 'all 200ms ease',
 };
 
 export default ModalActions;

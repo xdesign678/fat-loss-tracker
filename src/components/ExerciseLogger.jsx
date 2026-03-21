@@ -507,15 +507,15 @@ const styles = {
   manualButton: {
     display: 'flex',
     alignItems: 'center',
-    padding: 'var(--space-sm) var(--space-base)',
-    background: 'var(--bg-tertiary)',
+    padding: '8px 16px',
+    background: 'transparent',
     border: '1px solid var(--border)',
-    borderRadius: 'var(--radius-base)',
-    color: 'var(--text-heading)',
+    borderRadius: '7.5px',
+    color: 'var(--text-primary)',
     fontSize: 'var(--text-base)',
-    fontWeight: '500',
+    fontWeight: '400',
     cursor: 'pointer',
-    transition: 'background var(--duration-slow)'
+    transition: 'background 200ms ease'
   },
   categoryCard: {
     background: 'var(--bg-secondary)',

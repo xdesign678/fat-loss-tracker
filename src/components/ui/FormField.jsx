@@ -23,13 +23,14 @@ export default FormField;
 
 export const inputStyle = {
   marginTop: 'var(--space-sm)',
-  padding: 'var(--space-md)',
+  padding: '8px 16px',
   background: 'var(--bg-secondary)',
   border: '1px solid var(--border)',
-  borderRadius: 'var(--radius-base)',
-  color: 'var(--text-heading)',
+  borderRadius: '7.5px',
+  color: 'var(--text-primary)',
   fontSize: 'var(--text-base)',
   outline: 'none',
+  transition: 'border-color 200ms ease',
 };
 
 export const textareaStyle = {

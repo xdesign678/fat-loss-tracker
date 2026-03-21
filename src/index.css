@@ -26,14 +26,18 @@
   --text-nav: #8A8478;
   --text-body: #3D3833;
 
-  /* --- Accent Colors (warm terracotta/sienna — Claude signature) --- */
+  /* --- Accent Colors (warm terracotta — decorative only, not for primary buttons) --- */
   --accent: #C27035;
   --accent-hover: #B0632E;
   --accent-secondary: #A6845C;
-  --accent-gradient: linear-gradient(135deg, #C27035, #D4944E);
   --accent-bg: rgba(194, 112, 53, 0.06);
   --accent-border: rgba(194, 112, 53, 0.16);
   --accent-border-subtle: rgba(194, 112, 53, 0.08);
+
+  /* --- Primary Action (near-black, Claude style) --- */
+  --btn-primary-bg: #0f0f0e;
+  --btn-primary-text: #faf9f5;
+  --btn-primary-hover: #2a2a28;
 
   /* --- Status Colors --- */
   --success: #2F8654;
@@ -53,8 +57,8 @@
 
   /* --- Misc --- */
   --scrollbar-thumb: rgba(0, 0, 0, 0.08);
-  --selection-bg: rgba(194, 112, 53, 0.15);
-  --selection-text: #1A1815;
+  --selection-bg: rgba(204, 120, 92, 0.5);
+  --selection-text: inherit;
 
   /* --- Shadows (warm, subtle) --- */
   --shadow-xs: 0 1px 2px rgba(26, 24, 21, 0.04);
@@ -65,21 +69,26 @@
   --shadow-button: 0 1px 3px rgba(194, 112, 53, 0.12);
   --shadow-button-hover: 0 2px 8px rgba(194, 112, 53, 0.18);
 
-  /* --- Legacy gradients mapped to new palette --- */
-  --weight-gradient: linear-gradient(135deg, #C27035 0%, #D4944E 100%);
-  --ai-button-gradient: linear-gradient(135deg, #C27035, #D4944E);
+  /* --- Solid fills (no gradients per Claude style) --- */
+  --weight-gradient: #C27035;
+  --ai-button-gradient: #0f0f0e;
 
-  /* --- Typography Scale (literary, generous) --- */
+  /* --- Typography Scale (Claude literary sizing) --- */
   --text-xs: 0.75rem;       /* 12px */
   --text-sm: 0.8125rem;     /* 13px */
-  --text-base: 0.875rem;    /* 14px */
-  --text-md: 0.9375rem;     /* 15px */
-  --text-lg: 1rem;          /* 16px */
-  --text-xl: 1.125rem;      /* 18px */
-  --text-2xl: 1.3125rem;    /* 21px */
-  --text-3xl: 1.5rem;       /* 24px */
-  --text-4xl: 1.75rem;      /* 28px */
-  --text-5xl: 2rem;         /* 32px */
+  --text-base: 0.9375rem;   /* 15px — Claude UI text */
+  --text-md: 1rem;           /* 16px */
+  --text-lg: 1.0625rem;     /* 17px — Claude body text */
+  --text-xl: 1.25rem;       /* 20px */
+  --text-2xl: 1.5rem;       /* 24px */
+  --text-3xl: clamp(1.25rem, 1.173rem + 0.327vw, 1.5rem);  /* 20-24px fluid */
+  --text-4xl: clamp(1.75rem, 1.673rem + 0.327vw, 2rem);    /* 28-32px fluid */
+  --text-5xl: clamp(2rem, 1.694rem + 1.306vw, 2.5rem);     /* 32-40px fluid */
+
+  /* --- Font Families (Claude: serif for reading, sans for UI) --- */
+  --font-serif: 'Lora', 'Noto Serif SC', Georgia, 'Times New Roman', serif;
+  --font-sans: 'Inter', system-ui, -apple-system, 'PingFang SC', 'Noto Sans SC', sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
 
   /* --- Spacing Scale --- */
   --space-xs: 4px;
@@ -91,13 +100,13 @@
   --space-2xl: 32px;
   --space-3xl: 48px;
 
-  /* --- Border Radius --- */
-  --radius-sm: 6px;
-  --radius-base: 8px;
-  --radius-md: 10px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
-  --radius-2xl: 20px;
+  /* --- Border Radius (Claude: 7.5px signature for buttons/inputs) --- */
+  --radius-sm: 4px;
+  --radius-base: 7.5px;
+  --radius-md: 7.5px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
   --radius-full: 9999px;
 
   /* --- Transition Durations --- */
@@ -133,10 +142,13 @@
   --accent: #D4944E;
   --accent-hover: #E0A260;
   --accent-secondary: #C0A47C;
-  --accent-gradient: linear-gradient(135deg, #D4944E, #E0A260);
   --accent-bg: rgba(212, 148, 78, 0.08);
   --accent-border: rgba(212, 148, 78, 0.18);
   --accent-border-subtle: rgba(212, 148, 78, 0.08);
+
+  --btn-primary-bg: #ece9e1;
+  --btn-primary-text: #1a1a18;
+  --btn-primary-hover: #d8d4cc;
 
   --success: #4CAF6E;
   --success-bg: rgba(76, 175, 110, 0.08);
@@ -153,8 +165,8 @@
   --chart-text: #706B63;
 
   --scrollbar-thumb: rgba(255, 255, 255, 0.08);
-  --selection-bg: rgba(212, 148, 78, 0.2);
-  --selection-text: #F0ECE6;
+  --selection-bg: rgba(204, 120, 92, 0.5);
+  --selection-text: inherit;
 
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.2);
   --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.2);
@@ -164,8 +176,8 @@
   --shadow-button: 0 2px 6px rgba(212, 148, 78, 0.2);
   --shadow-button-hover: 0 4px 12px rgba(212, 148, 78, 0.3);
 
-  --weight-gradient: linear-gradient(135deg, #D4944E 0%, #E0A260 100%);
-  --ai-button-gradient: linear-gradient(135deg, #D4944E, #E0A260);
+  --weight-gradient: #D4944E;
+  --ai-button-gradient: #ece9e1;
 }
 
 /* === Base Styles === */
@@ -180,14 +192,25 @@ html, body, #root {
   width: 100%;
   background: var(--bg-primary);
   color: var(--text-primary);
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  font-family: var(--font-serif);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
-  font-size: var(--text-base);
+  font-size: var(--text-lg);
   line-height: 1.6;
-  letter-spacing: -0.005em;
+  letter-spacing: normal;
   transition: background var(--duration-slow) ease, color var(--duration-slow) ease;
+}
+
+/* Headings use sans-serif per Claude style */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-sans);
+  letter-spacing: -0.02em;
+}
+
+/* UI elements use sans-serif */
+button, input, textarea, select, nav, label {
+  font-family: var(--font-sans);
 }
 
 body {
@@ -219,9 +242,7 @@ input[type="number"] {
   color: var(--selection-text);
 }
 
-button {
-  font-family: inherit;
-}
+/* button font-family set via UI elements rule above */
 
 button:focus-visible,
 input:focus-visible,
@@ -362,11 +383,34 @@ textarea:focus-visible,
 }
 
 .card-hover {
-  transition: box-shadow var(--duration-base) ease, transform var(--duration-base) ease, border-color var(--duration-base) ease;
+  transition: box-shadow var(--duration-base) ease, opacity 300ms ease, border-color var(--duration-base) ease;
 }
 .card-hover:hover {
   box-shadow: var(--shadow-md);
   border-color: var(--border-light);
+}
+
+/* Claude: sibling dimming — hovered card stays, others fade */
+.responsive-grid-4:has(.card-hover:hover) .card-hover:not(:hover) {
+  opacity: 0.6;
+}
+
+/* Claude link style */
+a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  text-decoration-color: rgba(20, 20, 19, 0.3);
+  transition: text-decoration-color 150ms ease;
+}
+a:hover {
+  text-decoration-color: rgba(20, 20, 19, 0.6);
+}
+[data-theme="dark"] a {
+  text-decoration-color: rgba(236, 233, 225, 0.3);
+}
+[data-theme="dark"] a:hover {
+  text-decoration-color: rgba(236, 233, 225, 0.6);
 }
 
 /* === Toast Container === */

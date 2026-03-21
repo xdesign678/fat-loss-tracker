@@ -235,14 +235,14 @@ const SetupScreen = () => {
     },
     input: {
       width: '100%',
-      padding: 'var(--space-md) var(--space-base)',
+      padding: '8px 16px',
       background: 'var(--bg-primary)',
       border: '1px solid var(--border)',
-      borderRadius: 'var(--radius-lg)',
-      fontSize: 'var(--text-lg)',
+      borderRadius: '7.5px',
+      fontSize: 'var(--text-base)',
       color: 'var(--text-primary)',
       outline: 'none',
-      transition: 'all var(--duration-slow) ease'
+      transition: 'border-color 200ms ease'
     },
     errorText: {
       fontSize: 'var(--text-sm)',
@@ -259,15 +259,15 @@ const SetupScreen = () => {
     activityOption: {
       padding: 'var(--space-md) var(--space-base)',
       background: 'var(--bg-primary)',
-      border: '2px solid var(--border)',
-      borderRadius: 'var(--radius-lg)',
+      border: '1px solid var(--border)',
+      borderRadius: '7.5px',
       cursor: 'pointer',
-      transition: 'all var(--duration-slow) ease',
+      transition: 'all 200ms ease',
       textAlign: 'center'
     },
     activityOptionActive: {
       background: 'var(--accent-bg)',
-      border: '2px solid var(--accent)'
+      border: '1px solid var(--accent)'
     },
     activityLabel: {
       fontSize: 'var(--text-base)',
@@ -303,15 +303,15 @@ const SetupScreen = () => {
     },
     button: {
       width: '100%',
-      padding: 'var(--space-base)',
-      background: 'var(--accent)',
+      padding: '10px var(--space-base)',
+      background: 'var(--btn-primary-bg)',
       border: 'none',
-      borderRadius: 'var(--radius-lg)',
-      fontSize: 'var(--text-lg)',
-      fontWeight: '600',
-      color: '#ffffff',
+      borderRadius: '7.5px',
+      fontSize: 'var(--text-base)',
+      fontWeight: '400',
+      color: 'var(--btn-primary-text)',
       cursor: 'pointer',
-      transition: 'all var(--duration-slow) ease',
+      transition: 'all 200ms ease',
       marginTop: 'var(--space-base)',
       display: 'flex',
       alignItems: 'center',
