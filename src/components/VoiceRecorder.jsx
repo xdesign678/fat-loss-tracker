@@ -2,11 +2,8 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Mic, MicOff, X, Check, RotateCcw, Loader, Utensils, Dumbbell } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { formatDate } from '../utils/calculations';
-import { requestAIJson } from '../utils/ai';
+import { requestAIJson, getAIConfig } from '../utils/ai';
 import { useToast } from './Toast';
-
-const AI_GATEWAY_URL = 'https://ai-gateway.happycapy.ai/api/v1/chat/completions';
-const AI_GATEWAY_KEY = import.meta.env.VITE_AI_GATEWAY_API_KEY;
 
 // Pure helper functions (no hooks needed)
 function normalizeFoodItem(item = {}) {
@@ -90,20 +87,7 @@ const VoiceRecorder = ({ isOpen, onClose }) => {
   }, []);
 
   const getAPIConfig = useCallback(() => {
-    if (AI_GATEWAY_KEY) {
-      return { url: AI_GATEWAY_URL, key: AI_GATEWAY_KEY, model: 'anthropic/claude-haiku-4.5' };
-    }
-
-    const aiSettings = state.aiSettings || {};
-    if (aiSettings.apiKey && aiSettings.selectedModel) {
-      return {
-        url: 'https://openrouter.ai/api/v1/chat/completions',
-        key: aiSettings.apiKey,
-        model: aiSettings.selectedModel,
-      };
-    }
-
-    return null;
+    return getAIConfig(state.aiSettings);
   }, [state.aiSettings]);
 
   const localFallbackAnalysis = useCallback((text) => {

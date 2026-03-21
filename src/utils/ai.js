@@ -1,4 +1,21 @@
+const AI_GATEWAY_URL = 'https://ai-gateway.happycapy.ai/api/v1/chat/completions';
+const AI_GATEWAY_KEY = import.meta.env.VITE_AI_GATEWAY_API_KEY;
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
+const DEFAULT_GATEWAY_MODEL = 'anthropic/claude-opus-4-6';
+
+export function getAIConfig(aiSettings) {
+  if (AI_GATEWAY_KEY) {
+    return { url: AI_GATEWAY_URL, key: AI_GATEWAY_KEY, model: DEFAULT_GATEWAY_MODEL };
+  }
+  if (aiSettings?.apiKey && aiSettings?.selectedModel) {
+    return { url: OPENROUTER_URL, key: aiSettings.apiKey, model: aiSettings.selectedModel };
+  }
+  return null;
+}
+
+export function hasAIAvailable(aiSettings) {
+  return !!(AI_GATEWAY_KEY || (aiSettings?.apiKey && aiSettings?.selectedModel));
+}
 
 function extractJson(content, matcher) {
   const match = content.match(matcher);
@@ -72,7 +89,7 @@ export async function requestAIJson(options) {
     : extractJsonObject(content);
 }
 
-export async function testAIConnection({ apiKey, model, url = OPENROUTER_URL, timeout = 15000 }) {
+export async function testAIConnection({ apiKey, model, url = AI_GATEWAY_URL, timeout = 15000 }) {
   await requestChatCompletion({
     apiKey,
     model,

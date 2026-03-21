@@ -4,7 +4,7 @@ import { useApp } from '../context/AppContext';
 import DateNavigator from './DateNavigator';
 import { searchFood, foodDatabase } from '../utils/foodDatabase';
 import { formatDate } from '../utils/calculations';
-import { requestAIJson } from '../utils/ai';
+import { requestAIJson, getAIConfig, hasAIAvailable } from '../utils/ai';
 import EmptyState from './EmptyState';
 import { useToast } from './Toast';
 import { Modal, ModalActions, QuickValueButtons, FormField, inputStyle, textareaStyle } from './ui';
@@ -241,7 +241,8 @@ const FoodLogger = ({ selectedDate, onDateChange }) => {
   }, [todayLogs]);
 
   const aiSettings = state.aiSettings || {};
-  const hasAI = !!(aiSettings.apiKey && aiSettings.selectedModel);
+  const aiConfig = getAIConfig(aiSettings);
+  const hasAI = hasAIAvailable(aiSettings);
 
   const resetManualFood = () => {
     setManualFood({ name: '', grams: '', calories: '', protein: '', carbs: '', fat: '', time: '' });
@@ -334,10 +335,13 @@ const FoodLogger = ({ selectedDate, onDateChange }) => {
 
   // --- AI Recognition ---
 
-  const callOpenRouter = async (text) => {
+  const callAIAnalysis = async (text) => {
+    const config = getAIConfig(aiSettings);
+    if (!config) throw new Error('未配置 AI 服务');
     return requestAIJson({
-      apiKey: aiSettings.apiKey,
-      model: aiSettings.selectedModel,
+      apiKey: config.key,
+      model: config.model,
+      url: config.url,
       responseType: 'array',
       systemPrompt: '你是一个食物营养分析助手。用户会告诉你他吃了什么，你需要分析每种食物并返回JSON数组。\n每个元素格式：{"name":"食物名","grams":克数,"calories":总热量kcal,"protein":蛋白质g,"carbs":碳水g,"fat":脂肪g}\n注意：calories/protein/carbs/fat是该份量的总量，不是每100g的值。\n只返回JSON数组，不要有其他文字。',
       userPrompt: text,
@@ -349,7 +353,7 @@ const FoodLogger = ({ selectedDate, onDateChange }) => {
     if (hasAI) {
       setAiLoading(true); setAiError(''); setAiResults([]);
       try {
-        const items = await callOpenRouter(aiInput);
+        const items = await callAIAnalysis(aiInput);
         if (!Array.isArray(items) || items.length === 0) {
           setAiError('AI 未能识别食物，请重新描述');
         } else {
@@ -515,7 +519,7 @@ const FoodLogger = ({ selectedDate, onDateChange }) => {
             background: hasAI ? 'var(--success-bg-badge)' : 'var(--warning-bg)',
             color: hasAI ? 'var(--success)' : 'var(--warning)',
           }}>
-            {hasAI ? `AI: ${aiSettings.selectedModel.split('/').pop()}` : '本地匹配模式'}
+            {hasAI ? `AI: ${(aiConfig?.model || '').split('/').pop()}` : '本地匹配模式'}
           </span>
           {!hasAI && <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>在设置中配置 API 可识别任意食物</span>}
         </div>

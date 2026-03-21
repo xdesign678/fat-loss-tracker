@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import { useToast } from './Toast';
-import { testAIConnection } from '../utils/ai';
+import { testAIConnection, hasAIAvailable, getAIConfig } from '../utils/ai';
 import { X, Plus, Trash2, Eye, EyeOff, Check, Zap } from 'lucide-react';
 import { Modal } from './ui';
 
@@ -87,9 +87,15 @@ const Settings = ({ isOpen, onClose }) => {
       </div>
 
       <div style={styles.scrollArea}>
+        {/* AI Gateway Status */}
+        {hasAIAvailable() && !ai.apiKey && (
+          <div style={{ padding: 'var(--space-md)', background: 'var(--success-bg)', borderRadius: 'var(--radius-base)', marginBottom: 'var(--space-lg)', fontSize: 'var(--text-sm)', color: 'var(--success)', fontWeight: '500' }}>
+            AI Gateway 已连接 (模型: {getAIConfig()?.model || 'N/A'})，无需额外配置即可使用 AI 功能
+          </div>
+        )}
         {/* API Key */}
         <div style={styles.section}>
-          <label style={styles.sectionLabel}>OpenRouter API Key</label>
+          <label style={styles.sectionLabel}>OpenRouter API Key（可选，覆盖默认 AI Gateway）</label>
           <div style={styles.apiKeyRow}>
             <input
               ref={firstInputRef}
