@@ -10,7 +10,8 @@ import {
   getBMICategory,
   recommendedWeeklyLoss,
 } from '../utils/calculations';
-import { Target, Activity, TrendingDown, UserRound } from 'lucide-react';
+import { isStandaloneMode, importData } from '../utils/dataMigration';
+import { Target, Activity, TrendingDown, UserRound, Upload } from 'lucide-react';
 import { useToast } from './Toast';
 
 const SetupScreen = () => {
@@ -25,6 +26,9 @@ const SetupScreen = () => {
   const [activityLevel, setActivityLevel] = useState('sedentary');
   const [errors, setErrors] = useState({});
   const [focusedInput, setFocusedInput] = useState(null);
+  const [migrationCode, setMigrationCode] = useState('');
+  const [migrationResult, setMigrationResult] = useState(null);
+  const isPWA = isStandaloneMode();
 
   const sexOptions = [
     { value: 'male', label: '男' },
@@ -169,6 +173,15 @@ const SetupScreen = () => {
     });
 
     showToast('设置完成，开始你的减脂之旅！', 'success');
+  };
+
+  const handleMigrationImport = () => {
+    const result = importData(migrationCode);
+    setMigrationResult(result);
+    if (result.success) {
+      showToast(result.message, 'success');
+      setTimeout(() => window.location.reload(), 1500);
+    }
   };
 
   const styles = {
@@ -330,6 +343,66 @@ const SetupScreen = () => {
           <h1 style={styles.title}>开始你的减脂之旅</h1>
           <p style={styles.subtitle}>填写基本信息，让我们为你定制专属减脂计划</p>
         </div>
+
+        {/* PWA Data Migration Card */}
+        {isPWA && (
+          <div style={{
+            background: 'var(--accent-bg)',
+            border: '1px solid var(--accent-border)',
+            borderRadius: 'var(--radius-lg)',
+            padding: 'var(--space-lg)',
+            marginBottom: 'var(--space-xl)',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', marginBottom: 'var(--space-md)' }}>
+              <Upload size={18} color="var(--accent)" />
+              <span style={{ fontSize: 'var(--text-md)', fontWeight: 600, color: 'var(--text-primary)' }}>从浏览器导入数据</span>
+            </div>
+            <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', marginBottom: 'var(--space-md)', lineHeight: 1.5 }}>
+              如果你之前在浏览器中使用过 Kalos，请在浏览器中打开设置 &gt; 导出数据，然后将迁移码粘贴到下方。
+            </div>
+            <div style={{ display: 'flex', gap: 'var(--space-sm)' }}>
+              <input
+                type="text"
+                value={migrationCode}
+                onChange={(e) => setMigrationCode(e.target.value)}
+                style={{ ...styles.input, flex: 1, fontFamily: 'monospace', fontSize: 'var(--text-sm)' }}
+                placeholder="粘贴迁移码..."
+              />
+              <button
+                type="button"
+                onClick={handleMigrationImport}
+                disabled={!migrationCode.trim()}
+                style={{
+                  background: 'var(--accent)',
+                  border: 'none',
+                  borderRadius: '7.5px',
+                  color: '#fff',
+                  padding: '8px 16px',
+                  fontSize: 'var(--text-sm)',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  flexShrink: 0,
+                  opacity: migrationCode.trim() ? 1 : 0.5,
+                }}
+              >
+                导入
+              </button>
+            </div>
+            {migrationResult && (
+              <div style={{
+                marginTop: 'var(--space-md)',
+                padding: 'var(--space-sm) var(--space-md)',
+                borderRadius: 'var(--radius-base)',
+                fontSize: 'var(--text-sm)',
+                fontWeight: 500,
+                color: migrationResult.success ? 'var(--success)' : 'var(--danger)',
+                background: migrationResult.success ? 'var(--success-bg)' : 'var(--danger-bg)',
+              }}>
+                {migrationResult.message}
+              </div>
+            )}
+          </div>
+        )}
 
         <form style={styles.form} onSubmit={handleSubmit}>
           <div style={styles.formGroup}>

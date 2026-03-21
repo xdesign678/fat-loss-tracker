@@ -2,7 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import { useToast } from './Toast';
 import { testAIConnection, hasAIAvailable, getAIConfig } from '../utils/ai';
-import { X, Plus, Trash2, Eye, EyeOff, Check, Zap } from 'lucide-react';
+import { exportData, importData } from '../utils/dataMigration';
+import { X, Plus, Trash2, Eye, EyeOff, Check, Zap, Upload, Copy } from 'lucide-react';
 import { Modal } from './ui';
 
 const PRESET_MODELS = [
@@ -30,6 +31,9 @@ const Settings = ({ isOpen, onClose }) => {
   const [saved, setSaved] = useState(false);
   const [testResult, setTestResult] = useState(null);
   const [testing, setTesting] = useState(false);
+  const [importCode, setImportCode] = useState('');
+  const [migrationResult, setMigrationResult] = useState(null);
+  const [exported, setExported] = useState(false);
 
   const handleAddModel = (modelName) => {
     const name = (modelName || newModelInput).trim();
@@ -67,6 +71,41 @@ const Settings = ({ isOpen, onClose }) => {
       setTestResult({ ok: false, msg: e.message });
     }
     setTesting(false);
+  };
+
+  const handleExport = async () => {
+    const code = exportData();
+    if (!code) {
+      showToast('没有可导出的数据', 'error');
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(code);
+      setExported(true);
+      showToast('迁移码已复制到剪贴板', 'success');
+      setTimeout(() => setExported(false), 3000);
+    } catch {
+      // Fallback: select text in a temporary textarea
+      const ta = document.createElement('textarea');
+      ta.value = code;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      setExported(true);
+      showToast('迁移码已复制', 'success');
+      setTimeout(() => setExported(false), 3000);
+    }
+  };
+
+  const handleImport = () => {
+    const result = importData(importCode);
+    setMigrationResult(result);
+    if (result.success) {
+      showToast(result.message, 'success');
+      // Reload to apply imported data
+      setTimeout(() => window.location.reload(), 1500);
+    }
   };
 
   useEffect(() => {
@@ -175,6 +214,39 @@ const Settings = ({ isOpen, onClose }) => {
               {testResult.ok ? 'API 连接成功' : `失败: ${testResult.msg}`}
             </div>
           )}
+        </div>
+
+        {/* Data Migration */}
+        <div style={{ ...styles.section, borderTop: '1px solid var(--border)', paddingTop: 'var(--space-xl)' }}>
+          <label style={styles.sectionLabel}>数据迁移</label>
+          <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 'var(--space-md)', lineHeight: 1.5 }}>
+            iOS 安装 PWA 后数据不会自动同步。先在浏览器中导出，再在 PWA 中导入。
+          </div>
+          <div style={styles.actionRow}>
+            <button type="button" style={styles.testBtn} onClick={handleExport}>
+              <Copy size={16} />
+              <span>{exported ? '已复制' : '导出数据'}</span>
+            </button>
+          </div>
+          <div style={{ marginTop: 'var(--space-md)' }}>
+            <div style={{ display: 'flex', gap: 'var(--space-sm)' }}>
+              <input
+                type="text"
+                value={importCode}
+                onChange={(e) => setImportCode(e.target.value)}
+                style={{ ...styles.input, flex: 1, fontFamily: 'monospace', fontSize: 'var(--text-sm)' }}
+                placeholder="粘贴迁移码..."
+              />
+              <button type="button" style={styles.addBtn} onClick={handleImport} disabled={!importCode.trim()}>
+                <Upload size={18} />
+              </button>
+            </div>
+            {migrationResult && (
+              <div style={{ ...styles.testResult, color: migrationResult.success ? 'var(--success)' : 'var(--danger)', background: migrationResult.success ? 'var(--success-bg)' : 'var(--danger-bg)' }}>
+                {migrationResult.message}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </Modal>
