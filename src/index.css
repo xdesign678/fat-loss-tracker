@@ -22,8 +22,8 @@
   --text-primary: #1A1815;
   --text-heading: #1A1815;
   --text-secondary: #706B63;
-  --text-muted: #A09A91;
-  --text-nav: #8A8478;
+  --text-muted: #837D74;
+  --text-nav: #7A7469;
   --text-body: #3D3833;
 
   /* --- Accent Colors (warm terracotta — decorative only, not for primary buttons) --- */
@@ -135,8 +135,8 @@
   --text-primary: #E8E4DE;
   --text-heading: #F0ECE6;
   --text-secondary: #A09A91;
-  --text-muted: #706B63;
-  --text-nav: #8A8478;
+  --text-muted: #908A82;
+  --text-nav: #9A948C;
   --text-body: #C8C2B8;
 
   --accent: #D4944E;
@@ -252,9 +252,12 @@ textarea:focus-visible,
   outline-offset: 2px;
 }
 
-/* Smooth theme transitions */
-[data-theme="light"] *,
-[data-theme="dark"] * {
+/* Smooth theme transitions — scoped to direct layout elements only (not *) */
+[data-theme="light"] > #root,
+[data-theme="dark"] > #root,
+.card-hover,
+.nav-safe-area,
+.toast-item {
   transition: background-color var(--duration-base) ease,
               border-color var(--duration-base) ease,
               color var(--duration-base) ease;

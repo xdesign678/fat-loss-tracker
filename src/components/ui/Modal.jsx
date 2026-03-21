@@ -1,26 +1,60 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
+
+const FOCUSABLE_SELECTOR = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
 
 const Modal = ({ isOpen, onClose, title, children, maxWidth = '500px' }) => {
+  const previousFocusRef = useRef(null);
+  const dialogRef = useRef(null);
+
   const handleEscape = useCallback((e) => {
     if (e.key === 'Escape') onClose();
   }, [onClose]);
 
+  // Focus trap: keep Tab within modal
+  const handleTab = useCallback((e) => {
+    if (e.key !== 'Tab' || !dialogRef.current) return;
+    const focusable = dialogRef.current.querySelectorAll(FOCUSABLE_SELECTOR);
+    if (focusable.length === 0) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  }, []);
+
   useEffect(() => {
     if (isOpen) {
+      previousFocusRef.current = document.activeElement;
       document.addEventListener('keydown', handleEscape);
+      document.addEventListener('keydown', handleTab);
       document.body.classList.add('modal-open');
+      // Auto-focus first focusable element
+      setTimeout(() => {
+        const focusable = dialogRef.current?.querySelectorAll(FOCUSABLE_SELECTOR);
+        if (focusable?.length) focusable[0].focus();
+      }, 50);
     }
     return () => {
       document.removeEventListener('keydown', handleEscape);
+      document.removeEventListener('keydown', handleTab);
       document.body.classList.remove('modal-open');
+      // Restore focus on close
+      if (previousFocusRef.current?.focus) {
+        previousFocusRef.current.focus();
+      }
     };
-  }, [isOpen, handleEscape]);
+  }, [isOpen, handleEscape, handleTab]);
 
   if (!isOpen) return null;
 
   return (
     <div className="modal-overlay" style={overlayStyle} onClick={onClose}>
       <div
+        ref={dialogRef}
         className="modal-content"
         style={{ ...modalStyle, maxWidth }}
         onClick={(e) => e.stopPropagation()}

@@ -134,7 +134,15 @@ const ExerciseLogger = ({ selectedDate, onDateChange }) => {
   const handleDeleteExercise = (id) => {
     const exercise = todayLogs.find(e => e.id === id);
     dispatch({ type: 'REMOVE_EXERCISE', payload: { date: selectedDate, id } });
-    showToast(`已删除 ${exercise?.name || '运动'}`, 'success');
+    showToast({
+      message: `已删除 ${exercise?.name || '运动'}`,
+      type: 'success',
+      duration: 4000,
+      actionLabel: '撤销',
+      onAction: () => {
+        if (exercise) dispatch({ type: 'RESTORE_EXERCISE', payload: { date: selectedDate, exercise } });
+      },
+    });
   };
 
   const handleEditExercise = (exercise) => {

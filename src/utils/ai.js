@@ -26,31 +26,43 @@ export async function requestChatCompletion({
   url = OPENROUTER_URL,
   maxTokens = 1000,
   temperature = 0.1,
+  timeout = 30000,
 }) {
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
-      ],
-      max_tokens: maxTokens,
-      temperature,
-    }),
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(error.error?.message || `API错误 ${response.status}`);
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      signal: controller.signal,
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
+        max_tokens: maxTokens,
+        temperature,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.error?.message || `API错误 ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.choices?.[0]?.message?.content || '';
+  } catch (e) {
+    if (e.name === 'AbortError') throw new Error('请求超时，请检查网络连接');
+    throw e;
+  } finally {
+    clearTimeout(timeoutId);
   }
-
-  const data = await response.json();
-  return data.choices?.[0]?.message?.content || '';
 }
 
 export async function requestAIJson(options) {
@@ -60,7 +72,7 @@ export async function requestAIJson(options) {
     : extractJsonObject(content);
 }
 
-export async function testAIConnection({ apiKey, model, url = OPENROUTER_URL }) {
+export async function testAIConnection({ apiKey, model, url = OPENROUTER_URL, timeout = 15000 }) {
   await requestChatCompletion({
     apiKey,
     model,
@@ -69,5 +81,6 @@ export async function testAIConnection({ apiKey, model, url = OPENROUTER_URL }) 
     userPrompt: 'Reply with just ok',
     maxTokens: 5,
     temperature: 0,
+    timeout,
   });
 }

@@ -4,6 +4,7 @@ import { useApp } from '../context/AppContext';
 import DateNavigator from './DateNavigator';
 import { searchFood, foodDatabase } from '../utils/foodDatabase';
 import { formatDate } from '../utils/calculations';
+import { requestAIJson } from '../utils/ai';
 import EmptyState from './EmptyState';
 import { useToast } from './Toast';
 import { Modal, ModalActions, QuickValueButtons, FormField, inputStyle, textareaStyle } from './ui';
@@ -302,7 +303,15 @@ const FoodLogger = ({ selectedDate, onDateChange }) => {
   const handleDeleteFood = (id) => {
     const food = todayLogs.find(f => f.id === id);
     dispatch({ type: 'REMOVE_FOOD', payload: { date: selectedDate, id } });
-    showToast(`已删除 ${food?.name || '食物'}`, 'success');
+    showToast({
+      message: `已删除 ${food?.name || '食物'}`,
+      type: 'success',
+      duration: 4000,
+      actionLabel: '撤销',
+      onAction: () => {
+        if (food) dispatch({ type: 'RESTORE_FOOD', payload: { date: selectedDate, food } });
+      },
+    });
   };
 
   const handleEditFood = (food) => {
@@ -326,38 +335,13 @@ const FoodLogger = ({ selectedDate, onDateChange }) => {
   // --- AI Recognition ---
 
   const callOpenRouter = async (text) => {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000);
-    try {
-      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${aiSettings.apiKey}` },
-        signal: controller.signal,
-        body: JSON.stringify({
-          model: aiSettings.selectedModel,
-          messages: [
-            { role: 'system', content: '你是一个食物营养分析助手。用户会告诉你他吃了什么，你需要分析每种食物并返回JSON数组。\n每个元素格式：{"name":"食物名","grams":克数,"calories":总热量kcal,"protein":蛋白质g,"carbs":碳水g,"fat":脂肪g}\n注意：calories/protein/carbs/fat是该份量的总量，不是每100g的值。\n只返回JSON数组，不要有其他文字。' },
-            { role: 'user', content: text },
-          ],
-          max_tokens: 1000,
-          temperature: 0.1,
-        }),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error?.message || `API错误 ${res.status}`);
-      }
-      const data = await res.json();
-      const content = data.choices?.[0]?.message?.content || '';
-      const match = content.match(/\[[\s\S]*\]/);
-      if (!match) throw new Error('AI返回格式异常');
-      return JSON.parse(match[0]);
-    } catch (e) {
-      if (e.name === 'AbortError') throw new Error('请求超时，请检查网络连接');
-      throw e;
-    } finally {
-      clearTimeout(timeoutId);
-    }
+    return requestAIJson({
+      apiKey: aiSettings.apiKey,
+      model: aiSettings.selectedModel,
+      responseType: 'array',
+      systemPrompt: '你是一个食物营养分析助手。用户会告诉你他吃了什么，你需要分析每种食物并返回JSON数组。\n每个元素格式：{"name":"食物名","grams":克数,"calories":总热量kcal,"protein":蛋白质g,"carbs":碳水g,"fat":脂肪g}\n注意：calories/protein/carbs/fat是该份量的总量，不是每100g的值。\n只返回JSON数组，不要有其他文字。',
+      userPrompt: text,
+    });
   };
 
   const handleAIRecognition = async () => {

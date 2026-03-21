@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, memo, useCallback } from 'react';
 import {
   BarChart,
   Bar,
@@ -16,7 +16,7 @@ import { TrendingUp, BarChart3 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { formatDate, getDateRange } from '../utils/calculations';
 
-const DashboardCharts = ({ selectedDate, calorieTarget, weightTrendData }) => {
+const DashboardCharts = memo(({ selectedDate, calorieTarget, weightTrendData }) => {
   const { state } = useApp();
   const profile = state.profile || {};
   const [calorieRange, setCalorieRange] = useState(7); // 7, 14, 30 天
@@ -81,7 +81,7 @@ const DashboardCharts = ({ selectedDate, calorieTarget, weightTrendData }) => {
   const hasCalorieData = filteredCalorieData.some(d => d.calories > 0);
   const hasWeightData = weightTrendData.length > 1;
   // 热量图表 tooltip
-  const calorieTooltip = ({ active, payload }) => {
+  const calorieTooltip = useCallback(({ active, payload }) => {
     if (!active || !payload || !payload.length) return null;
 
     const data = payload[0].payload;
@@ -103,10 +103,10 @@ const DashboardCharts = ({ selectedDate, calorieTarget, weightTrendData }) => {
         </div>
       </div>
     );
-  };
+  }, []);
 
   // 体重图表 tooltip
-  const weightTooltip = ({ active, payload }) => {
+  const weightTooltip = useCallback(({ active, payload }) => {
     if (!active || !payload || !payload.length) return null;
 
     const data = payload[0].payload;
@@ -133,7 +133,7 @@ const DashboardCharts = ({ selectedDate, calorieTarget, weightTrendData }) => {
         )}
       </div>
     );
-  };
+  }, [profile.targetWeight]);
 
   return (
     <>
@@ -284,7 +284,7 @@ const DashboardCharts = ({ selectedDate, calorieTarget, weightTrendData }) => {
       </div>
     </>
   );
-};
+});
 
 const styles = {
   chartCard: {

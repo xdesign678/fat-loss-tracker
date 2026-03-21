@@ -8,6 +8,52 @@ import { useToast } from './Toast';
 const AI_GATEWAY_URL = 'https://ai-gateway.happycapy.ai/api/v1/chat/completions';
 const AI_GATEWAY_KEY = import.meta.env.VITE_AI_GATEWAY_API_KEY;
 
+// Pure helper functions (no hooks needed)
+function normalizeFoodItem(item = {}) {
+  return {
+    name: item.name || '',
+    grams: Math.round(item.grams || 0),
+    calories: Math.round(item.calories || 0),
+    protein: Math.round(item.protein || 0),
+    carbs: Math.round(item.carbs || 0),
+    fat: Math.round(item.fat || 0),
+  };
+}
+
+function normalizeExerciseItem(item = {}) {
+  return {
+    name: item.name || '',
+    duration: Math.round(item.duration || 30),
+    calories: Math.round(item.calories || 0),
+    category: item.category || '其他',
+  };
+}
+
+function normalizeResults(parsed, isLocal = false) {
+  if (parsed?.type === 'mixed') {
+    return {
+      type: 'mixed',
+      foods: Array.isArray(parsed.foods) ? parsed.foods.map(normalizeFoodItem) : [],
+      exercises: Array.isArray(parsed.exercises) ? parsed.exercises.map(normalizeExerciseItem) : [],
+      isLocal,
+    };
+  }
+
+  if (parsed?.type === 'exercise') {
+    return {
+      type: 'exercise',
+      items: Array.isArray(parsed.items) ? parsed.items.map(normalizeExerciseItem) : [],
+      isLocal,
+    };
+  }
+
+  return {
+    type: 'food',
+    items: Array.isArray(parsed?.items) ? parsed.items.map(normalizeFoodItem) : [],
+    isLocal,
+  };
+}
+
 // States: idle, recording, processing, results, error
 const VoiceRecorder = ({ isOpen, onClose }) => {
   const { state, dispatch } = useApp();
@@ -30,6 +76,19 @@ const VoiceRecorder = ({ isOpen, onClose }) => {
     }
   }, []);
 
+  // Cleanup on unmount to prevent SpeechRecognition memory leak
+  useEffect(() => {
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+        recognitionRef.current = null;
+      }
+      if (recordingTimerRef.current) {
+        clearInterval(recordingTimerRef.current);
+      }
+    };
+  }, []);
+
   const getAPIConfig = useCallback(() => {
     if (AI_GATEWAY_KEY) {
       return { url: AI_GATEWAY_URL, key: AI_GATEWAY_KEY, model: 'anthropic/claude-haiku-4.5' };
@@ -46,47 +105,6 @@ const VoiceRecorder = ({ isOpen, onClose }) => {
 
     return null;
   }, [state.aiSettings]);
-
-  const normalizeFoodItem = useCallback((item = {}) => ({
-    name: item.name || '',
-    grams: Math.round(item.grams || 0),
-    calories: Math.round(item.calories || 0),
-    protein: Math.round(item.protein || 0),
-    carbs: Math.round(item.carbs || 0),
-    fat: Math.round(item.fat || 0),
-  }), []);
-
-  const normalizeExerciseItem = useCallback((item = {}) => ({
-    name: item.name || '',
-    duration: Math.round(item.duration || 30),
-    calories: Math.round(item.calories || 0),
-    category: item.category || '其他',
-  }), []);
-
-  const normalizeResults = useCallback((parsed, isLocal = false) => {
-    if (parsed?.type === 'mixed') {
-      return {
-        type: 'mixed',
-        foods: Array.isArray(parsed.foods) ? parsed.foods.map(normalizeFoodItem) : [],
-        exercises: Array.isArray(parsed.exercises) ? parsed.exercises.map(normalizeExerciseItem) : [],
-        isLocal,
-      };
-    }
-
-    if (parsed?.type === 'exercise') {
-      return {
-        type: 'exercise',
-        items: Array.isArray(parsed.items) ? parsed.items.map(normalizeExerciseItem) : [],
-        isLocal,
-      };
-    }
-
-    return {
-      type: 'food',
-      items: Array.isArray(parsed?.items) ? parsed.items.map(normalizeFoodItem) : [],
-      isLocal,
-    };
-  }, [normalizeExerciseItem, normalizeFoodItem]);
 
   const localFallbackAnalysis = useCallback((text) => {
     const exerciseKeywords = ['跑步', '走路', '游泳', '骑车', '骑行', '健身', '深蹲', '俯卧撑',
@@ -112,7 +130,7 @@ const VoiceRecorder = ({ isOpen, onClose }) => {
 
     setResults(normalizeResults(fallbackResult, true));
     setStatus('results');
-  }, [normalizeResults]);
+  }, []);
 
   const analyzeWithAI = useCallback(async (text) => {
     setStatus('processing');
@@ -155,7 +173,7 @@ const VoiceRecorder = ({ isOpen, onClose }) => {
       setError(`AI 分析失败: ${e.message}`);
       setStatus('error');
     }
-  }, [getAPIConfig, localFallbackAnalysis, normalizeResults]);
+  }, [getAPIConfig, localFallbackAnalysis]);
 
   // Reset state when modal opens
   useEffect(() => {

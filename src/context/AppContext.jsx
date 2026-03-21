@@ -1,4 +1,4 @@
-import { createContext, useContext, useReducer, useEffect, useRef } from 'react';
+import { createContext, useContext, useReducer, useEffect, useRef, useMemo, useCallback } from 'react';
 import { formatDate } from '../utils/calculations';
 
 const AppContext = createContext();
@@ -211,6 +211,28 @@ export function reducer(state, action) {
     }
     case 'SET_AI_SETTINGS':
       return { ...state, aiSettings: { ...state.aiSettings, ...action.payload } };
+    case 'RESTORE_FOOD': {
+      const date = action.payload.date;
+      const existing = state.dailyLogs[date] || { foods: [], exercises: [] };
+      return {
+        ...state,
+        dailyLogs: {
+          ...state.dailyLogs,
+          [date]: { ...existing, foods: [...existing.foods, action.payload.food] }
+        }
+      };
+    }
+    case 'RESTORE_EXERCISE': {
+      const date = action.payload.date;
+      const existing = state.dailyLogs[date] || { foods: [], exercises: [] };
+      return {
+        ...state,
+        dailyLogs: {
+          ...state.dailyLogs,
+          [date]: { ...existing, exercises: [...existing.exercises, action.payload.exercise] }
+        }
+      };
+    }
     case 'RESET':
       return createDefaultState();
     default:
@@ -221,25 +243,41 @@ export function reducer(state, action) {
 export function AppProvider({ children }) {
   const [state, dispatch] = useReducer(reducer, loadState() || createDefaultState());
   const saveTimerRef = useRef(null);
+  const stateRef = useRef(state);
+  stateRef.current = state;
+
+  const saveState = useCallback(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(stateRef.current));
+    } catch (e) {
+      console.error('Failed to save state', e);
+    }
+  }, []);
 
   useEffect(() => {
     if (saveTimerRef.current) {
       clearTimeout(saveTimerRef.current);
     }
-    saveTimerRef.current = setTimeout(() => {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-      } catch (e) {
-        console.error('Failed to save state', e);
-      }
-    }, 500);
+    saveTimerRef.current = setTimeout(saveState, 500);
     return () => {
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     };
-  }, [state]);
+  }, [state, saveState]);
+
+  // Force save on page unload to prevent data loss
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+      saveState();
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [saveState]);
+
+  const contextValue = useMemo(() => ({ state, dispatch }), [state]);
 
   return (
-    <AppContext.Provider value={{ state, dispatch }}>
+    <AppContext.Provider value={contextValue}>
       {children}
     </AppContext.Provider>
   );

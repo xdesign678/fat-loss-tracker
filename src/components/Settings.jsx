@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import { useToast } from './Toast';
+import { testAIConnection } from '../utils/ai';
 import { X, Plus, Trash2, Eye, EyeOff, Check, Zap } from 'lucide-react';
 import { Modal } from './ui';
 
@@ -60,23 +61,10 @@ const Settings = ({ isOpen, onClose }) => {
     setTesting(true);
     setTestResult(null);
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000);
-      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
-        signal: controller.signal,
-        body: JSON.stringify({ model: selectedModel, messages: [{ role: 'user', content: 'Reply with just "ok"' }], max_tokens: 5 }),
-      });
-      clearTimeout(timeoutId);
-      if (res.ok) {
-        setTestResult({ ok: true, msg: '连接成功' });
-      } else {
-        const err = await res.json().catch(() => ({}));
-        setTestResult({ ok: false, msg: err.error?.message || `HTTP ${res.status}` });
-      }
+      await testAIConnection({ apiKey, model: selectedModel, timeout: 15000 });
+      setTestResult({ ok: true, msg: '连接成功' });
     } catch (e) {
-      setTestResult({ ok: false, msg: e.name === 'AbortError' ? '请求超时' : e.message });
+      setTestResult({ ok: false, msg: e.message });
     }
     setTesting(false);
   };
