@@ -104,6 +104,7 @@ const Settings = ({ isOpen, onClose }) => {
               onChange={(e) => setApiKey(e.target.value)}
               style={styles.input}
               placeholder="sk-or-v1-..."
+              autoComplete="off"
             />
             <button type="button" style={styles.iconBtn} onClick={() => setShowKey(!showKey)} title={showKey ? '隐藏' : '显示'} aria-label={showKey ? '隐藏 API Key' : '显示 API Key'}>
               {showKey ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -184,7 +185,7 @@ const styles = {
   header: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-base)' },
   title: { fontSize: 'var(--text-2xl)', fontWeight: '700', color: 'var(--text-heading)', margin: 0 },
   closeBtn: { background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: 'var(--space-md)', minWidth: '44px', minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' },
-  scrollArea: { overflowY: 'auto', flex: 1 },
+  scrollArea: { overflowY: 'auto', flex: 1, overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' },
   section: { marginBottom: 'var(--space-xl)' },
   sectionLabel: { display: 'block', fontSize: 'var(--text-base)', fontWeight: '600', color: 'var(--text-primary)', marginBottom: 'var(--space-md)' },
   apiKeyRow: { display: 'flex', gap: 'var(--space-sm)', alignItems: 'center' },

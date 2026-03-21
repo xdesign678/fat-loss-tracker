@@ -366,6 +366,8 @@ const styles = {
     padding: 'var(--space-lg)',
     maxWidth: '1000px',
     margin: '0 auto',
+    overflowY: 'auto',
+    overscrollBehavior: 'contain',
   },
   header: {
     display: 'flex',

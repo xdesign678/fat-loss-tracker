@@ -5,6 +5,7 @@ import App from './App.jsx'
 import { AppProvider } from './context/AppContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { ToastProvider } from './components/Toast'
+import PWAPrompt from './components/PWAPrompt'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -12,6 +13,7 @@ createRoot(document.getElementById('root')).render(
       <AppProvider>
         <ToastProvider>
           <App />
+          <PWAPrompt />
         </ToastProvider>
       </AppProvider>
     </ThemeProvider>

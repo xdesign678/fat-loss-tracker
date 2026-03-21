@@ -378,6 +378,8 @@ const ExerciseLogger = ({ selectedDate, onDateChange }) => {
                 <div style={{ display: 'flex', gap: 'var(--space-sm)', alignItems: 'center' }}>
                   <input
                     type="number"
+                    inputMode="numeric"
+                    enterKeyHint="done"
                     value={duration}
                     onChange={(e) => setDuration(e.target.value)}
                     style={{ ...inputStyle, marginTop: 0, flex: 1 }}
@@ -419,6 +421,8 @@ const ExerciseLogger = ({ selectedDate, onDateChange }) => {
                 <div style={{ display: 'flex', gap: 'var(--space-sm)', alignItems: 'center' }}>
                   <input
                     type="number"
+                    inputMode="numeric"
+                    enterKeyHint="next"
                     value={manualExercise.duration}
                     onChange={(e) => setManualExercise({ ...manualExercise, duration: e.target.value })}
                     style={{ ...inputStyle, marginTop: 0, flex: 1 }}
@@ -433,6 +437,8 @@ const ExerciseLogger = ({ selectedDate, onDateChange }) => {
               <FormField label="消耗热量（千卡）" required>
                 <input
                   type="number"
+                  inputMode="numeric"
+                  enterKeyHint="done"
                   value={manualExercise.calories}
                   onChange={(e) => setManualExercise({ ...manualExercise, calories: e.target.value })}
                   style={inputStyle}

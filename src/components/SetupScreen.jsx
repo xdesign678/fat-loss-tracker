@@ -175,7 +175,10 @@ const SetupScreen = () => {
     container: {
       minHeight: '100vh',
       background: 'var(--bg-primary)',
-      padding: '40px 20px',
+      paddingTop: 'calc(40px + env(safe-area-inset-top, 0px))',
+      paddingBottom: 'calc(20px + env(safe-area-inset-bottom, 0px))',
+      paddingLeft: '20px',
+      paddingRight: '20px',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
@@ -361,6 +364,8 @@ const SetupScreen = () => {
             <div style={styles.inputWrapper}>
               <input
                 type="number"
+                inputMode="numeric"
+                enterKeyHint="next"
                 style={{...styles.input, ...(focusedInput === 'height' ? {border: '1px solid var(--accent)'} : {}), ...(errors.height ? {borderColor: 'var(--danger)'} : {})}}
                 value={height}
                 onChange={handleHeightChange}
@@ -381,6 +386,8 @@ const SetupScreen = () => {
             <div style={styles.inputWrapper}>
               <input
                 type="number"
+                inputMode="numeric"
+                enterKeyHint="next"
                 style={{...styles.input, ...(focusedInput === 'age' ? {border: '1px solid var(--accent)'} : {}), ...(errors.age ? {borderColor: 'var(--danger)'} : {})}}
                 value={age}
                 onChange={handleAgeChange}
@@ -402,6 +409,8 @@ const SetupScreen = () => {
               <input
                 type="number"
                 step="0.1"
+                inputMode="decimal"
+                enterKeyHint="next"
                 style={{...styles.input, ...(focusedInput === 'currentWeight' ? {border: '1px solid var(--accent)'} : {}), ...(errors.currentWeight ? {borderColor: 'var(--danger)'} : {})}}
                 value={currentWeight}
                 onChange={handleCurrentWeightChange}
@@ -423,6 +432,8 @@ const SetupScreen = () => {
               <input
                 type="number"
                 step="0.1"
+                inputMode="decimal"
+                enterKeyHint="done"
                 style={{...styles.input, ...(focusedInput === 'targetWeight' ? {border: '1px solid var(--accent)'} : {}), ...(errors.targetWeight ? {borderColor: 'var(--danger)'} : {})}}
                 value={targetWeight}
                 onChange={handleTargetWeightChange}

@@ -35,6 +35,7 @@ const WeightLogger = ({ isOpen, onClose }) => {
 
   const handleSave = () => {
     if (newWeight && parseFloat(newWeight) > 0) {
+      if (navigator.vibrate) navigator.vibrate(50);
       const today = formatDate(new Date());
       const weight = parseFloat(newWeight);
       dispatch({ type: 'LOG_WEIGHT', payload: { date: today, weight } });
@@ -90,6 +91,7 @@ const WeightLogger = ({ isOpen, onClose }) => {
             ref={inputRef}
             type="text"
             inputMode="decimal"
+            enterKeyHint="done"
             value={newWeight}
             onChange={handleInputChange}
             onKeyDown={handleKeyPress}

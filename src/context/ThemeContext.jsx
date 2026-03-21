@@ -16,6 +16,12 @@ export function ThemeProvider({ children }) {
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem(THEME_KEY, theme);
+
+    // Update meta theme-color for mobile status bar
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+    if (metaThemeColor) {
+      metaThemeColor.setAttribute('content', theme === 'dark' ? '#1C1B18' : '#FAF8F5');
+    }
   }, [theme]);
 
   const toggleTheme = () => {

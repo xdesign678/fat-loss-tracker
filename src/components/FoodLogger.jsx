@@ -409,6 +409,7 @@ const FoodLogger = ({ selectedDate, onDateChange }) => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             style={styles.searchInput}
+            enterKeyHint="search"
             aria-label="搜索食物"
           />
           {searchQuery && (
@@ -461,7 +462,7 @@ const FoodLogger = ({ selectedDate, onDateChange }) => {
             <div style={{ marginBottom: 'var(--space-lg)' }}>
               <FormField label="重量（克）">
                 <div style={{ display: 'flex', gap: 'var(--space-sm)', alignItems: 'center' }}>
-                  <input type="number" value={grams} onChange={(e) => setGrams(e.target.value)} style={{ ...inputStyle, marginTop: 0, flex: 1 }} autoFocus min="0" max="5000" />
+                  <input type="number" inputMode="decimal" enterKeyHint="done" value={grams} onChange={(e) => setGrams(e.target.value)} style={{ ...inputStyle, marginTop: 0, flex: 1 }} autoFocus min="0" max="5000" />
                   <QuickValueButtons values={[50, 100, 150, 200]} onSelect={setGrams} unit="g" selectedValue={parseInt(grams)} />
                 </div>
               </FormField>
@@ -489,21 +490,21 @@ const FoodLogger = ({ selectedDate, onDateChange }) => {
               </FormField>
               <FormField label="重量（克）">
                 <div style={{ display: 'flex', gap: 'var(--space-sm)', alignItems: 'center' }}>
-                  <input type="number" value={manualFood.grams} onChange={(e) => setManualFood({ ...manualFood, grams: e.target.value })} style={{ ...inputStyle, marginTop: 0, flex: 1 }} placeholder="例：150" min="0" max="5000" />
+                  <input type="number" inputMode="decimal" enterKeyHint="next" value={manualFood.grams} onChange={(e) => setManualFood({ ...manualFood, grams: e.target.value })} style={{ ...inputStyle, marginTop: 0, flex: 1 }} placeholder="例：150" min="0" max="5000" />
                   <QuickValueButtons values={[50, 100, 150, 200]} onSelect={(v) => setManualFood({ ...manualFood, grams: v.toString() })} unit="g" />
                 </div>
               </FormField>
               <FormField label="热量（千卡）" required>
-                <input type="number" value={manualFood.calories} onChange={(e) => setManualFood({ ...manualFood, calories: e.target.value })} style={inputStyle} placeholder="例：165" min="0" max="10000" />
+                <input type="number" inputMode="decimal" enterKeyHint="next" value={manualFood.calories} onChange={(e) => setManualFood({ ...manualFood, calories: e.target.value })} style={inputStyle} placeholder="例：165" min="0" max="10000" />
               </FormField>
               <FormField label="蛋白质（克）">
-                <input type="number" value={manualFood.protein} onChange={(e) => setManualFood({ ...manualFood, protein: e.target.value })} style={inputStyle} placeholder="例：31" min="0" />
+                <input type="number" inputMode="decimal" enterKeyHint="next" value={manualFood.protein} onChange={(e) => setManualFood({ ...manualFood, protein: e.target.value })} style={inputStyle} placeholder="例：31" min="0" />
               </FormField>
               <FormField label="碳水（克）">
-                <input type="number" value={manualFood.carbs} onChange={(e) => setManualFood({ ...manualFood, carbs: e.target.value })} style={inputStyle} placeholder="例：0" min="0" />
+                <input type="number" inputMode="decimal" enterKeyHint="next" value={manualFood.carbs} onChange={(e) => setManualFood({ ...manualFood, carbs: e.target.value })} style={inputStyle} placeholder="例：0" min="0" />
               </FormField>
               <FormField label="脂肪（克）">
-                <input type="number" value={manualFood.fat} onChange={(e) => setManualFood({ ...manualFood, fat: e.target.value })} style={inputStyle} placeholder="例：3.6" min="0" />
+                <input type="number" inputMode="decimal" enterKeyHint="done" value={manualFood.fat} onChange={(e) => setManualFood({ ...manualFood, fat: e.target.value })} style={inputStyle} placeholder="例：3.6" min="0" />
               </FormField>
             </div>
             <ModalActions onCancel={closeAddModal} onConfirm={handleManualAdd} confirmText={editingFoodId ? '保存' : '添加'} />

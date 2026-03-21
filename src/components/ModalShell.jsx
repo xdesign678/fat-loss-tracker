@@ -104,6 +104,8 @@ const styles = {
     overflowY: 'auto',
     flex: 1,
     padding: 'var(--space-xl)',
+    overscrollBehavior: 'contain',
+    WebkitOverflowScrolling: 'touch',
   },
   footer: {
     display: 'flex',

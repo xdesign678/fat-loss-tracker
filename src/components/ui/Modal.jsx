@@ -28,6 +28,8 @@ const Modal = ({ isOpen, onClose, title, children, maxWidth = '500px' }) => {
 
   useEffect(() => {
     if (isOpen) {
+      const scrollY = window.scrollY;
+      document.body.style.top = `-${scrollY}px`;
       previousFocusRef.current = document.activeElement;
       document.addEventListener('keydown', handleEscape);
       document.addEventListener('keydown', handleTab);
@@ -37,16 +39,19 @@ const Modal = ({ isOpen, onClose, title, children, maxWidth = '500px' }) => {
         const focusable = dialogRef.current?.querySelectorAll(FOCUSABLE_SELECTOR);
         if (focusable?.length) focusable[0].focus();
       }, 50);
+
+      return () => {
+        document.removeEventListener('keydown', handleEscape);
+        document.removeEventListener('keydown', handleTab);
+        document.body.classList.remove('modal-open');
+        document.body.style.top = '';
+        window.scrollTo(0, scrollY);
+        // Restore focus on close
+        if (previousFocusRef.current?.focus) {
+          previousFocusRef.current.focus();
+        }
+      };
     }
-    return () => {
-      document.removeEventListener('keydown', handleEscape);
-      document.removeEventListener('keydown', handleTab);
-      document.body.classList.remove('modal-open');
-      // Restore focus on close
-      if (previousFocusRef.current?.focus) {
-        previousFocusRef.current.focus();
-      }
-    };
   }, [isOpen, handleEscape, handleTab]);
 
   if (!isOpen) return null;
@@ -92,6 +97,8 @@ const modalStyle = {
   maxHeight: '90vh',
   overflow: 'auto',
   boxShadow: 'var(--shadow-modal)',
+  overscrollBehavior: 'contain',
+  WebkitOverflowScrolling: 'touch',
 };
 
 const titleStyle = {

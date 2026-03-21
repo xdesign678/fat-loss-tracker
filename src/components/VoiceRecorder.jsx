@@ -247,6 +247,7 @@ const VoiceRecorder = ({ isOpen, onClose }) => {
 
   const startRecording = useCallback(async () => {
     try {
+      if (navigator.vibrate) navigator.vibrate(50);
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
       audioChunksRef.current = [];
@@ -289,6 +290,7 @@ const VoiceRecorder = ({ isOpen, onClose }) => {
   }, [stopMediaStream, startSpeechPreview]);
 
   const handleStopAndProcess = useCallback(async () => {
+    if (navigator.vibrate) navigator.vibrate([30, 50, 30]);
     // Stop SpeechRecognition preview
     stopSpeechRecognition();
 
@@ -781,6 +783,8 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     animation: 'slideUp var(--duration-slow) ease',
+    overscrollBehavior: 'contain',
+    WebkitOverflowScrolling: 'touch',
   },
   header: {
     display: 'flex',
@@ -1072,7 +1076,7 @@ const styles = {
   },
   // Actions
   actions: {
-    padding: 'var(--space-base) var(--space-xl) var(--space-2xl)',
+    padding: 'var(--space-base) var(--space-xl) calc(var(--space-2xl) + env(safe-area-inset-bottom, 0px))',
     display: 'flex',
     justifyContent: 'center',
   },
