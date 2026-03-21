@@ -2,7 +2,7 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Mic, MicOff, X, Check, RotateCcw, Loader, Utensils, Dumbbell } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { formatDate } from '../utils/calculations';
-import { requestAIJson, getAIConfig } from '../utils/ai';
+import { requestAIJson, getAIConfig, transcribeAudio } from '../utils/ai';
 import { useToast } from './Toast';
 
 // Pure helper functions (no hooks needed)
@@ -62,29 +62,35 @@ const VoiceRecorder = ({ isOpen, onClose }) => {
   const [error, setError] = useState('');
   const [pulseAnim, setPulseAnim] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
-  const recognitionRef = useRef(null);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
+  const streamRef = useRef(null);
   const recordingTimerRef = useRef(null);
   const today = formatDate(new Date());
 
-  const stopRecording = useCallback(() => {
-    if (recognitionRef.current) {
-      recognitionRef.current.stop();
-      recognitionRef.current = null;
+  const stopMediaStream = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(t => t.stop());
+      streamRef.current = null;
     }
   }, []);
 
-  // Cleanup on unmount to prevent SpeechRecognition memory leak
+  const stopRecording = useCallback(() => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+    }
+    mediaRecorderRef.current = null;
+  }, []);
+
   useEffect(() => {
     return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
-        recognitionRef.current = null;
-      }
+      stopRecording();
+      stopMediaStream();
       if (recordingTimerRef.current) {
         clearInterval(recordingTimerRef.current);
       }
     };
-  }, []);
+  }, [stopRecording, stopMediaStream]);
 
   const getAPIConfig = useCallback(() => {
     return getAIConfig(state.aiSettings);
@@ -168,14 +174,16 @@ const VoiceRecorder = ({ isOpen, onClose }) => {
       setResults(null);
       setError('');
       setRecordingDuration(0);
+      audioChunksRef.current = [];
     } else {
       stopRecording();
+      stopMediaStream();
       if (recordingTimerRef.current) {
         clearInterval(recordingTimerRef.current);
         recordingTimerRef.current = null;
       }
     }
-  }, [isOpen, stopRecording]);
+  }, [isOpen, stopRecording, stopMediaStream]);
 
   // Pulse animation and timer for recording
   useEffect(() => {
@@ -196,80 +204,85 @@ const VoiceRecorder = ({ isOpen, onClose }) => {
     setPulseAnim(false);
   }, [status]);
 
-  const getSpeechRecognition = () => {
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) return null;
-    return new SR();
-  };
+  const startRecording = useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+      audioChunksRef.current = [];
 
-  const startRecording = useCallback(() => {
-    const recognition = getSpeechRecognition();
-    if (!recognition) {
-      setError('您的浏览器不支持语音识别，请使用 Chrome 浏览器');
-      setStatus('error');
-      return;
-    }
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+        ? 'audio/webm;codecs=opus'
+        : MediaRecorder.isTypeSupported('audio/webm')
+          ? 'audio/webm'
+          : 'audio/mp4';
 
-    recognition.lang = 'zh-CN';
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.maxAlternatives = 1;
+      const recorder = new MediaRecorder(stream, { mimeType });
 
-    recognition.onstart = () => {
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data);
+      };
+
+      recorder.onerror = () => {
+        setError('录音出错，请重试');
+        setStatus('error');
+        stopMediaStream();
+      };
+
+      mediaRecorderRef.current = recorder;
+      recorder.start(500); // collect data every 500ms
       setStatus('recording');
       setTranscript('');
       setInterimText('');
       setError('');
-    };
-
-    recognition.onresult = (event) => {
-      let finalText = '';
-      let interim = '';
-      for (let i = 0; i < event.results.length; i++) {
-        if (event.results[i].isFinal) {
-          finalText += event.results[i][0].transcript;
-        } else {
-          interim += event.results[i][0].transcript;
-        }
-      }
-      if (finalText) setTranscript(finalText);
-      setInterimText(interim);
-    };
-
-    recognition.onerror = (event) => {
-      if (event.error === 'no-speech') {
-        setError('未检测到语音，请再试一次');
-      } else if (event.error === 'not-allowed') {
+    } catch (e) {
+      if (e.name === 'NotAllowedError') {
         setError('麦克风权限被拒绝，请在浏览器设置中允许');
       } else {
-        setError(`语音识别出错: ${event.error}`);
+        setError(`无法启动录音: ${e.message}`);
       }
       setStatus('error');
-    };
-
-    recognition.onend = () => {
-      // Only auto-process if we have transcript and are still in recording state
-      if (recognitionRef.current === recognition) {
-        recognitionRef.current = null;
-      }
-    };
-
-    recognitionRef.current = recognition;
-    recognition.start();
-  }, []);
+    }
+  }, [stopMediaStream]);
 
   const handleStopAndProcess = useCallback(async () => {
-    stopRecording();
-    const text = transcript || interimText;
-    if (!text.trim()) {
-      setError('未检测到语音内容，请再试一次');
+    // Stop the MediaRecorder and wait for final data
+    const recorder = mediaRecorderRef.current;
+    if (!recorder || recorder.state === 'inactive') {
+      setError('录音未启动');
       setStatus('error');
       return;
     }
-    setTranscript(text);
-    setInterimText('');
-    await analyzeWithAI(text);
-  }, [transcript, interimText, analyzeWithAI, stopRecording]);
+
+    const audioBlob = await new Promise((resolve) => {
+      recorder.onstop = () => {
+        const mimeType = recorder.mimeType || 'audio/webm';
+        resolve(new Blob(audioChunksRef.current, { type: mimeType }));
+      };
+      recorder.stop();
+    });
+    stopMediaStream();
+    mediaRecorderRef.current = null;
+
+    if (audioBlob.size < 1000) {
+      setError('录音时间太短，请再试一次');
+      setStatus('error');
+      return;
+    }
+
+    // Step 1: Transcribe audio
+    setStatus('processing');
+    setInterimText('AI 转写中...');
+    try {
+      const text = await transcribeAudio({ audioBlob, aiSettings: state.aiSettings });
+      setTranscript(text);
+      setInterimText('');
+      // Step 2: Analyze the transcript
+      await analyzeWithAI(text);
+    } catch (e) {
+      setError(`语音识别失败: ${e.message}`);
+      setStatus('error');
+    }
+  }, [analyzeWithAI, stopMediaStream, state.aiSettings]);
 
   const getFoodResults = () => {
     if (!results) return [];
@@ -452,11 +465,6 @@ const VoiceRecorder = ({ isOpen, onClose }) => {
               </div>
               <div style={styles.recordingText}>正在聆听...</div>
               <div style={styles.recordingDuration}>{recordingTimeLabel}</div>
-              {displayText && (
-                <div style={styles.transcriptPreview}>
-                  {displayText}
-                </div>
-              )}
             </div>
           )}
 
@@ -466,8 +474,8 @@ const VoiceRecorder = ({ isOpen, onClose }) => {
               <div style={styles.spinner}>
                 <Loader size={32} style={styles.spinnerIcon} />
               </div>
-              <div style={styles.processingText}>AI 正在分析...</div>
-              <div style={styles.transcriptPreview}>{transcript}</div>
+              <div style={styles.processingText}>{interimText || 'AI 正在分析...'}</div>
+              {transcript && <div style={styles.transcriptPreview}>{transcript}</div>}
             </div>
           )}
 
