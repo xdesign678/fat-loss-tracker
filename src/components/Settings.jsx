@@ -1,10 +1,20 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { useToast } from './Toast';
 import { testAIConnection, hasAIAvailable, getAIConfig } from '../utils/ai';
 import { exportData, importData } from '../utils/dataMigration';
 import { X, Plus, Trash2, Eye, EyeOff, Check, Zap, Upload, Copy } from 'lucide-react';
 import { Modal } from './ui';
+import {
+  calculateProgress,
+  getDaysBetween,
+  formatDate,
+} from '../utils/calculations';
+import {
+  LineChart, Line, XAxis, YAxis, Tooltip as RechartsTooltip,
+  ResponsiveContainer, CartesianGrid, ReferenceLine,
+} from 'recharts';
+import { Scale, Target, Calendar, TrendingDown as TrendingDownIcon } from 'lucide-react';
 
 const PRESET_MODELS = [
   'google/gemini-2.0-flash-001',
@@ -17,7 +27,7 @@ const PRESET_MODELS = [
   'qwen/qwen-2.5-72b-instruct',
 ];
 
-const Settings = ({ isOpen, onClose }) => {
+const Settings = ({ isOpen, onClose, onOpenWeightLogger }) => {
   const { state, dispatch } = useApp();
   const showToast = useToast();
   const firstInputRef = useRef(null);
@@ -34,6 +44,32 @@ const Settings = ({ isOpen, onClose }) => {
   const [importCode, setImportCode] = useState('');
   const [migrationResult, setMigrationResult] = useState(null);
   const [exported, setExported] = useState(false);
+
+  const profile = state.profile || {};
+  const weightHistory = state.weightHistory || [];
+
+  const progressData = useMemo(() => {
+    const progress = profile.startWeight && profile.currentWeight && profile.targetWeight
+      ? calculateProgress(profile.startWeight, profile.currentWeight, profile.targetWeight)
+      : 0;
+    const weightLost = profile.startWeight && profile.currentWeight
+      ? profile.startWeight - profile.currentWeight : 0;
+    const daysPersisted = profile.startDate ? getDaysBetween(profile.startDate, new Date()) : 0;
+    const weeksElapsed = daysPersisted / 7;
+    const avgWeeklyLoss = weeksElapsed > 0 ? weightLost / weeksElapsed : 0;
+    const weightToGo = profile.currentWeight && profile.targetWeight
+      ? profile.currentWeight - profile.targetWeight : 0;
+    const daysRemaining = avgWeeklyLoss > 0 ? Math.ceil((weightToGo / avgWeeklyLoss) * 7) : 0;
+    return { progress, weightLost, daysPersisted, avgWeeklyLoss, daysRemaining };
+  }, [profile.startWeight, profile.currentWeight, profile.targetWeight, profile.startDate]);
+
+  const weightTrendData = useMemo(() => {
+    if (weightHistory.length === 0) return [];
+    return weightHistory.slice(-14).map((entry) => ({
+      date: formatDate(entry.date, 'MM/DD'),
+      weight: entry.weight,
+    }));
+  }, [weightHistory]);
 
   const handleAddModel = (modelName) => {
     const name = (modelName || newModelInput).trim();
@@ -117,15 +153,90 @@ const Settings = ({ isOpen, onClose }) => {
   const presetsNotAdded = PRESET_MODELS.filter((m) => !models.includes(m));
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="" maxWidth="520px">
+    <Modal isOpen={isOpen} onClose={onClose} title="" maxWidth="560px">
       <div style={styles.header}>
-        <h2 style={styles.title}>AI 设置</h2>
+        <h2 style={styles.title}>设置</h2>
         <button style={styles.closeBtn} onClick={onClose} aria-label="关闭设置">
           <X size={20} />
         </button>
       </div>
 
       <div style={styles.scrollArea}>
+        {/* 个人信息 */}
+        <div style={settStyles.sectionCard}>
+          <label style={styles.sectionLabel}>个人信息</label>
+          <div style={settStyles.infoGrid}>
+            <div style={settStyles.infoItem}>
+              <span style={settStyles.infoLabel}>当前体重</span>
+              <span style={settStyles.infoValue}>{profile.currentWeight || '--'} kg</span>
+            </div>
+            <div style={settStyles.infoItem}>
+              <span style={settStyles.infoLabel}>身高</span>
+              <span style={settStyles.infoValue}>{profile.height || '--'} cm</span>
+            </div>
+            <div style={settStyles.infoItem}>
+              <span style={settStyles.infoLabel}>年龄</span>
+              <span style={settStyles.infoValue}>{profile.age || '--'}</span>
+            </div>
+            <div style={settStyles.infoItem}>
+              <span style={settStyles.infoLabel}>目标体重</span>
+              <span style={settStyles.infoValue}>{profile.targetWeight || '--'} kg</span>
+            </div>
+          </div>
+          <button
+            type="button"
+            style={settStyles.recordWeightBtn}
+            className="btn-interactive"
+            onClick={() => { if (onOpenWeightLogger) onOpenWeightLogger(); }}
+          >
+            <Scale size={16} />
+            <span>记录新体重</span>
+          </button>
+        </div>
+
+        {/* 减脂进度 */}
+        <div style={settStyles.sectionCard}>
+          <label style={styles.sectionLabel}>减脂进度</label>
+          <div style={settStyles.progressHeader}>
+            <span style={settStyles.progressPercent}>{progressData.progress}%</span>
+            <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)' }}>
+              {profile.startWeight || 0} kg → {profile.targetWeight || 0} kg
+            </span>
+          </div>
+          <div style={settStyles.progressTrack}>
+            <div style={{ ...settStyles.progressFill, width: `${Math.min(progressData.progress, 100)}%` }} />
+          </div>
+          {progressData.daysPersisted > 0 && (
+            <div style={settStyles.metaRow}>
+              <span style={settStyles.metaItem}><Calendar size={13} /> 已坚持 {progressData.daysPersisted} 天</span>
+              {progressData.avgWeeklyLoss > 0 && (
+                <span style={settStyles.metaItem}><TrendingDownIcon size={13} /> 周均 -{progressData.avgWeeklyLoss.toFixed(2)} kg</span>
+              )}
+              {progressData.daysRemaining > 0 && (
+                <span style={settStyles.metaItem}><Target size={13} /> 约 {progressData.daysRemaining} 天</span>
+              )}
+            </div>
+          )}
+          {weightTrendData.length > 1 && (
+            <div style={{ marginTop: 'var(--space-md)' }}>
+              <ResponsiveContainer width="100%" height={160}>
+                <LineChart data={weightTrendData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" />
+                  <XAxis dataKey="date" stroke="var(--chart-text)" tick={{ fill: 'var(--chart-text)', fontSize: 11 }} />
+                  <YAxis stroke="var(--chart-text)" tick={{ fill: 'var(--chart-text)', fontSize: 11 }} domain={['dataMin - 2', 'dataMax + 2']} />
+                  <RechartsTooltip />
+                  {profile.targetWeight && (
+                    <ReferenceLine y={profile.targetWeight} stroke="var(--accent)" strokeDasharray="5 5" strokeWidth={1.5} />
+                  )}
+                  <Line type="monotone" dataKey="weight" stroke="var(--success)" strokeWidth={2} dot={{ fill: 'var(--success)', r: 3 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </div>
+
+        <div style={settStyles.sectionCard}>
+          <label style={styles.sectionLabel}>AI 设置</label>
         {/* AI Gateway Status */}
         {hasAIAvailable() && !ai.apiKey && (
           <div style={{ padding: 'var(--space-md)', background: 'var(--success-bg)', borderRadius: 'var(--radius-base)', marginBottom: 'var(--space-lg)', fontSize: 'var(--text-sm)', color: 'var(--success)', fontWeight: '500' }}>
@@ -248,6 +359,7 @@ const Settings = ({ isOpen, onClose }) => {
             )}
           </div>
         </div>
+        </div>
       </div>
     </Modal>
   );
@@ -281,6 +393,90 @@ const styles = {
   testBtn: { flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-sm)', padding: 'var(--space-md)', background: 'var(--border)', border: '1px solid var(--border-light)', borderRadius: 'var(--radius-base)', color: 'var(--text-primary)', fontSize: 'var(--text-base)', fontWeight: '500', cursor: 'pointer' },
   saveBtn: { flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-sm)', padding: 'var(--space-md)', background: 'var(--accent)', border: 'none', borderRadius: 'var(--radius-base)', color: '#fff', fontSize: 'var(--text-base)', fontWeight: '500', cursor: 'pointer' },
   testResult: { marginTop: 'var(--space-md)', padding: 'var(--space-md) var(--space-md)', borderRadius: 'var(--radius-base)', fontSize: 'var(--text-sm)', fontWeight: '500' },
+};
+
+const settStyles = {
+  sectionCard: {
+    background: 'var(--bg-primary)',
+    border: '1px solid var(--border)',
+    borderRadius: 'var(--radius-base)',
+    padding: 'var(--space-lg)',
+    marginBottom: 'var(--space-lg)',
+  },
+  infoGrid: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: 'var(--space-md)',
+    marginBottom: 'var(--space-md)',
+  },
+  infoItem: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '4px',
+  },
+  infoLabel: {
+    fontSize: 'var(--text-xs)',
+    color: 'var(--text-muted)',
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px',
+  },
+  infoValue: {
+    fontSize: 'var(--text-lg)',
+    fontWeight: '600',
+    color: 'var(--text-heading)',
+  },
+  recordWeightBtn: {
+    width: '100%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 'var(--space-sm)',
+    padding: 'var(--space-md)',
+    background: 'var(--accent)',
+    border: 'none',
+    borderRadius: 'var(--radius-base)',
+    color: '#fff',
+    fontSize: 'var(--text-base)',
+    fontWeight: '500',
+    cursor: 'pointer',
+  },
+  progressHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'baseline',
+    marginBottom: 'var(--space-sm)',
+  },
+  progressPercent: {
+    fontSize: 'var(--text-2xl)',
+    fontWeight: '700',
+    color: 'var(--accent)',
+  },
+  progressTrack: {
+    width: '100%',
+    height: '6px',
+    background: 'var(--border)',
+    borderRadius: 'var(--radius-full)',
+    overflow: 'hidden',
+    marginBottom: 'var(--space-md)',
+  },
+  progressFill: {
+    height: '100%',
+    background: 'var(--accent)',
+    borderRadius: 'var(--radius-full)',
+    transition: 'width 0.5s ease',
+  },
+  metaRow: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: 'var(--space-md)',
+    fontSize: 'var(--text-sm)',
+    color: 'var(--text-secondary)',
+  },
+  metaItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '4px',
+  },
 };
 
 export default Settings;

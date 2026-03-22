@@ -63,7 +63,6 @@ function App() {
           <Dashboard
             selectedDate={selectedDate}
             onDateChange={setSelectedDate}
-            onOpenWeightLogger={() => setWeightModalOpen(true)}
           />
         );
         break;
@@ -81,7 +80,6 @@ function App() {
           <Dashboard
             selectedDate={selectedDate}
             onDateChange={setSelectedDate}
-            onOpenWeightLogger={() => setWeightModalOpen(true)}
           />
         );
     }
@@ -118,8 +116,8 @@ function App() {
             onClick={() => setSettingsOpen(true)}
             style={styles.headerBtn}
             className="btn-interactive"
-            title="AI 设置"
-            aria-label="打开 AI 设置"
+            title="设置"
+            aria-label="打开设置"
           >
             <SettingsIcon size={18} color={state.aiSettings?.apiKey ? 'var(--accent)' : 'var(--text-muted)'} />
           </button>
@@ -222,7 +220,7 @@ function App() {
           <WeightLogger isOpen={weightModalOpen} onClose={() => setWeightModalOpen(false)} />
         )}
         {settingsOpen && (
-          <Settings isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
+          <Settings isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} onOpenWeightLogger={() => setWeightModalOpen(true)} />
         )}
       </Suspense>
       <VoiceRecorder isOpen={voiceModalOpen} onClose={() => setVoiceModalOpen(false)} />

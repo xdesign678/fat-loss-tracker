@@ -143,3 +143,65 @@ export function getDailyTip(tips, date = new Date()) {
   const hash = seed.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
   return tips[hash % tips.length];
 }
+
+const DAY_LABELS = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+
+// 获取某日期所在周的热量预算数据（周内动态分配）
+export function getWeeklyCalorieData(dailyLogs, dailyTarget, date = new Date()) {
+  const weekDates = getWeekDates(date);
+  const today = formatDate(new Date());
+
+  let totalConsumed = 0;
+  let pastDays = 0;
+
+  const days = weekDates.map((d, i) => {
+    const dateKey = formatDate(d);
+    const isPast = dateKey <= today;
+    const isToday = dateKey === today;
+    const log = dailyLogs[dateKey] || { foods: [] };
+    const calories = isPast
+      ? Math.round(log.foods.reduce((sum, food) => sum + (food.calories || 0), 0))
+      : null;
+
+    if (isPast) {
+      totalConsumed += calories || 0;
+      pastDays++;
+    }
+
+    // Status based on original daily target
+    let status = 'future';
+    if (isPast && calories !== null) {
+      const ratio = dailyTarget > 0 ? calories / dailyTarget : 0;
+      if (ratio > 1.1) status = 'over';
+      else if (ratio > 1.0) status = 'warning';
+      else status = 'on_track';
+    }
+
+    return { date: dateKey, dayLabel: DAY_LABELS[i], calories, status, isToday };
+  });
+
+  const weeklyBudget = Math.round(dailyTarget * 7);
+  const remaining = weeklyBudget - totalConsumed;
+  const futureDays = 7 - pastDays;
+  const remainingAvg = futureDays > 0 ? Math.round(remaining / futureDays) : 0;
+
+  // Add vsBudgetAvg indicator for past days
+  for (const day of days) {
+    if (day.calories !== null) {
+      day.vsBudgetAvg = day.calories > remainingAvg ? 'above' : 'below';
+    } else {
+      day.vsBudgetAvg = null;
+    }
+  }
+
+  return {
+    weekStart: formatDate(weekDates[0]),
+    weekEnd: formatDate(weekDates[6]),
+    dailyTarget: Math.round(dailyTarget),
+    weeklyBudget,
+    totalConsumed,
+    remainingAvg,
+    progressPercent: weeklyBudget > 0 ? Math.round((totalConsumed / weeklyBudget) * 100) : 0,
+    days,
+  };
+}

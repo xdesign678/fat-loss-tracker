@@ -2,8 +2,6 @@ import { useState, useMemo, memo, useCallback } from 'react';
 import {
   BarChart,
   Bar,
-  LineChart,
-  Line,
   XAxis,
   YAxis,
   Tooltip,
@@ -12,13 +10,12 @@ import {
   ReferenceLine,
 } from 'recharts';
 import EmptyState from './EmptyState';
-import { TrendingUp, BarChart3 } from 'lucide-react';
+import { BarChart3 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { formatDate, getDateRange } from '../utils/calculations';
 
-const DashboardCharts = memo(({ selectedDate, calorieTarget, weightTrendData }) => {
+const DashboardCharts = memo(({ selectedDate, calorieTarget }) => {
   const { state } = useApp();
-  const profile = state.profile || {};
   const [calorieRange, setCalorieRange] = useState(7); // 7, 14, 30 天
 
   // 根据时间范围重新计算热量数据
@@ -38,48 +35,7 @@ const DashboardCharts = memo(({ selectedDate, calorieTarget, weightTrendData }) 
     });
   }, [calorieRange, selectedDate, state.dailyLogs, calorieTarget]);
 
-  // 线性回归预测体重趋势
-  const predictedWeightData = useMemo(() => {
-    if (weightTrendData.length < 3) return [];
-
-    // 简单线性回归
-    const n = weightTrendData.length;
-    const xValues = weightTrendData.map((_, i) => i);
-    const yValues = weightTrendData.map((d) => d.weight);
-
-    const sumX = xValues.reduce((sum, x) => sum + x, 0);
-    const sumY = yValues.reduce((sum, y) => sum + y, 0);
-    const sumXY = xValues.reduce((sum, x, i) => sum + x * yValues[i], 0);
-    const sumX2 = xValues.reduce((sum, x) => sum + x * x, 0);
-
-    const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
-    const intercept = (sumY - slope * sumX) / n;
-
-    // 预测未来 7 天
-    const predictions = [];
-    for (let i = 1; i <= 7; i++) {
-      const x = n - 1 + i;
-      const predictedWeight = slope * x + intercept;
-      predictions.push({
-        date: `+${i}天`,
-        weight: null,
-        predictedWeight: parseFloat(predictedWeight.toFixed(1)),
-      });
-    }
-
-    return predictions;
-  }, [weightTrendData]);
-
-  // 合并实际数据和预测数据
-  const combinedWeightData = useMemo(() => {
-    return [
-      ...weightTrendData.map(d => ({ ...d, predictedWeight: null })),
-      ...predictedWeightData,
-    ];
-  }, [weightTrendData, predictedWeightData]);
-
   const hasCalorieData = filteredCalorieData.some(d => d.calories > 0);
-  const hasWeightData = weightTrendData.length > 1;
   // 热量图表 tooltip
   const calorieTooltip = useCallback(({ active, payload }) => {
     if (!active || !payload || !payload.length) return null;
@@ -104,36 +60,6 @@ const DashboardCharts = memo(({ selectedDate, calorieTarget, weightTrendData }) 
       </div>
     );
   }, []);
-
-  // 体重图表 tooltip
-  const weightTooltip = useCallback(({ active, payload }) => {
-    if (!active || !payload || !payload.length) return null;
-
-    const data = payload[0].payload;
-
-    return (
-      <div style={styles.tooltip}>
-        <div style={{ fontWeight: '600', marginBottom: '8px', color: 'var(--text-primary)' }}>
-          {data.date}
-        </div>
-        {data.weight && (
-          <div style={{ color: 'var(--success)', marginBottom: '4px' }}>
-            实际体重: {data.weight} kg
-          </div>
-        )}
-        {data.predictedWeight && (
-          <div style={{ color: 'var(--accent)', fontSize: '12px' }}>
-            预测体重: {data.predictedWeight} kg
-          </div>
-        )}
-        {profile.targetWeight && data.weight && (
-          <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-            距离目标: {(data.weight - profile.targetWeight).toFixed(1)} kg
-          </div>
-        )}
-      </div>
-    );
-  }, [profile.targetWeight]);
 
   return (
     <>
@@ -213,71 +139,6 @@ const DashboardCharts = memo(({ selectedDate, calorieTarget, weightTrendData }) 
                   }}
                 />
               </BarChart>
-            </ResponsiveContainer>
-          </div>
-        )}
-      </div>
-
-      {/* 体重趋势图 */}
-      <div style={styles.chartCard} className="card-hover">
-        <div style={styles.chartTitle}>体重趋势（最近记录 + 7 天预测）</div>
-
-        {!hasWeightData ? (
-          <div style={{ padding: '20px 0' }}>
-            <EmptyState
-              icon={TrendingUp}
-              title="暂无体重数据"
-              description="记录至少2次体重，开启趋势分析"
-            />
-          </div>
-        ) : (
-          <div className="chart-container">
-            <ResponsiveContainer width="100%" height={200}>
-              <LineChart data={combinedWeightData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" />
-                <XAxis
-                  dataKey="date"
-                  stroke="var(--chart-text)"
-                  tick={{ fill: 'var(--chart-text)', fontSize: 12 }}
-                />
-                <YAxis
-                  stroke="var(--chart-text)"
-                  tick={{ fill: 'var(--chart-text)', fontSize: 12 }}
-                  domain={['dataMin - 2', 'dataMax + 2']}
-                />
-                <Tooltip content={weightTooltip} />
-                {/* 目标体重参考线 */}
-                {profile.targetWeight && (
-                  <ReferenceLine
-                    y={profile.targetWeight}
-                    stroke="var(--accent)"
-                    strokeDasharray="5 5"
-                    strokeWidth={2}
-                    label={{ value: '目标', fill: 'var(--accent)', fontSize: 12 }}
-                  />
-                )}
-                {/* 实际体重线 */}
-                <Line
-                  type="monotone"
-                  dataKey="weight"
-                  stroke="var(--success)"
-                  strokeWidth={3}
-                  dot={{ fill: 'var(--success)', r: 5 }}
-                  name="实际体重"
-                  connectNulls={false}
-                />
-                {/* 预测体重线（虚线） */}
-                <Line
-                  type="monotone"
-                  dataKey="predictedWeight"
-                  stroke="var(--accent)"
-                  strokeWidth={2}
-                  strokeDasharray="5 5"
-                  dot={{ fill: 'var(--accent)', r: 4 }}
-                  name="预测趋势"
-                  connectNulls={false}
-                />
-              </LineChart>
             </ResponsiveContainer>
           </div>
         )}

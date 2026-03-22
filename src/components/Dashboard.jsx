@@ -7,24 +7,18 @@ import {
   calculateBMR,
   calculateTDEE,
   calculateDailyCalorieTarget,
-  calculateProgress,
   calculateProteinTarget,
   formatDate,
-  getDaysBetween,
   getDailyTip,
 } from '../utils/calculations';
 import { buildDailyActionPlan } from '../utils/tracking';
+import WeeklyCalorieProgress from './WeeklyCalorieProgress';
 import {
   Flame,
   Drumstick,
   Dumbbell,
-  Scale,
-  TrendingDown,
   Lightbulb,
   Plus,
-  Target,
-  Calendar,
-  TrendingUp,
 } from 'lucide-react';
 
 const DashboardCharts = lazy(() => import('./DashboardCharts'));
@@ -47,7 +41,7 @@ const tips = [
   '记录饮食能让减脂效率提高50%以上',
 ];
 
-const Dashboard = ({ selectedDate, onDateChange, onOpenWeightLogger }) => {
+const Dashboard = ({ selectedDate, onDateChange }) => {
   const { state } = useApp();
   const showToast = useToast();
 
@@ -78,41 +72,7 @@ const Dashboard = ({ selectedDate, onDateChange, onOpenWeightLogger }) => {
     return { bmr, tdee, calorieTarget, proteinTarget };
   }, [profile.currentWeight, profile.height, profile.age, profile.activityLevel, profile.sex]);
 
-  // useMemo 缓存进度计算
-  const progressData = useMemo(() => {
-    const progress = profile.startWeight && profile.currentWeight && profile.targetWeight
-      ? calculateProgress(profile.startWeight, profile.currentWeight, profile.targetWeight)
-      : 0;
 
-    const weightLost = profile.startWeight && profile.currentWeight
-      ? profile.startWeight - profile.currentWeight
-      : 0;
-    const weightToGo = profile.currentWeight && profile.targetWeight
-      ? profile.currentWeight - profile.targetWeight
-      : 0;
-
-    // 计算已坚持天数（从首次体重记录开始）
-    const daysPersisted = profile.startDate ? getDaysBetween(profile.startDate, new Date()) : 0;
-
-    // 计算平均每周减重速度
-    const weeksElapsed = daysPersisted / 7;
-    const avgWeeklyLoss = weeksElapsed > 0 ? weightLost / weeksElapsed : 0;
-
-    // 预计还需天数
-    const daysRemaining = avgWeeklyLoss > 0 ? Math.ceil((weightToGo / avgWeeklyLoss) * 7) : 0;
-
-    return { progress, weightLost, weightToGo, daysPersisted, avgWeeklyLoss, daysRemaining };
-  }, [profile.startDate, profile.startWeight, profile.currentWeight, profile.targetWeight]);
-
-  // useMemo 缓存体重趋势数据
-  const weightTrendData = useMemo(() => {
-    return state.weightHistory.length > 0
-      ? state.weightHistory.slice(-14).map((entry) => ({
-          date: formatDate(entry.date, 'MM/DD'),
-          weight: entry.weight,
-        }))
-      : [{ date: formatDate(new Date(), 'MM/DD'), weight: profile.currentWeight || 0 }];
-  }, [state.weightHistory, profile.currentWeight]);
 
   // useMemo 缓存行动计划
   const actionPlan = useMemo(() => {
@@ -147,7 +107,6 @@ const Dashboard = ({ selectedDate, onDateChange, onOpenWeightLogger }) => {
 
   // 判断是否有数据
   const hasData = selectedLog.foods.length > 0 || selectedLog.exercises.length > 0;
-  const hasWeightHistory = state.weightHistory.length > 0;
 
   // 计算统计卡片颜色
   const getCalorieColor = () => {
@@ -172,15 +131,6 @@ const Dashboard = ({ selectedDate, onDateChange, onOpenWeightLogger }) => {
     header: { marginBottom: 'var(--space-lg)' },
     date: { fontSize: 'var(--text-base)', color: 'var(--text-secondary)', marginBottom: 'var(--space-xs)' },
     greeting: { fontSize: 'var(--text-4xl)', fontWeight: '700', color: 'var(--text-heading)', fontFamily: 'var(--font-sans)', letterSpacing: '-0.02em', lineHeight: '1.2' },
-    progressCard: { background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: 'var(--space-lg)', marginBottom: 'var(--space-xl)' },
-    progressHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-md)' },
-    progressTitle: { fontSize: 'var(--text-md)', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px' },
-    progressPercent: { fontSize: 'var(--text-3xl)', fontWeight: '700', color: 'var(--accent)' },
-    progressBar: { width: '100%', height: '8px', background: 'var(--bg-primary)', borderRadius: 'var(--radius-full)', overflow: 'hidden', marginBottom: '12px' },
-    progressFill: { height: '100%', background: 'var(--accent)', borderRadius: 'var(--radius-full)', transition: 'width 0.5s ease' },
-    progressLabels: { display: 'flex', justifyContent: 'space-between', fontSize: 'var(--text-sm)', color: 'var(--text-secondary)' },
-    progressMeta: { display: 'flex', gap: 'var(--space-base)', marginTop: 'var(--space-md)', fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', flexWrap: 'wrap' },
-    progressMetaItem: { display: 'flex', alignItems: 'center', gap: '4px' },
     statCard: { background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: 'var(--space-lg)', cursor: 'pointer', transition: 'all var(--duration-base) ease' },
     statHeader: { display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' },
     statLabel: { fontSize: 'var(--text-base)', color: 'var(--text-secondary)' },
@@ -210,41 +160,7 @@ const Dashboard = ({ selectedDate, onDateChange, onOpenWeightLogger }) => {
         <div style={styles.date}>{formatDate(selectedDate, 'YYYY年MM月DD日')}</div>
         <h1 style={styles.greeting}>{selectedDate === today ? '今天继续加油！' : '回看这一天'}</h1>
       </div>
-      <div style={styles.progressCard} className="card-hover">
-        <div style={styles.progressHeader}>
-          <div style={styles.progressTitle}><TrendingDown size={20} /> 减脂进度</div>
-          <div style={styles.progressPercent} className="countUp">{progressData.progress.toFixed(1)}%</div>
-        </div>
-        <div style={styles.progressBar}>
-          <div style={{ ...styles.progressFill, width: `${Math.min(progressData.progress, 100)}%` }} />
-        </div>
-        <div style={styles.progressLabels}>
-          <span>{profile.startWeight || 0} kg</span>
-          <span>{profile.targetWeight || 0} kg</span>
-        </div>
-        {hasWeightHistory && progressData.daysPersisted > 0 && (
-          <div style={styles.progressMeta}>
-            <div style={styles.progressMetaItem}>
-              <Calendar size={14} />
-              <span>已坚持 {progressData.daysPersisted} 天</span>
-            </div>
-            {progressData.avgWeeklyLoss > 0 && (
-              <>
-                <div style={styles.progressMetaItem}>
-                  <TrendingDown size={14} />
-                  <span>平均每周减重 {progressData.avgWeeklyLoss.toFixed(2)} kg</span>
-                </div>
-                {progressData.daysRemaining > 0 && (
-                  <div style={styles.progressMetaItem}>
-                    <Target size={14} />
-                    <span>预计还需 {progressData.daysRemaining} 天</span>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        )}
-      </div>
+      <WeeklyCalorieProgress selectedDate={selectedDate} onDateChange={onDateChange} />
 
       {!hasData ? (
         <div style={styles.emptyStateContainer}>
@@ -288,18 +204,6 @@ const Dashboard = ({ selectedDate, onDateChange, onOpenWeightLogger }) => {
             </div>
             <div style={styles.statSubtext}>kcal</div>
           </div>
-          <button type="button" style={styles.statCard} className="card-hover btn-interactive" onClick={onOpenWeightLogger} aria-label="打开体重记录">
-            <div style={styles.statHeader}>
-              <Scale size={20} style={{ color: 'var(--accent-secondary)' }} />
-              <span style={styles.statLabel}>当前体重</span>
-            </div>
-            <div style={{ ...styles.statValue, color: 'var(--accent-secondary)' }} className="countUp">
-              {profile.currentWeight || 0}
-            </div>
-            <div style={styles.statSubtext}>
-              {hasWeightHistory ? '点击记录新体重' : '点击记录首次体重'}
-            </div>
-          </button>
         </div>
       )}
       <div style={{ ...styles.actionCard, ...(actionPlan.tone === 'warning' ? styles.actionCardWarning : actionPlan.tone === 'calm' ? styles.actionCardCalm : {}) }} className="card-hover">
@@ -340,7 +244,7 @@ const Dashboard = ({ selectedDate, onDateChange, onOpenWeightLogger }) => {
         </div>
       </div>
       <Suspense fallback={<div style={styles.chartSkeleton}>图表加载中...</div>}>
-        <DashboardCharts selectedDate={selectedDate} calorieTarget={targets.calorieTarget} weightTrendData={weightTrendData} />
+        <DashboardCharts selectedDate={selectedDate} calorieTarget={targets.calorieTarget} />
       </Suspense>
       <div style={styles.tipCard} className="card-hover">
         <Lightbulb size={24} style={styles.tipIcon} />
