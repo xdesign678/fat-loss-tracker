@@ -233,6 +233,40 @@ export function reducer(state, action) {
         }
       };
     }
+    case 'IMPORT_AI_DATA': {
+      const { weightHistory: importedWeights, dailyLogs: importedLogs, profile: importedProfile } = action.payload;
+      // Merge weight history (deduplicate by date, imported wins)
+      const existingWeightMap = new Map(state.weightHistory.map(w => [w.date, w]));
+      if (Array.isArray(importedWeights)) {
+        importedWeights.forEach(w => existingWeightMap.set(w.date, w));
+      }
+      const mergedWeights = [...existingWeightMap.values()].sort((a, b) => a.date.localeCompare(b.date));
+      // Merge daily logs (append foods/exercises to existing dates)
+      const mergedLogs = { ...state.dailyLogs };
+      if (importedLogs && typeof importedLogs === 'object') {
+        Object.entries(importedLogs).forEach(([date, log]) => {
+          const existing = mergedLogs[date] || { foods: [], exercises: [] };
+          const newFoods = (log.foods || []).map(f => ({ ...f, id: createEntryId('food') }));
+          const newExercises = (log.exercises || []).map(e => ({ ...e, id: createEntryId('exercise') }));
+          mergedLogs[date] = {
+            foods: [...existing.foods, ...newFoods],
+            exercises: [...existing.exercises, ...newExercises],
+          };
+        });
+      }
+      // Update profile if imported (only non-empty fields)
+      const mergedProfile = { ...state.profile };
+      if (importedProfile && typeof importedProfile === 'object') {
+        Object.entries(importedProfile).forEach(([k, v]) => {
+          if (v !== null && v !== undefined && v !== '') mergedProfile[k] = v;
+        });
+      }
+      // Update currentWeight from latest weight record
+      if (mergedWeights.length > 0) {
+        mergedProfile.currentWeight = mergedWeights[mergedWeights.length - 1].weight;
+      }
+      return { ...state, weightHistory: mergedWeights, dailyLogs: mergedLogs, profile: mergedProfile };
+    }
     case 'RESET':
       return createDefaultState();
     default:

@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { useToast } from './Toast';
-import { testAIConnection, hasAIAvailable, getAIConfig } from '../utils/ai';
+import { testAIConnection, hasAIAvailable, getAIConfig, parseImportData } from '../utils/ai';
 import { exportData, importData } from '../utils/dataMigration';
-import { X, Plus, Trash2, Eye, EyeOff, Check, Zap, Upload, Copy } from 'lucide-react';
+import { X, Plus, Trash2, Eye, EyeOff, Check, Zap, Upload, Copy, FileText, Loader, ChevronDown, ChevronUp } from 'lucide-react';
 import { Modal } from './ui';
 import {
   calculateProgress,
@@ -44,6 +44,13 @@ const Settings = ({ isOpen, onClose, onOpenWeightLogger }) => {
   const [importCode, setImportCode] = useState('');
   const [migrationResult, setMigrationResult] = useState(null);
   const [exported, setExported] = useState(false);
+
+  // AI Import states
+  const [importText, setImportText] = useState('');
+  const [importing, setImporting] = useState(false);
+  const [parsedData, setParsedData] = useState(null);
+  const [importError, setImportError] = useState('');
+  const [showPreviewDetail, setShowPreviewDetail] = useState(false);
 
   const profile = state.profile || {};
   const weightHistory = state.weightHistory || [];
@@ -142,6 +149,39 @@ const Settings = ({ isOpen, onClose, onOpenWeightLogger }) => {
       // Reload to apply imported data
       setTimeout(() => window.location.reload(), 1500);
     }
+  };
+
+  const handleAIAnalyze = async () => {
+    if (!importText.trim()) return;
+    setImporting(true);
+    setImportError('');
+    setParsedData(null);
+    try {
+      const result = await parseImportData({ text: importText, aiSettings: ai });
+      setParsedData(result);
+    } catch (e) {
+      setImportError(e.message || '分析失败');
+    }
+    setImporting(false);
+  };
+
+  const handleConfirmImport = () => {
+    if (!parsedData) return;
+    dispatch({ type: 'IMPORT_AI_DATA', payload: parsedData });
+    showToast(parsedData.summary || '数据已导入', 'success');
+    setParsedData(null);
+    setImportText('');
+    setImportError('');
+  };
+
+  const getImportStats = (data) => {
+    if (!data) return null;
+    const weightCount = data.weightHistory?.length || 0;
+    const logDates = Object.keys(data.dailyLogs || {});
+    const foodCount = logDates.reduce((sum, d) => sum + (data.dailyLogs[d]?.foods?.length || 0), 0);
+    const exerciseCount = logDates.reduce((sum, d) => sum + (data.dailyLogs[d]?.exercises?.length || 0), 0);
+    const hasProfile = data.profile && Object.values(data.profile).some(v => v !== null);
+    return { weightCount, foodCount, exerciseCount, logDates: logDates.length, hasProfile };
   };
 
   useEffect(() => {
@@ -327,6 +367,102 @@ const Settings = ({ isOpen, onClose, onOpenWeightLogger }) => {
           )}
         </div>
 
+        {/* AI Smart Import */}
+        <div style={{ ...styles.section, borderTop: '1px solid var(--border)', paddingTop: 'var(--space-xl)' }}>
+          <label style={styles.sectionLabel}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
+              <FileText size={16} />
+              AI 智能导入
+            </span>
+          </label>
+          <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 'var(--space-md)', lineHeight: 1.5 }}>
+            粘贴历史数据（体重记录、饮食日志、运动记录等），AI 将自动识别并导入。支持任意文本格式。
+          </div>
+          <textarea
+            value={importText}
+            onChange={(e) => setImportText(e.target.value)}
+            style={aiImportStyles.textarea}
+            placeholder={'粘贴你的数据，例如：\n3月1日 体重108.5kg\n早餐：鸡蛋2个、全麦面包1片\n午餐：鸡胸肉150g、西兰花200g\n跑步30分钟\n...'}
+            rows={6}
+          />
+          <div style={{ display: 'flex', gap: 'var(--space-md)', marginTop: 'var(--space-md)' }}>
+            <button
+              type="button"
+              style={{ ...styles.saveBtn, flex: 1, opacity: (!importText.trim() || importing) ? 0.5 : 1 }}
+              onClick={handleAIAnalyze}
+              disabled={!importText.trim() || importing}
+            >
+              {importing ? <Loader size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <Zap size={16} />}
+              <span>{importing ? '分析中...' : 'AI 分析'}</span>
+            </button>
+            {importText.trim() && (
+              <button
+                type="button"
+                style={{ ...styles.testBtn, flex: 'none', padding: 'var(--space-md) var(--space-lg)' }}
+                onClick={() => { setImportText(''); setParsedData(null); setImportError(''); }}
+              >
+                清空
+              </button>
+            )}
+          </div>
+          {importError && (
+            <div style={{ ...styles.testResult, color: 'var(--danger)', background: 'var(--danger-bg)', marginTop: 'var(--space-md)' }}>
+              {importError}
+            </div>
+          )}
+          {parsedData && (() => {
+            const stats = getImportStats(parsedData);
+            return (
+              <div style={aiImportStyles.previewCard}>
+                <div style={aiImportStyles.previewHeader}>
+                  <span style={{ fontWeight: '600', color: 'var(--text-heading)' }}>分析结果</span>
+                  <button
+                    type="button"
+                    style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: 'var(--text-sm)' }}
+                    onClick={() => setShowPreviewDetail(!showPreviewDetail)}
+                  >
+                    详情 {showPreviewDetail ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                  </button>
+                </div>
+                {parsedData.summary && (
+                  <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', marginBottom: 'var(--space-md)', lineHeight: 1.5 }}>
+                    {parsedData.summary}
+                  </div>
+                )}
+                <div style={aiImportStyles.statsRow}>
+                  {stats.weightCount > 0 && <span style={aiImportStyles.statChip}>{stats.weightCount} 条体重</span>}
+                  {stats.foodCount > 0 && <span style={aiImportStyles.statChip}>{stats.foodCount} 条饮食</span>}
+                  {stats.exerciseCount > 0 && <span style={aiImportStyles.statChip}>{stats.exerciseCount} 条运动</span>}
+                  {stats.hasProfile && <span style={aiImportStyles.statChip}>个人信息</span>}
+                  {stats.logDates > 0 && <span style={aiImportStyles.statChip}>{stats.logDates} 天记录</span>}
+                </div>
+                {showPreviewDetail && (
+                  <div style={aiImportStyles.detailBox}>
+                    <pre style={aiImportStyles.detailPre}>{JSON.stringify(parsedData, null, 2)}</pre>
+                  </div>
+                )}
+                <div style={{ display: 'flex', gap: 'var(--space-md)', marginTop: 'var(--space-md)' }}>
+                  <button
+                    type="button"
+                    style={{ ...styles.saveBtn, flex: 1 }}
+                    onClick={handleConfirmImport}
+                  >
+                    <Check size={16} />
+                    <span>确认导入</span>
+                  </button>
+                  <button
+                    type="button"
+                    style={{ ...styles.testBtn, flex: 1 }}
+                    onClick={() => setParsedData(null)}
+                  >
+                    取消
+                  </button>
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+
         {/* Data Migration */}
         <div style={{ ...styles.section, borderTop: '1px solid var(--border)', paddingTop: 'var(--space-xl)' }}>
           <label style={styles.sectionLabel}>数据迁移</label>
@@ -476,6 +612,69 @@ const settStyles = {
     display: 'flex',
     alignItems: 'center',
     gap: '4px',
+  },
+};
+
+const aiImportStyles = {
+  textarea: {
+    width: '100%',
+    padding: 'var(--space-md)',
+    background: 'var(--bg-secondary)',
+    border: '1px solid var(--border)',
+    borderRadius: 'var(--radius-base)',
+    color: 'var(--text-heading)',
+    fontSize: 'var(--text-sm)',
+    fontFamily: 'inherit',
+    lineHeight: 1.6,
+    resize: 'vertical',
+    outline: 'none',
+    minHeight: '120px',
+    boxSizing: 'border-box',
+  },
+  previewCard: {
+    marginTop: 'var(--space-md)',
+    padding: 'var(--space-lg)',
+    background: 'var(--success-bg)',
+    border: '1px solid var(--success)',
+    borderRadius: 'var(--radius-base)',
+  },
+  previewHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 'var(--space-sm)',
+  },
+  statsRow: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: 'var(--space-sm)',
+    marginBottom: 'var(--space-sm)',
+  },
+  statChip: {
+    padding: '2px var(--space-md)',
+    background: 'var(--bg-primary)',
+    border: '1px solid var(--border)',
+    borderRadius: 'var(--radius-sm)',
+    fontSize: 'var(--text-xs)',
+    color: 'var(--text-secondary)',
+    fontWeight: '500',
+  },
+  detailBox: {
+    marginTop: 'var(--space-md)',
+    maxHeight: '200px',
+    overflowY: 'auto',
+    background: 'var(--bg-primary)',
+    borderRadius: 'var(--radius-base)',
+    border: '1px solid var(--border)',
+  },
+  detailPre: {
+    padding: 'var(--space-md)',
+    margin: 0,
+    fontSize: 'var(--text-xs)',
+    color: 'var(--text-secondary)',
+    fontFamily: 'monospace',
+    whiteSpace: 'pre-wrap',
+    wordBreak: 'break-all',
   },
 };
 
